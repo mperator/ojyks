@@ -10,27 +10,41 @@ export default class Skyjo extends Component {
         super(props);
 
         this.state = {
-            deck: [],
-            cards: [],
-            discards: [],
+            drawPile: [],
+            boardCards: [],
+            discardPile: [],
 
-            selectedCard: null,
             state: null,
         }
     }
 
     componentDidMount() {
-        const deck = createDeck(cardTypes);
-
-        var cards = deck.splice(0, 12);
+        let drawPile = createDeck(cardTypes);
+        const boardCards = drawPile.splice(0, 12).map((card, i) => ({ cell: i, card: card}));
 
         this.setState({
-            deck: deck,
-            cards: cards
+            drawPile: drawPile,
+            discardPile: [],
+            boardCards: boardCards,
+            state: "init"
         });
     }
 
-    selectedCard(card) {
+    // execution
+    selectedCard(info) {
+        switch(this.state.state) {
+            case "init": 
+                // user has to select two cards draw and discard are deactivated
+
+                // open, face down
+
+                // filter for open cards
+                // set next state
+            break;
+        }
+
+// { source: '', card: value, id, boardplace id}
+
         // card.source -> deck, pile, disc
 
 
@@ -41,13 +55,13 @@ export default class Skyjo extends Component {
             <div>
                 <h1>Skyjo</h1>
 
-                <DrawPile cards={this.state.deck} />
-                <DiscardPile cards={this.state.discards} />
+                <DrawPile cards={this.state.drawPile} />
+                <DiscardPile cards={this.state.discardPile} />
 
                 <br/>
 
 
-                {this.state.cards.length > 0 && <Board cards={this.state.cards} />}
+               {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} />}
 
             </div>
         )

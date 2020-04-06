@@ -1,14 +1,14 @@
 .board {
-    width: 201px;
-    height: 150px;
+    width: 601px;
+    height: 450px;
     border: solid 1px #000;
 }
 
 .board div { 
     box-sizing: border-box;
     float: left;
-    width: 50px; 
-    height: 50px; 
+    width: 150px; 
+    height: 150px; 
     margin: 0;
     padding: 0;  
     border: 1px solid #404040; 

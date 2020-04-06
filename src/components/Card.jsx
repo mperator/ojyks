@@ -9,10 +9,13 @@ export default class Card extends Component {
     }
 
     render() {
-        console.log(this.props)
+        const {card, cell}  = this.props;
         return (
             <div>
-                {this.props.card}
+                <p>{cell}</p>
+                <p>{card.id}</p>
+                <p>{card.value}</p>
+                <p>{card.faceDown.toString()}</p>
             </div>
         )
     }

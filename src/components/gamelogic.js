@@ -19,10 +19,14 @@ const cardTypes = [
 function createDeck(cardTypes) {
     let cards = [];
 
-    for (let card of cardTypes) {
+    for (let template of cardTypes) {
         // https://stackoverflow.com/questions/3746725/how-to-create-an-array-containing-1-n
         //var x = Array.apply(null, { length: card.count }).map(c => card.value);
-        cards = [...cards, ...Array.from(Array(card.count), (_, i) => card.value)];
+        cards = [...cards, ...Array.from(Array(template.count), (_, i) => ({ 
+            id: cards.length + i,
+            value: template.value,
+            faceDown: true
+        }))];
     }
 
     return shuffle(cards);
