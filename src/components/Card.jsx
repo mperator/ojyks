@@ -12,10 +12,10 @@ export default class Card extends Component {
         const {card, cell}  = this.props;
         return (
             <div onClick={() => this.props.handleClick({source: "board", cell: cell})}>
-                <p>{cell}</p>
-                <p>{card.id}</p>
+                {card.faceDown ? 
+                <p>#</p> : 
                 <p>{card.value}</p>
-                <p>{card.faceDown.toString()}</p>
+                }
             </div>
         )
     }
