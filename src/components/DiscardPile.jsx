@@ -2,7 +2,7 @@ import React, { Fragment } from 'react'
 
 export default function DiscardPile(props) {
     return (
-        <div>
+        <div onClick={() => props.handleClick({ source: "discard"})}>
             <p>{props.cards.length}</p>
             {props.cards.length > 0 && (
                 <Fragment>

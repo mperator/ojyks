@@ -3,7 +3,7 @@ import Card from './Card'
 
 export default function DrawPile(props) {
     return (
-        <div>
+        <div onClick={() => props.handleClick({source: "draw"})}>
             <p>{props.cards.length}</p>
             {props.cards.length > 0 && (
                 <Fragment>

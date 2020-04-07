@@ -11,7 +11,7 @@ export default class Card extends Component {
     render() {
         const {card, cell}  = this.props;
         return (
-            <div>
+            <div onClick={() => this.props.handleClick({source: "board", cell: cell})}>
                 <p>{cell}</p>
                 <p>{card.id}</p>
                 <p>{card.value}</p>
