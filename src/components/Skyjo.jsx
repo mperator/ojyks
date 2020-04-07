@@ -35,19 +35,18 @@ export default class Skyjo extends Component {
 
     // execution
     executeTurn(info) { // -> info about click on discard, click on draw or on any board
-        switch(this.state.state) {
-            case "init": 
-
-                if(info.source !== "board") return;
+        switch (this.state.state) {
+            case "init":
+                if (info.source !== "board") return;
                 // user has to select two cards draw and discard are deactivated
                 console.log(this.state.boardCards)
-                
+
                 const card = this.state.boardCards[info.cell];
-                if(!card.faceDown) return;
+                if (!card.faceDown) return;
 
                 const cards = this.state.boardCards;
                 cards[info.cell].faceDown = false;
-                
+
                 const count = cards.filter(card => !card.faceDown).length;
                 console.log(count)
                 const state = count === 2 ? "play" : "init";
@@ -56,21 +55,152 @@ export default class Skyjo extends Component {
                     boardCards: cards,
                     state: state
                 });
+                break;
 
-                
-                
-                
-                // open, face down
+            case "play":
+                switch (info.source) {
+                    case "board":
+                        const card = this.state.boardCards[info.cell];
+                        if (!card.faceDown) return;
 
-                // filter for open cards
-                // set next state
-            break;
+                        const cards = this.state.boardCards;
+                        cards[info.cell].faceDown = false;
+
+                        this.setState({
+                            boardCards: cards,
+                            state: "play"
+                        });
+                        break;
+
+                    case "draw":
+                        // show first card on pile
+                        const pile = this.state.drawPile;
+                        // TODO: pile count > 0
+
+                        pile[0].faceDown = false;
+
+                        this.setState({
+                            drawPile: pile,
+                            state: "draw"
+                        })
+                        break;
+
+
+
+                    case "discard":
+                        if(this.state.discardPile.length === 0) return;
+
+                        this.setState({state: "discard"});
+                        break;
+                }
+
+
+                break;
+
+            case "draw":
+                // user can exchange card from board or discard pile
+                // if card is discard user has to open a card
+                const drawPile = this.state.drawPile;
+                const drawCard = drawPile.splice(0, 1)[0];
+
+                console.log(drawPile)
+                console.log(drawCard)
+
+                switch (info.source) {
+                    case "board":
+                        const boardCards = this.state.boardCards;
+                        const boardCard = boardCards[info.cell];
+                        boardCard.faceDown = false;
+
+                        boardCards[info.cell] = drawCard;
+
+                        const discardPile = [boardCard, ...this.state.discardPile];
+
+                        this.setState({
+                            drawPile: drawPile,
+                            boardCards: boardCards,
+                            discardPile: discardPile,
+                            state: "play"
+                        })
+
+                        break;
+
+                    case "draw":
+                        return;
+
+                    case "discard":
+                        this.setState({
+                            drawPile: drawPile,
+                            discardPile: [drawCard, ...this.state.discardPile],
+                            state: "draw.open"
+                        })
+
+                        break;
+                }
+                break;
+
+            case "draw.open":
+                
+                switch (info.source) {
+                    case "board":
+                        const boardCards = this.state.boardCards;
+                        const boardCard = boardCards[info.cell];
+                        
+                        if(!boardCard.faceDown) return;
+
+                        boardCards[info.cell].faceDown = false;
+
+                        this.setState({
+                            boardCards: boardCards,
+                            state: "play"
+                        })
+
+                        break;
+
+                    case "draw":
+                        return;
+
+                    case "discard":
+                        return;
+                }
+                break;
+
+            case "discard":
+                var discardPile = this.state.discardPile;
+                var discardCard = discardPile.splice(0, 1)[0];
+
+                switch (info.source) {
+                    case "board":
+                        const boardCards = this.state.boardCards;
+                        const boardCard = boardCards[info.cell];
+                        boardCard.faceDown = false;
+
+                        boardCards[info.cell] = discardCard;
+
+                        this.setState({
+                            boardCards: boardCards,
+                            discardPile: [boardCard, ...discardPile],
+                            state: "play"
+                        })
+                        break;
+
+                    case "draw":
+                        return;
+
+                    case "discard":
+                        return;
+                }
+                break;
+
         }
 
-// { source: '', card: value, id, boardplace id}
+        // { source: '', card: value, id, boardplace id}
 
         // card.source -> deck, pile, disc
 
+        // remove cards if multiple in a row
+
+        // all that are not null
 
     }
 
@@ -83,10 +213,10 @@ export default class Skyjo extends Component {
                 <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
                 <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
 
-                <br/>
+                <br />
 
 
-               {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}
+                {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}
 
             </div>
         )
