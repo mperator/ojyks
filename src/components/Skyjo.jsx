@@ -202,6 +202,44 @@ export default class Skyjo extends Component {
 
         // all that are not null
 
+        // 0 1  2  3
+        // 4 5  6  7
+        // 8 9 10 11
+
+        const boardCards = this.state.boardCards;
+        if(boardCards[0] && boardCards[0].value === boardCards[4].value && boardCards[0].value === boardCards[8].value) {
+            boardCards[0] = null;
+            boardCards[4] = null;
+            boardCards[8] = null;
+        }
+        if(boardCards[1] && boardCards[1].value === boardCards[5].value && boardCards[1].value === boardCards[9].value) {
+            boardCards[1] = null;
+            boardCards[5] = null;
+            boardCards[9] = null;
+        }
+        if(boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value) {
+            boardCards[2] = null;
+            boardCards[6] = null;
+            boardCards[10] = null;
+        }
+        if(boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[3].value === boardCards[11].value) {
+            boardCards[3] = null;
+            boardCards[7] = null;
+            boardCards[11] = null;
+        }
+
+        this.setState({ boardCards: boardCards})
+
+        // check for game end
+        const cardsNotNull = this.state.boardCards.filter(c => c !== null);
+        console.log(cardsNotNull)
+
+        const cardsOpened = cardsNotNull.filter(c => !c.faceDown);
+        console.log(cardsNotNull)
+
+        if(cardsOpened.length === cardsNotNull.length) {
+            this.setState({ state: "end"})
+        }
     }
 
     render() {
