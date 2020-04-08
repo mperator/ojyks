@@ -5,6 +5,8 @@ import Board from './Board';
 import DrawPile from './DrawPile'
 import DiscardPile from './DiscardPile';
 
+import './Skyjo.css'
+
 export default class Skyjo extends Component {
     constructor(props) {
         super(props);
@@ -88,9 +90,9 @@ export default class Skyjo extends Component {
 
 
                     case "discard":
-                        if(this.state.discardPile.length === 0) return;
+                        if (this.state.discardPile.length === 0) return;
 
-                        this.setState({state: "discard"});
+                        this.setState({ state: "discard" });
                         break;
                 }
 
@@ -140,13 +142,13 @@ export default class Skyjo extends Component {
                 break;
 
             case "draw.open":
-                
+
                 switch (info.source) {
                     case "board":
                         const boardCards = this.state.boardCards;
                         const boardCard = boardCards[info.cell];
-                        
-                        if(!boardCard.faceDown) return;
+
+                        if (!boardCard.faceDown) return;
 
                         boardCards[info.cell].faceDown = false;
 
@@ -207,28 +209,28 @@ export default class Skyjo extends Component {
         // 8 9 10 11
 
         const boardCards = this.state.boardCards;
-        if(boardCards[0] && boardCards[0].value === boardCards[4].value && boardCards[0].value === boardCards[8].value) {
+        if (boardCards[0] && boardCards[0].value === boardCards[4].value && boardCards[0].value === boardCards[8].value) {
             boardCards[0] = null;
             boardCards[4] = null;
             boardCards[8] = null;
         }
-        if(boardCards[1] && boardCards[1].value === boardCards[5].value && boardCards[1].value === boardCards[9].value) {
+        if (boardCards[1] && boardCards[1].value === boardCards[5].value && boardCards[1].value === boardCards[9].value) {
             boardCards[1] = null;
             boardCards[5] = null;
             boardCards[9] = null;
         }
-        if(boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value) {
+        if (boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value) {
             boardCards[2] = null;
             boardCards[6] = null;
             boardCards[10] = null;
         }
-        if(boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[3].value === boardCards[11].value) {
+        if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[3].value === boardCards[11].value) {
             boardCards[3] = null;
             boardCards[7] = null;
             boardCards[11] = null;
         }
 
-        this.setState({ boardCards: boardCards})
+        this.setState({ boardCards: boardCards })
 
         // check for game end
         const cardsNotNull = this.state.boardCards.filter(c => c !== null);
@@ -237,25 +239,32 @@ export default class Skyjo extends Component {
         const cardsOpened = cardsNotNull.filter(c => !c.faceDown);
         console.log(cardsNotNull)
 
-        if(cardsOpened.length === cardsNotNull.length) {
-            this.setState({ state: "end"})
+        if (cardsOpened.length === cardsNotNull.length) {
+            this.setState({ state: "end" })
         }
     }
 
     render() {
         return (
-            <div>
-                <p>{this.state.state}</p>
-                <h1>Skyjo</h1>
-
-                <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
-                <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
-
-                <br />
-
-
-                {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}
-
+            <div className="container">
+                <div className="player">
+                    <div className="pile">
+                        <div className="pile-draw">
+                            <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
+                        </div>
+                        <div className="pile-discard">
+                            <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
+                        </div>
+                    </div>
+                    <div className="state">
+                        <p>{this.state.state}</p>
+                    </div>
+                    <div className="game">
+                        {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}
+                    </div>
+                </div>
+                <div className="room">room</div>
+                <div className="chat">chat</div>
             </div>
         )
     }

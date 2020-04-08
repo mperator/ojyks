@@ -1,0 +1,55 @@
+.container { 
+    height:100vh; 
+    display: grid; 
+    grid-template-rows: 1fr 1fr; 
+    grid-template-columns: 50% 50%; 
+} 
+
+.player { 
+    background:tomato; 
+    grid-column: 1;
+    grid-row-start: 1;
+    grid-row-end: 3;
+
+    display: grid;
+    grid-template-rows: 3fr 1fr 9fr;
+    grid-template-columns: 100%;
+} 
+
+.room { 
+    background:gold; 
+    grid-column:2; 
+    grid-row :1; 
+} 
+
+.chat { 
+    background:lightgreen; 
+    grid-column:2; 
+    grid-row :2; 
+} 
+
+.pile {
+    background: blue;
+    grid-row: 1;
+}
+
+.state {
+    background: pink;
+    grid-row: 2;
+}
+
+.game {
+    background: yellow;
+    grid-row: 3;
+
+    align-self: center;
+    justify-self: center;
+}
+
+.pile-draw {
+    display: inline-block;
+}
+
+.pile-discard  {
+    display: inline-block;
+}
