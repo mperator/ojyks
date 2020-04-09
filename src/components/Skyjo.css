@@ -6,7 +6,6 @@
 } 
 
 .player { 
-    background:tomato; 
     grid-column: 1;
     grid-row-start: 1;
     grid-row-end: 3;
@@ -39,9 +38,9 @@
 }
 
 .game {
-    background: yellow;
     grid-row: 3;
-
+    width: 100%;
+    height: 100%;
     align-self: center;
     justify-self: center;
 }
