@@ -8,8 +8,8 @@ export default function Board(props) {
     return (
         <div className="board">
             {props.cards.map((card, i) => 
-                <div className="board-card-place">
-                    {card && <Card card={card} key={i} cell={i} handleClick={props.handleClick}/>}
+                <div className="board-card-place" key={i}>
+                    {card && <Card card={card} cell={i} handleClick={props.handleClick}/>}
                 </div>
             )}
 

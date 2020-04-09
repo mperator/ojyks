@@ -1,0 +1,50 @@
+.card {
+    background: white;
+    border-radius: 5px;
+    padding: 2px;
+    height: 100%;
+}
+
+.card-number {
+    position: relative;
+    top: 50%;
+    transform: translate(0px, -50%);
+    text-align: center;
+    font-size: 2em;
+    font-weight: bold;
+}
+
+.card-facedown {
+    background: greenyellow;
+    border-radius: 5px;
+    height: 100%;
+}
+
+.card-violet {
+    background: darkorchid;
+    border-radius: 5px;
+    height: 100%;
+}
+
+.card-blue {
+    background: lightseagreen;
+    border-radius: 5px;
+    height: 100%;
+}
+.card-green {
+    background: green;
+    border-radius: 5px;
+    height: 100%;
+    color: white;
+}
+.card-yellow {
+    background: yellow;
+    border-radius: 5px;
+    height: 100%;
+}
+
+.card-red {
+    background: red;
+    border-radius: 5px;
+    height: 100%;
+}
