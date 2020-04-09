@@ -1,19 +1,12 @@
 import React, { Fragment } from 'react'
+import Card from './Card'
+import './DiscardPile.css'
 
 export default function DiscardPile(props) {
     return (
-        <div onClick={() => props.handleClick({ source: "discard"})}>
-            {/* <p>{props.cards.length}</p> */}
+        <div className="discard-pile" onClick={() => props.handleClick({source: "discard"})}>
             {props.cards.length > 0 && (
-                <Fragment>
-                    {props.cards[0].faceDown ?
-                        <p>#</p>    :
-                        <p>{props.cards[0].value}</p>
-                    }
-                    {/* <p>{props.cards[0].value}</p>
-                    <p>{props.cards[0].id}</p>
-                    <p>{props.cards[0].faceDown.toString()}</p> */}
-                </Fragment>
+                <Card card={props.cards[0]} cell={-1} handleClick={() => props.handleClick({source: "discard"})}/>
             )}
         </div>
     )

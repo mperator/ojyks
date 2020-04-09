@@ -213,22 +213,32 @@ export default class Skyjo extends Component {
             boardCards[0] = null;
             boardCards[4] = null;
             boardCards[8] = null;
+
+            // TODO add to discard pile
         }
         if (boardCards[1] && boardCards[1].value === boardCards[5].value && boardCards[1].value === boardCards[9].value) {
             boardCards[1] = null;
             boardCards[5] = null;
             boardCards[9] = null;
+
+            // TODO add to discard pile
         }
         if (boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value) {
             boardCards[2] = null;
             boardCards[6] = null;
             boardCards[10] = null;
+
+            // TODO add to discard pile
         }
         if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[3].value === boardCards[11].value) {
             boardCards[3] = null;
             boardCards[7] = null;
             boardCards[11] = null;
+
+            // TODO add to discard pile
         }
+
+        // TODO add 
 
         this.setState({ boardCards: boardCards })
 
@@ -249,8 +259,8 @@ export default class Skyjo extends Component {
             <div className="container">
                 <div className="player">
                     <div className="pile">
+                        <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
                         <div className="pile-draw">
-                            <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
                         </div>
                         <div className="pile-discard">
                             <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />

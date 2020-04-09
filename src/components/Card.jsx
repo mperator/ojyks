@@ -11,7 +11,6 @@ export default class Card extends Component {
     }
 
     getClassName() {
-        console.log("hahahah")
         const { card } = this.props;
         if (card.faceDown) {
             return "card-facedown";
