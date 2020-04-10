@@ -17,6 +17,7 @@ export default class Skyjo extends Component {
             discardPile: [],
 
             state: null,
+            instruction: ""
         }
 
         this.executeTurn = this.executeTurn.bind(this);
@@ -31,7 +32,8 @@ export default class Skyjo extends Component {
             drawPile: drawPile,
             discardPile: [],
             boardCards: boardCards,
-            state: "init"
+            state: "init",
+            instruction: "Decke zwei Karten auf..."
         });
     }
 
@@ -51,9 +53,24 @@ export default class Skyjo extends Component {
                 const count = cards.filter(card => !card.faceDown).length;
                 const state = count === 2 ? "play" : "init";
 
+                let instruction = "";
+                switch (count) {
+                    case 0:
+                        instruction = "Decke zwei Karten auf...";
+                        break;
+                    case 1:
+                        instruction = "Decke eine Karte auf...";
+                        break;
+                    case 2:
+                        instruction = "Ziehe eine Karte vom Stapel oder decke eine weiter Karte auf..."
+                        break;
+                    default: throw "Error";
+                }
+
                 this.setState({
                     boardCards: cards,
-                    state: state
+                    state: state,
+                    instruction: instruction
                 });
                 break;
 
@@ -68,7 +85,8 @@ export default class Skyjo extends Component {
 
                         this.setState({
                             boardCards: cards,
-                            state: "play"
+                            state: "play",
+                            instruction: "Ziehe eine Karte vom Stapel oder decke eine weiter Karte auf..."
                         });
                         break;
 
@@ -81,14 +99,18 @@ export default class Skyjo extends Component {
 
                         this.setState({
                             drawPile: pile,
-                            state: "draw"
+                            state: "draw",
+                            instruction: "Tausche mit einer Karte auf dem Feld oder lege sie auf den Ablagestapel..."
                         })
                         break;
 
                     case "discard":
                         if (this.state.discardPile.length === 0) return;
 
-                        this.setState({ state: "discard" });
+                        this.setState({
+                            state: "discard",
+                            instruction: "Decke eine Karte auf dem Feld auf..."
+                        });
                         break;
                 }
 
@@ -114,7 +136,8 @@ export default class Skyjo extends Component {
                             drawPile: drawPile,
                             boardCards: boardCards,
                             discardPile: discardPile,
-                            state: "play"
+                            state: "play",
+                            instruction: "Ziehe eine Karte vom Stapel oder decke eine weiter Karte auf..."
                         })
 
                         break;
@@ -126,7 +149,8 @@ export default class Skyjo extends Component {
                         this.setState({
                             drawPile: drawPile,
                             discardPile: [drawCard, ...this.state.discardPile],
-                            state: "draw.open"
+                            state: "draw.open",
+                            instruction: "Decke eine Karte auf dem Feld auf..."
                         })
 
                         break;
@@ -146,7 +170,8 @@ export default class Skyjo extends Component {
 
                         this.setState({
                             boardCards: boardCards,
-                            state: "play"
+                            state: "play",
+                            instruction: "Ziehe eine Karte vom Stapel oder decke eine weiter Karte auf..."
                         })
 
                         break;
@@ -174,7 +199,9 @@ export default class Skyjo extends Component {
                         this.setState({
                             boardCards: boardCards,
                             discardPile: [boardCard, ...discardPile],
-                            state: "play"
+                            state: "play",
+                            instruction: "Ziehe eine Karte vom Stapel oder decke eine weiter Karte auf...",
+
                         })
                         break;
 
@@ -242,7 +269,10 @@ export default class Skyjo extends Component {
         console.log(cardsNotNull)
 
         if (cardsOpened.length === cardsNotNull.length) {
-            this.setState({ state: "end" })
+            this.setState({
+                state: "end",
+                instruction: "Spiel beendet, drücke F5 oder lade die Seite neu..."
+            })
         }
     }
 
@@ -251,13 +281,15 @@ export default class Skyjo extends Component {
             <div className="container">
                 <div className="player">
                     <div className="pile">
-                        <div></div>
+                        <div>
+                            {/* <p>{this.state.state}</p> */}
+                        </div>
                         <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
                         <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
                         <div></div>
                     </div>
                     <div className="state">
-                        <p>{this.state.state}</p>
+                        <p>{this.state.instruction}</p>
                     </div>
                     <div className="game">
                         {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}

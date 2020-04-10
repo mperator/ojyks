@@ -39,8 +39,9 @@
 }
 
 .state {
-    background: pink;
     grid-row: 2;
+    padding: 0px 15px;
+    color: white;
 }
 
 .game {
