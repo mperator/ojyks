@@ -9,29 +9,9 @@ export default function Board(props) {
         <div className="board">
             {props.cards.map((card, i) => 
                 <div className="board-card-place" key={i}>
-                    {card && <Card card={card} cell={i} handleClick={props.handleClick}/>}
+                    {card && <Card card={card} cell={i} handleClick={props.handleClick} source={"board"}/>}
                 </div>
             )}
-
-            {/* <div className="board-card-place">1</div>
-            <div className="board-card-place">2</div>
-            <div className="board-card-place">3</div>
-            <div className="board-card-place">4</div>
-            <div className="board-card-place">5</div>
-            <div className="board-card-place">6</div>
-            <div className="board-card-place">7</div>
-            <div className="board-card-place">8</div>
-            <div className="board-card-place">9</div>
-            <div className="board-card-place">9</div>
-            <div className="board-card-place">9</div>
-            <div className="board-card-place">9</div> */}
         </div>
-        // <div className="board">
-        //     {props.cards.map((card, i) => 
-        //         card ? 
-        //         <Card card={card} key={i} cell={i} handleClick={props.handleClick}/> : 
-        //         <div>-</div>
-        //     )}
-        // </div>
     )
 }

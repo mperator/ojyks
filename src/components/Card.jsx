@@ -32,7 +32,7 @@ export default class Card extends Component {
     render() {
         const { card, cell } = this.props;
         return (
-            <div className="card" onClick={() => this.props.handleClick({ source: "board", cell: cell })}>
+            <div className="card" onClick={() => this.props.handleClick({ source: this.props.source, cell: cell })}>
                 <div className={this.getClassName()} >
                     <div className="card-number">
                         {card.faceDown ?
