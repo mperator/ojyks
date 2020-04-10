@@ -10,7 +10,8 @@ export default class CreateLobby extends Component {
         super(props);
 
         this.state = {
-            roomname: ""
+            roomname: "",
+            errorMessage: ""
         }
 
         this.handleChange = this.handleChange.bind(this);
@@ -24,11 +25,18 @@ export default class CreateLobby extends Component {
 
     handleClick(e) {
         e.preventDefault();
-        this.context.send("holla chicka");
+        this.context.send({ user: this.context.username, lobby: this.state.roomname, action: 'create-lobby' });
     }
 
     handleMessage(data) {
-        console.log(data);
+        if (data.type !== 'response' &&
+            data.action !== 'create-lobby') return;
+
+        if (data.state === 'success') {
+            this.props.history.push(`lobby/${data.lobby}`);
+        } else {
+            this.setState({ errorMessage: data.errorMessage });
+        }
     }
 
     componentDidMount() {
@@ -48,6 +56,7 @@ export default class CreateLobby extends Component {
                 <div>
                     <label htmlFor="roomname">Lobby:</label>
                     <input type="text" name="roomname" id="roomname" value={this.state.roomname} onChange={this.handleChange} />
+                    {this.state.errorMessage && <span className="error">{this.state.errorMessage}</span>}
                 </div>
 
                 <button onClick={this.handleClick}>

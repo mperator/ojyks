@@ -6,6 +6,10 @@ body {
   width: 100%;
   height: 100%;
 }
+
+.error {
+  color:red;
+}
 /* 
 .App {
   text-align: center;

@@ -34,8 +34,8 @@ export default class App extends Component {
       this.setState({ callbacks: callbacks });
     }
 
-    this.send = (message) => {
-      this.ws.send(message);
+    this.send = (data) => {
+      this.ws.send(JSON.stringify(data));
     }
 
     this.state = {
@@ -60,7 +60,7 @@ export default class App extends Component {
 
       // distribute message to all registered callback functions.
       for(const name in callbacks) {
-        callbacks[name](event.data)
+        callbacks[name](JSON.parse(event.data))
       }
     }
   }
