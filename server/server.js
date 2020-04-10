@@ -29,6 +29,16 @@ wss.on('connection', (ws) => {
             });
         }
 
+        function broadcastTest(clients, data) {
+            console.log("br", clients.length)
+
+            clients.forEach(function each(client) {
+                if (client !== ws && client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify(data));
+                }
+            });
+        }
+
         function getLobbies() {
             const tmp = lobbies.map(l => ({
                 name: l.name,
@@ -39,6 +49,19 @@ wss.on('connection', (ws) => {
             }));
 
             return tmp;
+        }
+
+        function getLobby(lobbyname) {
+            const results = lobbies.filter(l => l.name === lobbyname);
+            if(results.length === 0) return null;
+
+            return results.map(l => ({
+                name: l.name,
+                creator: l.creator,
+                state: l.state,
+                slots: l.slots,
+                users: l.users.map(u => u.name)
+            }))[0];
         }
 
         switch (data.action) {
@@ -54,8 +77,7 @@ wss.on('connection', (ws) => {
                         creator: data.user,
                         state: 'open',
                         slots: 8,
-                        users: [data.user],
-                        chats: []
+                        users: [{ name: data.user, ws: ws}]                        
                     });
 
                     console.log(`Lobby ${data.lobby} was created by ${data.user}`);
@@ -92,12 +114,19 @@ wss.on('connection', (ws) => {
                     return; // error lobby full
                 }
 
-                lobby.users.push( { name: payload.name, ws: ws});
+                lobby.users.push( { name: payload.user, ws: ws});
 
                 send(ws, { type: "response", action: "join-lobby", state: "success", payload: { lobby: payload.lobby}})
                 
                 // inform all about lobby update
                 broadcast({ type: 'response', action: 'update-lobbies', payload: { lobbies: getLobbies() } });
+                
+                var usersWs = lobby.users.map(u => u.ws);
+                broadcastTest(usersWs, { type: 'response', action: 'update-lobby', payload: { lobby: getLobby(payload.lobby)}})
+            } break; // TODO -> refresh lobby for user that are already in lobby
+            case 'update-lobby': {
+                // user requests an update of the lobby data
+                send(ws, { type: 'response', action: 'update-lobby', payload: { lobby: getLobby(data.payload.lobbyname)}})
             } break;
         }
 

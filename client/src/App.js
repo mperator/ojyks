@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 
-import { BrowserRouter, Route } from 'react-router-dom'
+import { BrowserRouter, Route, Switch } from 'react-router-dom'
 
 import Login from './components/Login/Login'
 import Lobby from './components/Lobby/Lobby'
@@ -59,7 +59,7 @@ export default class App extends Component {
       var callbacks = this.state.callbacks;
 
       // distribute message to all registered callback functions.
-      for(const name in callbacks) {
+      for (const name in callbacks) {
         callbacks[name](JSON.parse(event.data))
       }
     }
@@ -70,11 +70,13 @@ export default class App extends Component {
       <div className="App" >
         <UserContext.Provider value={this.state}>
           <BrowserRouter>
-            <Route exact path="/" component={Login} />
-            <Route exact path="/lobby" component={Lobby} />
-            <Route exact path="/lobby/create" component={CreateLobby} />
-            <Route exact path="/lobby/join" component={JoinLobby} />
-            <Route path="/game:id" component={Ojyks} />
+            <Switch>
+              <Route exact path="/" component={Login} />
+              <Route exact path="/lobby/create" component={CreateLobby} />
+              <Route exact path="/lobby/join" component={JoinLobby} />
+              <Route exact path="/lobby/:name" component={Lobby} />
+              <Route path="/game:id" component={Ojyks} />
+            </Switch>
           </BrowserRouter>
         </UserContext.Provider>
       </div>

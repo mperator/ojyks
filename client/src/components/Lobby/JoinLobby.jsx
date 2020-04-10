@@ -33,7 +33,8 @@ export default class JoinLobby extends Component {
                 break;
             case 'join-lobby':
                 if(data.state === "success") {
-                    this.props.history.push(`lobby/${data.payload.name}`);
+                    console.log("join-lobby", data)
+                    this.props.history.push(`/lobby/${data.payload.lobby}`);
                 } else {
                     this.setState({ errorMessage: data.errorMessage});
                 }

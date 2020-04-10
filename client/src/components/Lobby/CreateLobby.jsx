@@ -29,11 +29,11 @@ export default class CreateLobby extends Component {
     }
 
     handleMessage(data) {
-        if (data.type !== 'response' &&
+        if (data.type !== 'response' ||
             data.action !== 'create-lobby') return;
 
         if (data.state === 'success') {
-            this.props.history.push(`lobby/${data.lobby}`);
+            this.props.history.push(`/lobby/${data.lobby}`);
         } else {
             this.setState({ errorMessage: data.errorMessage });
         }
