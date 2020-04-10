@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { Redirect } from 'react-router-dom'
 
 import { UserContext } from '../../context/user-context'
 
@@ -21,7 +22,7 @@ export default class JoinLobby extends Component {
     handleClick(e, lobbyname) {
         e.preventDefault();
 
-        this.context.send({ type: 'request', action: 'join-lobby', payload: { user: this.context.username, lobby: lobbyname} });
+        this.context.send({ type: 'request', action: 'join-lobby', payload: { user: this.context.username, lobby: lobbyname } });
     }
 
     handleMessage(data) {
@@ -32,11 +33,11 @@ export default class JoinLobby extends Component {
                 this.setState({ lobbies: data.payload.lobbies });
                 break;
             case 'join-lobby':
-                if(data.state === "success") {
+                if (data.state === "success") {
                     console.log("join-lobby", data)
                     this.props.history.push(`/lobby/${data.payload.lobby}`);
                 } else {
-                    this.setState({ errorMessage: data.errorMessage});
+                    this.setState({ errorMessage: data.errorMessage });
                 }
 
                 break;
@@ -46,6 +47,8 @@ export default class JoinLobby extends Component {
     }
 
     componentDidMount() {
+        if (!this.context.username) return;
+
         this.context.registerCallback('joinLobbyMessageHandler', this.handleMessage);
 
         this.context.send({ type: 'request', action: 'update-lobbies' });
@@ -56,6 +59,9 @@ export default class JoinLobby extends Component {
     }
 
     render() {
+        // TODO router guard
+        if (!this.context.username) return (<Redirect to="/" />);
+
         return (
             <div>
                 <h1>Join</h1>

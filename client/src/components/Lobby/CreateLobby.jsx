@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { NavLink } from 'react-router-dom'
+import { Redirect } from 'react-router-dom'
 
 import { UserContext } from '../../context/user-context'
 
@@ -48,6 +48,9 @@ export default class CreateLobby extends Component {
     }
 
     render() {
+        // TODO router guard
+        if(!this.context.username) return (<Redirect to="/" />);
+
         return (
             <div>
                 <h1>Willkommen, {this.context.username}</h1>

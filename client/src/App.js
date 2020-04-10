@@ -39,7 +39,7 @@ export default class App extends Component {
     }
 
     this.state = {
-      username: "jürgen",
+      username: '',
       setUsername: this.setUsername,
       registerCallback: this.registerCallback,
       unregisterCallback: this.unregisterCallback,
@@ -72,10 +72,11 @@ export default class App extends Component {
           <BrowserRouter>
             <Switch>
               <Route exact path="/" component={Login} />
+              <Route exact path="/login" component={Login} />
               <Route exact path="/lobby/create" component={CreateLobby} />
               <Route exact path="/lobby/join" component={JoinLobby} />
               <Route exact path="/lobby/:name" component={Lobby} />
-              <Route path="/game:id" component={Ojyks} />
+              <Route path="/game" component={Ojyks} />
             </Switch>
           </BrowserRouter>
         </UserContext.Provider>

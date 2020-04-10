@@ -1,4 +1,5 @@
 import React, { Component, Fragment } from 'react'
+import { Redirect } from 'react-router-dom'
 import { UserContext } from '../../context/user-context'
 
 // displays all users
@@ -34,6 +35,8 @@ export default class Lobby extends Component {
     }
 
     componentDidMount() {
+        if (!this.context.username) return;
+
         this.context.registerCallback('lobbyMessageHandler', this.handleMessage);
 
         this.context.send({ type: 'request', action: 'update-lobby', payload: { lobbyname: this.props.match.params.name } });
@@ -44,6 +47,9 @@ export default class Lobby extends Component {
     }
 
     render() {
+        // TODO router guard
+        if(!this.context.username) return (<Redirect to="/" />);
+
         return (
             <div>
                 <h1>Lobby</h1>
