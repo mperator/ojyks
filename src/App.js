@@ -2,12 +2,12 @@ import React from 'react';
 import logo from './logo.svg';
 import './App.css';
 
-import Skyjo from './components/Skyjo'
+import Ojyks from './components/Ojyks'
 
 function App() {
   return (
     <div className="App">
-      <Skyjo />
+      <Ojyks />
     </div>
   );
 }

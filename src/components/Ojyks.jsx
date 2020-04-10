@@ -5,9 +5,9 @@ import Board from './Board';
 import DrawPile from './DrawPile'
 import DiscardPile from './DiscardPile';
 
-import './Skyjo.css'
+import './Ojyks.css'
 
-export default class Skyjo extends Component {
+export default class Ojyks extends Component {
     constructor(props) {
         super(props);
 
