@@ -106,7 +106,7 @@ export default class Skyjo extends Component {
                 // if card is discard user has to open a card
                 const drawPile = this.state.drawPile;
                 const drawCard = drawPile.splice(0, 1)[0];
-                
+
                 console.log(drawPile)
                 console.log(drawCard)
 
@@ -261,12 +261,10 @@ export default class Skyjo extends Component {
             <div className="container">
                 <div className="player">
                     <div className="pile">
+                        <div></div>
                         <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
-                        <div className="pile-draw">
-                        </div>
-                        <div className="pile-discard">
-                            <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
-                        </div>
+                        <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
+                        <div></div>
                     </div>
                     <div className="state">
                         <p>{this.state.state}</p>
