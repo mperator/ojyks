@@ -10,17 +10,38 @@ export default class JoinLobby extends Component {
         super(props);
 
         this.state = {
-            lobbies: []
+            lobbies: [],
+            errorMessage: ""
         }
 
         this.handleMessage = this.handleMessage.bind(this);
+        this.handleClick = this.handleClick.bind(this);
+    }
+
+    handleClick(e, lobbyname) {
+        e.preventDefault();
+
+        this.context.send({ type: 'request', action: 'join-lobby', payload: { user: this.context.username, lobby: lobbyname} });
     }
 
     handleMessage(data) {
-        if (data.type !== 'response' &&
-            data.action !== 'update-lobbies') return;
+        if (data.type !== 'response') return;
 
-        this.setState({ lobbies: data.data.lobbies });
+        switch (data.action) {
+            case 'update-lobbies':
+                this.setState({ lobbies: data.payload.lobbies });
+                break;
+            case 'join-lobby':
+                if(data.state === "success") {
+                    this.props.history.push(`lobby/${data.payload.name}`);
+                } else {
+                    this.setState({ errorMessage: data.errorMessage});
+                }
+
+                break;
+            default:
+                return;
+        }
     }
 
     componentDidMount() {
@@ -37,7 +58,7 @@ export default class JoinLobby extends Component {
         return (
             <div>
                 <h1>Join</h1>
-
+                {this.state.errorMessage && <span className="error">{this.state.errorMessage}</span>}
                 <table>
                     <thead>
                         <tr>
@@ -56,7 +77,7 @@ export default class JoinLobby extends Component {
                                 <td>{l.creator}</td>
                                 <td>{l.users} / {l.slots}</td>
                                 <td>{l.state}</td>
-                                <td><button disabled={l.state!=="open"}>Join</button></td>
+                                <td><button disabled={l.state !== "open"} onClick={(e) => this.handleClick(e, l.name)}>Join</button></td>
                             </tr>
                         ))}
                     </tbody>
