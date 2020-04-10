@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom'
 import { UserContext } from '../../context/user-context'
 
 export default class Login extends Component {
+    static contextType = UserContext;
+    
     constructor(props) {
         super(props);
 
@@ -14,8 +16,6 @@ export default class Login extends Component {
         this.handleChange = this.handleChange.bind(this);
         this.handleClick = this.handleClick.bind(this);
     }
-
-    static contextType = UserContext;
 
     handleChange(e) {
         this.setState({ [e.target.name]: e.target.value });
