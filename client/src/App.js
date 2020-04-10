@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import './App.css';
 
 import { BrowserRouter, Route } from 'react-router-dom'
@@ -20,9 +20,48 @@ export default class App extends Component {
       this.setState({ username: username });
     }
 
+    this.registerCallback = (name, callback) => {
+      const callbacks = this.state.callbacks;
+      callbacks[name] = callback;
+
+      this.setState({ callbacks: callbacks });
+    }
+
+    this.unregisterCallback = (name) => {
+      const callbacks = this.state.callbacks;
+      delete callbacks[name];
+
+      this.setState({ callbacks: callbacks });
+    }
+
+    this.send = (message) => {
+      this.ws.send(message);
+    }
+
     this.state = {
-        username: "jürgen",
-        setUsername: this.setUsername
+      username: "jürgen",
+      setUsername: this.setUsername,
+      registerCallback: this.registerCallback,
+      unregisterCallback: this.unregisterCallback,
+      send: this.send,
+      callbacks: {}
+    }
+
+    this.ws = new WebSocket('ws://localhost:8080');
+  }
+
+  componentDidMount() {
+    this.ws.onopen = () => {
+      console.log('connected');
+    }
+
+    this.ws.onmessage = event => {
+      var callbacks = this.state.callbacks;
+
+      // distribute message to all registered callback functions.
+      for(const name in callbacks) {
+        callbacks[name](event.data)
+      }
     }
   }
 
