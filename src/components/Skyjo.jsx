@@ -37,13 +37,10 @@ export default class Skyjo extends Component {
 
     // execution
     executeTurn(info) { // -> info about click on discard, click on draw or on any board
-        console.log(info);
-
         switch (this.state.state) {
             case "init":
                 if (info.source !== "board") return;
                 // user has to select two cards draw and discard are deactivated
-                console.log(this.state.boardCards)
 
                 const card = this.state.boardCards[info.cell];
                 if (!card.faceDown) return;
@@ -52,7 +49,6 @@ export default class Skyjo extends Component {
                 cards[info.cell].faceDown = false;
 
                 const count = cards.filter(card => !card.faceDown).length;
-                console.log(count)
                 const state = count === 2 ? "play" : "init";
 
                 this.setState({
@@ -89,15 +85,12 @@ export default class Skyjo extends Component {
                         })
                         break;
 
-
-
                     case "discard":
                         if (this.state.discardPile.length === 0) return;
 
                         this.setState({ state: "discard" });
                         break;
                 }
-
 
                 break;
 
@@ -106,9 +99,6 @@ export default class Skyjo extends Component {
                 // if card is discard user has to open a card
                 const drawPile = this.state.drawPile;
                 const drawCard = drawPile.splice(0, 1)[0];
-
-                console.log(drawPile)
-                console.log(drawCard)
 
                 switch (info.source) {
                     case "board":
