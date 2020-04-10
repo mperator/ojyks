@@ -39,7 +39,6 @@ export default class Ojyks extends Component {
 
     // execution
     executeTurn(info) { // -> info about click on discard, click on draw or on any board
-        console.log(info)
         switch (this.state.state) {
             case "init":
                 if (info.source !== "board") return;
@@ -122,7 +121,6 @@ export default class Ojyks extends Component {
                 // if card is discard user has to open a card
                 const drawPile = this.state.drawPile;
                 const drawCard = drawPile.splice(0, 1)[0];
-                console.log(drawCard)
 
                 switch (info.source) {
                     case "board":
@@ -217,18 +215,6 @@ export default class Ojyks extends Component {
 
         }
 
-        // { source: '', card: value, id, boardplace id}
-
-        // card.source -> deck, pile, disc
-
-        // remove cards if multiple in a row
-
-        // all that are not null
-
-        // 0 1  2  3
-        // 4 5  6  7
-        // 8 9 10 11
-
         const boardCards = this.state.boardCards;
         if (boardCards[0] && boardCards[0].value === boardCards[4].value && boardCards[0].value === boardCards[8].value) {
             boardCards[0] = null;
@@ -259,16 +245,12 @@ export default class Ojyks extends Component {
             // TODO add to discard pile
         }
 
-        // TODO add 
-
         this.setState({ boardCards: boardCards })
 
         // check for game end
         const cardsNotNull = this.state.boardCards.filter(c => c !== null);
-        // console.log(cardsNotNull)
 
         const cardsOpened = cardsNotNull.filter(c => !c.faceDown);
-        // console.log(cardsNotNull)
 
         if (cardsOpened.length === cardsNotNull.length) {
             this.setState({
