@@ -38,13 +38,19 @@ export default class App extends Component {
       this.ws.send(JSON.stringify(data));
     }
 
+    this.addMessage = (msg) => {
+      this.setState(state => ({ chat: [msg, ...state.chat] }));
+    }
+    
     this.state = {
       username: '',
       setUsername: this.setUsername,
       registerCallback: this.registerCallback,
       unregisterCallback: this.unregisterCallback,
       send: this.send,
-      callbacks: {}
+      callbacks: {},
+      chat: [],
+      addMessage: this.addMessage
     }
 
     this.ws = new WebSocket('ws://localhost:8080');

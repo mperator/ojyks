@@ -128,6 +128,17 @@ wss.on('connection', (ws) => {
                 // user requests an update of the lobby data
                 send(ws, { type: 'response', action: 'update-lobby', payload: { lobby: getLobby(data.payload.lobbyname)}})
             } break;
+            case 'message-lobby': {
+                const results = lobbies.filter(l => l.name === data.payload.lobby);
+                if(results.length === 0) {
+                    return; // error
+                } 
+
+                const lobby = results[0];
+                var usersWs = lobby.users.map(u => u.ws);
+                broadcastTest(usersWs, { type: 'response', action: 'message-lobby', payload: data.payload })
+
+            } break;
         }
 
 

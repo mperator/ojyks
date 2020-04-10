@@ -19,19 +19,41 @@ export default class Lobby extends Component {
                 // slots: 0,
                 // state: '',
                 // users: []
-            }
+            },
+            message: ''
         }
 
         this.handleMessage = this.handleMessage.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.handleSend = this.handleSend.bind(this);
+    }
+
+    handleChange(e) {
+        this.setState({ [e.target.name] : e.target.value });
+    }
+
+    handleSend(e) {
+        e.preventDefault();
+        const message = { user: this.context.username, lobby: this.props.match.params.name, message: this.state.message };
+        this.context.send({ type: 'request', action: 'message-lobby', payload: message });
+        this.context.addMessage(message);
+
+        this.setState({ message: ""});
     }
 
     handleMessage(data) {
-        if (data.type !== 'response' ||
-            data.action !== 'update-lobby') return;
+        if (data.type !== 'response') return;
+        
+        switch(data.action) {
+            case 'update-lobby': {
+                console.log("lobby update", data);
+                this.setState({ lobby: data.payload.lobby });
+            } break;
 
-        console.log("lobby update", data);
-
-        this.setState({ lobby: data.payload.lobby });
+            case 'message-lobby': {
+                this.context.addMessage(data.payload)
+            } break;
+        }
     }
 
     componentDidMount() {
@@ -73,6 +95,20 @@ Users in Lobby
                         </ul>
                     </div>
                 </Fragment>}
+
+                <div>
+                    <div>
+                        <label htmlFor="message">Nachricht</label>
+                        <input type="text" name="message" id="message" value={this.state.message} onChange={this.handleChange} />
+                        <button onClick={this.handleSend}>Senden</button>
+                    </div>
+
+                    <ul>
+                        {this.context.chat.map((m, i) => (
+                            <li key={i}>{m.user}: {m.message}</li>
+                        ))}
+                    </ul>
+                </div>
 
 
             </div>
