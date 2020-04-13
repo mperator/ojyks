@@ -10,7 +10,7 @@ export default class CreateLobby extends Component {
         super(props);
 
         this.state = {
-            roomname: "",
+            lobby: "",
             errorMessage: ""
         }
 
@@ -20,12 +20,20 @@ export default class CreateLobby extends Component {
     }
 
     handleChange(e) {
-        this.setState({ [e.target.name]: e.target.value });
+        this.setState({ 
+            [e.target.name]: e.target.value,
+            errorMessage: ""
+        });
     }
 
     handleClick(e) {
         e.preventDefault();
-        this.context.send({ user: this.context.username, lobby: this.state.roomname, action: 'create-lobby' });
+
+        if(this.state.lobby) {
+            this.context.send({ user: this.context.username, lobby: this.state.lobby, action: 'create-lobby' });
+        } else {
+            this.setState({ errorMessage: "Fehler: Kein Lobby-Name angegeben..."})
+        }
     }
 
     handleMessage(data) {
@@ -35,7 +43,7 @@ export default class CreateLobby extends Component {
         if (data.state === 'success') {
             this.props.history.push(`/lobby/${data.lobby}`);
         } else {
-            this.setState({ errorMessage: data.errorMessage });
+            this.setState({ errorMessage: "Fehler: " + data.errorMessage });
         }
     }
 
@@ -49,22 +57,33 @@ export default class CreateLobby extends Component {
 
     render() {
         // TODO router guard
-        if(!this.context.username) return (<Redirect to="/" />);
+        if (!this.context.username) return (<Redirect to="/" />);
 
         return (
-            <div>
-                <h1>Willkommen, {this.context.username}</h1>
-                <p>Bitte vergieb einen Namen für deine Lobby. Andere Spieler können in die Lobby beitreten wenn diese erstellt wurde.</p>
+            <div className="lobby-create container">
+                <div className="row">
+                    <div className="col s12">
+                        <h1>Lobby erstellen</h1>
+                        <p className="flow-text">
+                            Bitte leg einen Namen für deine Lobby fest. Die Lobby ist nach dem
+                            Anlegen für andere Spieler sichtbar, damit diese beitreten können.
+                            Es kann nur eine Lobby mit dem selben Namen gleichzeitig existieren.
+                        </p>
+                    </div>
 
-                <div>
-                    <label htmlFor="roomname">Lobby:</label>
-                    <input type="text" name="roomname" id="roomname" value={this.state.roomname} onChange={this.handleChange} />
-                    {this.state.errorMessage && <span className="error">{this.state.errorMessage}</span>}
+                    <div className="col s12 input-field">
+                        <input type="text" name="lobby" id="lobby" value={this.state.lobby} onChange={this.handleChange} />
+                        <label htmlFor="lobby">Name:</label>
+                    </div>
+
+                    <div className="col s12">
+                        <button className="btn right ml5" onClick={this.handleClick}>erstellen...</button>
+                    </div>
+
+                    <div className="col s12 left red-text">
+                        {this.state.errorMessage && <p>{this.state.errorMessage}</p>}
+                    </div>                    
                 </div>
-
-                <button onClick={this.handleClick}>
-                    {/* <NavLink to="/lobby">create</NavLink> */}
-                </button>
             </div>
         )
     }
