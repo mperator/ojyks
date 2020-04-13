@@ -199,7 +199,7 @@ export default class Ojyks extends Component {
         if (this.state.state === null) return (<div>loading...|{this.state.lobby}|{this.context.username} </div>)
 
         return (
-            <div className="container">
+            <div className="container2">
                 <div className="player">
                     <div className="pile">
                         <div>

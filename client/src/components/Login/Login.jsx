@@ -1,16 +1,16 @@
 import React, { Component } from 'react'
-import { Link } from 'react-router-dom'
 
 import { UserContext } from '../../context/user-context'
 
 export default class Login extends Component {
     static contextType = UserContext;
-    
+
     constructor(props) {
         super(props);
 
         this.state = {
-            username: ""
+            username: "",
+            errorMessage: ""
         }
 
         this.handleChange = this.handleChange.bind(this);
@@ -18,24 +18,58 @@ export default class Login extends Component {
     }
 
     handleChange(e) {
-        this.setState({ [e.target.name]: e.target.value });
+        this.setState({
+            [e.target.name]: e.target.value,
+            errorMessage: ""
+        });
     }
 
     handleClick(e) {
         e.preventDefault();
-        this.context.setUsername(this.state.username);
+
+        if (this.state.username) {
+            this.context.setUsername(this.state.username);
+
+            switch (e.target.name) {
+                case "create":
+                    this.props.history.push("/lobby/create");
+                    break;
+                case "join":
+                    this.props.history.push("/lobby/join");
+                    break;
+                default: return;
+            }
+        } else {
+            this.setState({ errorMessage: "Bitte einen Benutzernamen eintragen." });
+        }
     }
 
     render() {
         return (
-            <div>
-                <h1>Login</h1>
-                <div>
-                    <label htmlFor="username">Username:</label>
-                    <input type="text" name="username" id="username" value={this.state.username} onChange={this.handleChange} />
-                </div>
-                <button onClick={this.handleClick}><Link to="/lobby/create/">Lobby öffnen</Link></button>
-                <button onClick={this.handleClick}><Link to="/lobby/join">Lobby beitreten</Link></button>
+            <div className="login container">
+                <div className="row">
+                    <div className="col s12">
+                        <h1>Login</h1>
+                        <p className="flow-text">
+                            Geb einen Namen ein um in eine Lobby beizutreten oder eine Lobby zu erstellen.
+                        </p>
+                    </div>
+
+                    <div className="input-field col s12">
+                        <input type="text" name="username" id="username" value={this.state.username} onChange={this.handleChange} />
+                        <label htmlFor="username">Benutzername:</label>
+                    </div>
+
+                    <div className="input-field col s12">
+                        <button className="btn right ml5" name="create" onClick={this.handleClick}>erstellen...</button>
+
+                        <button className="btn right ml5" name="join" onClick={this.handleClick}>beitreten...</button>
+                    </div>
+
+                    <div className="col s12 left red-text">
+                        {this.state.errorMessage ? <p>{this.state.errorMessage}</p> : null}
+                    </div>
+                </div>               
             </div>
         )
     }
