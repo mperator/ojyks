@@ -9,6 +9,7 @@ import DiscardPile from './DiscardPile';
 import { UserContext } from '../context/user-context'
 
 import './Ojyks.css'
+import data from './ojyks-mock'
 
 export default class Ojyks extends Component {
     static contextType = UserContext
@@ -16,7 +17,12 @@ export default class Ojyks extends Component {
     constructor(props) {
         super(props);
 
+        console.log(data)
+
         this.state = {
+            players: [],
+
+
             drawPile: [],
             boardCards: [],
             discardPile: [],
@@ -28,6 +34,8 @@ export default class Ojyks extends Component {
 
             currentPlayerCards: []
         }
+
+
 
         this.executeTurn = this.executeTurn.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
@@ -42,7 +50,7 @@ export default class Ojyks extends Component {
                 console.log("game state", data);
 
                 const player = payload.players.find(p => p.name === this.context.username);
-
+                const others = payload.players.filter(p => p.name !== this.context.username);
                 //const currentPlayer = payload.players.find(p => p.name === payload.currentPlayer);
 
                 this.setState({
@@ -52,6 +60,7 @@ export default class Ojyks extends Component {
                     boardCards: player.cards,
                     state: player.state,
 
+                    players: others
                     //currentPlayerCards: currentPlayer.cards
                 });
 
@@ -62,6 +71,18 @@ export default class Ojyks extends Component {
             } break;
         }
     }
+
+    // componentDidMount() {
+    //     this.setState({
+    //         drawPile: data.drawPile,
+    //         boardCards: data.boardCards,
+    //         discardPile: data.discardPile,
+
+    //         state: data.state,
+
+    //         players: data.players
+    //     })
+    // }
 
     componentDidMount() {
         if (!this.context.username) return;
@@ -146,52 +167,7 @@ export default class Ojyks extends Component {
             case "ready":
             default:
                 return;
-
         }
-
-        // const boardCards = this.state.boardCards;
-        // if (boardCards[0] && boardCards[0].value === boardCards[4].value && boardCards[0].value === boardCards[8].value) {
-        //     boardCards[0] = null;
-        //     boardCards[4] = null;
-        //     boardCards[8] = null;
-
-        //     // TODO add to discard pile
-        // }
-        // if (boardCards[1] && boardCards[1].value === boardCards[5].value && boardCards[1].value === boardCards[9].value) {
-        //     boardCards[1] = null;
-        //     boardCards[5] = null;
-        //     boardCards[9] = null;
-
-        //     // TODO add to discard pile
-        // }
-        // if (boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value) {
-        //     boardCards[2] = null;
-        //     boardCards[6] = null;
-        //     boardCards[10] = null;
-
-        //     // TODO add to discard pile
-        // }
-        // if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[3].value === boardCards[11].value) {
-        //     boardCards[3] = null;
-        //     boardCards[7] = null;
-        //     boardCards[11] = null;
-
-        //     // TODO add to discard pile
-        // }
-
-        // this.setState({ boardCards: boardCards })
-
-        // check for game end
-        // const cardsNotNull = this.state.boardCards.filter(c => c !== null);
-
-        // const cardsOpened = cardsNotNull.filter(c => !c.faceDown);
-
-        // if (cardsOpened.length === cardsNotNull.length) {
-        //     // this.setState({
-        //     //     state: "end",
-        //     //     instruction: "Spiel beendet, drücke F5 oder lade die Seite neu..."
-        //     // })
-        // }
     }
 
     render() {
@@ -199,6 +175,7 @@ export default class Ojyks extends Component {
         if (this.state.state === null) return (<div>loading...|{this.state.lobby}|{this.context.username} </div>)
 
         return (
+
             <div className="container2">
                 <div className="player">
                     <div className="pile">
@@ -216,9 +193,16 @@ export default class Ojyks extends Component {
                         {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}
                     </div>
                 </div>
-                <div className="room">room</div>
+                <div className="room">
+                    {this.state.players && this.state.players.map(p => (
+                        <div>
+                            <div><Board cards={p.cards} /></div>
+                            <p>{p.name}</p>
+                        </div>
+                    ))}
+                </div>
                 <div className="chat">chat
-                
+
                 </div>
             </div>
         )
