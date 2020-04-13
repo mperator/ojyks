@@ -16,8 +16,6 @@ const deckRules = [
     { value: 12, count: 10 }
 ];
 
-// TODO: Bug last turn skips 
-
 module.exports = class Ojyks {
     constructor(playerNames) {
         console.log(playerNames)
@@ -116,15 +114,20 @@ module.exports = class Ojyks {
     }
 
     completeTurn() {
-        // TODO check for game end.
+        const count = this.players.filter(p => p.state === "end").length;
 
         var player = this.players.find(p => p.name === this.currentPlayer);
-        player.state = 'ready';
+        if (count > 0) {
+            player.state = "end"
+        } else {
+            player.state = 'ready';
+        }
 
         this.nextPlayer();
 
         var player = this.players.find(p => p.name === this.currentPlayer);
-        player.state = 'play';
+        if (player.state === "ready")
+            player.state = 'play';
     }
 
     getCardFromDrawPile() {
@@ -137,25 +140,29 @@ module.exports = class Ojyks {
     }
 
     cleanUpBoard(boardCards) {
-        if (boardCards[0] && boardCards[0].value === boardCards[4].value && boardCards[0].value === boardCards[8].value) {
+        if (boardCards[0] && boardCards[0].value === boardCards[4].value && boardCards[0].value === boardCards[8].value &&
+            !boardCards[0].faceDown && !boardCards[4].faceDown && !boardCards[8].faceDown) {
             this.discardPile = [boardCards[0], boardCards[4], boardCards[8], ...this.discardPile];
             boardCards[0] = null;
             boardCards[4] = null;
             boardCards[8] = null;
         }
-        if (boardCards[1] && boardCards[1].value === boardCards[5].value && boardCards[1].value === boardCards[9].value) {
+        if (boardCards[1] && boardCards[1].value === boardCards[5].value && boardCards[1].value === boardCards[9].value &&
+            !boardCards[1].faceDown && !boardCards[5].faceDown && !boardCards[9].faceDown) {
             this.discardPile = [boardCards[1], boardCards[5], boardCards[9], ...this.discardPile];
             boardCards[1] = null;
             boardCards[5] = null;
             boardCards[9] = null;
         }
-        if (boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value) {
+        if (boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value &&
+            !boardCards[2].faceDown && !boardCards[6].faceDown && !boardCards[10].faceDown) {
             this.discardPile = [boardCards[2], boardCards[6], boardCards[10], ...this.discardPile];
             boardCards[2] = null;
             boardCards[6] = null;
             boardCards[10] = null;
         }
-        if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[11].value === boardCards[11].value) {
+        if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[11].value === boardCards[11].value &&
+            !boardCards[3].faceDown && !boardCards[7].faceDown && !boardCards[11].faceDown) {
             this.discardPile = [boardCards[3], boardCards[7], boardCards[11], ...this.discardPile];
             boardCards[3] = null;
             boardCards[7] = null;
@@ -164,12 +171,6 @@ module.exports = class Ojyks {
     }
 
     detectLastRound(player) {
-        const count = this.players.filter(p => p.state === "end").length;
-        if(count > 0) {
-            player.state = "end"
-            return;
-        }
-
         const cardsNotNull = player.cards.filter(c => c !== null);
         const cardsOpened = cardsNotNull.filter(c => !c.faceDown);
 
@@ -185,12 +186,12 @@ module.exports = class Ojyks {
         const count = this.players.length;
         const countEnd = this.players.filter(p => p.state === "end").length;
 
-        if(count !== countEnd) return;
+        if (count !== countEnd) return;
 
-        for(let player of this.players) {
+        for (let player of this.players) {
             player.state = "score";
             for (const card of player.cards) {
-                if(card) {
+                if (card) {
                     card.faceDown = false;
                 }
             }
