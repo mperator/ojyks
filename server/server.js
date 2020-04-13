@@ -1,4 +1,5 @@
 const WebSocket = require('ws');
+const Ojyks = require('./ojyks')
 
 const wss = new WebSocket.Server({ port: 8080 });
 console.log("Starting server ...");
@@ -39,6 +40,18 @@ wss.on('connection', (ws) => {
             });
         }
 
+        function broadcastToLobby(lobbyName, data) {
+            const lobby = lobbies.find(l => l.name == lobbyName);
+
+            for (const user of lobby.users) {
+                const ws = user.ws;
+
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify(data));
+                }
+            }
+        }
+
         function getLobbies() {
             const tmp = lobbies.map(l => ({
                 name: l.name,
@@ -53,14 +66,15 @@ wss.on('connection', (ws) => {
 
         function getLobby(lobbyname) {
             const results = lobbies.filter(l => l.name === lobbyname);
-            if(results.length === 0) return null;
+            if (results.length === 0) return null;
 
             return results.map(l => ({
                 name: l.name,
                 creator: l.creator,
                 state: l.state,
                 slots: l.slots,
-                users: l.users.map(u => u.name)
+                users: l.users.map(u => u.name),
+                game: null,
             }))[0];
         }
 
@@ -77,7 +91,7 @@ wss.on('connection', (ws) => {
                         creator: data.user,
                         state: 'open',
                         slots: 8,
-                        users: [{ name: data.user, ws: ws}]                        
+                        users: [{ name: data.user, ws: ws }]
                     });
 
                     console.log(`Lobby ${data.lobby} was created by ${data.user}`);
@@ -96,49 +110,61 @@ wss.on('connection', (ws) => {
                 const { payload } = data;
                 // check if lobby is full and lobby is open
                 const results = lobbies.filter(l => l.name === payload.lobby);
-                if(results.length === 0) {
+                if (results.length === 0) {
                     broadcast({ type: 'response', action: 'update-lobbies', payload: { lobbies: getLobbies() } });
-                    send(ws, { type: "response", action: "join-lobby", state: "error", payload: null, errorMessge: "Lobby was not found"})
+                    send(ws, { type: "response", action: "join-lobby", state: "error", payload: null, errorMessge: "Lobby was not found" })
                     return; // error
-                } 
+                }
 
                 const lobby = results[0];
-                if(lobby.state !== "open") {
+                if (lobby.state !== "open") {
                     broadcast({ type: 'response', action: 'update-lobbies', payload: { lobbies: getLobbies() } });
-                    send(ws, { type: "response", action: "join-lobby", state: "error", payload: null, errorMessge: "Lobby was closed"})
+                    send(ws, { type: "response", action: "join-lobby", state: "error", payload: null, errorMessge: "Lobby was closed" })
                     return; // error lobby not open
                 }
-                if(lobby.users.length >= (lobby.slots - 1)) {
+                if (lobby.users.length >= (lobby.slots - 1)) {
                     broadcast({ type: 'response', action: 'update-lobbies', payload: { lobbies: getLobbies() } });
-                    send(ws, { type: "response", action: "join-lobby", state: "error", payload: null, errorMessge: "Lobby is full"})
+                    send(ws, { type: "response", action: "join-lobby", state: "error", payload: null, errorMessge: "Lobby is full" })
                     return; // error lobby full
                 }
 
-                lobby.users.push( { name: payload.user, ws: ws});
+                lobby.users.push({ name: payload.user, ws: ws });
 
-                send(ws, { type: "response", action: "join-lobby", state: "success", payload: { lobby: payload.lobby}})
-                
+                send(ws, { type: "response", action: "join-lobby", state: "success", payload: { lobby: payload.lobby } })
+
                 // inform all about lobby update
                 broadcast({ type: 'response', action: 'update-lobbies', payload: { lobbies: getLobbies() } });
-                
+
                 var usersWs = lobby.users.map(u => u.ws);
-                broadcastTest(usersWs, { type: 'response', action: 'update-lobby', payload: { lobby: getLobby(payload.lobby)}})
+                broadcastTest(usersWs, { type: 'response', action: 'update-lobby', payload: { lobby: getLobby(payload.lobby) } })
             } break; // TODO -> refresh lobby for user that are already in lobby
             case 'update-lobby': {
                 // user requests an update of the lobby data
-                send(ws, { type: 'response', action: 'update-lobby', payload: { lobby: getLobby(data.payload.lobbyname)}})
+                send(ws, { type: 'response', action: 'update-lobby', payload: { lobby: getLobby(data.payload.lobbyname) } })
             } break;
             case 'message-lobby': {
                 const results = lobbies.filter(l => l.name === data.payload.lobby);
-                if(results.length === 0) {
+                if (results.length === 0) {
                     return; // error
-                } 
+                }
 
                 const lobby = results[0];
                 var usersWs = lobby.users.map(u => u.ws);
                 broadcastTest(usersWs, { type: 'response', action: 'message-lobby', payload: data.payload })
 
             } break;
+            case 'start-game': {
+                const { payload } = data;
+                const lobby = lobbies.find(l => l.name === payload.lobby);
+                lobby.state = 'closed'
+
+                console.log("create game for " + lobby.name)
+
+                const playerNames = lobby.users.map(u => u.name);
+                lobby.game = new Ojyks(playerNames);
+
+                broadcastToLobby(lobby.name, { type: 'response', action: 'start-game', payload: { lobby: lobby.name} })
+            }
         }
 
 

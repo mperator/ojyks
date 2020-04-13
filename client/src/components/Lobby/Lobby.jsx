@@ -26,6 +26,8 @@ export default class Lobby extends Component {
         this.handleMessage = this.handleMessage.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleSend = this.handleSend.bind(this);
+
+        this.handleStart = this.handleStart.bind(this);
     }
 
     handleChange(e) {
@@ -53,7 +55,17 @@ export default class Lobby extends Component {
             case 'message-lobby': {
                 this.context.addMessage(data.payload)
             } break;
+
+            case 'start-game': {
+                this.props.history.push(`/game/${data.payload.lobby}`);
+            }
         }
+    }
+
+    handleStart(e) {
+        e.preventDefault();
+
+        this.context.send({ type: 'request', action: 'start-game', payload: { lobby: this.state.lobby.name}})
     }
 
     componentDidMount() {
@@ -84,7 +96,7 @@ export default class Lobby extends Component {
                         <p>{this.state.lobby.name}</p>
                         <p>{this.state.lobby.creator}</p>
                         {this.state.lobby.creator === this.context.username &&
-                            <button>start</button>
+                            <button onClick={this.handleStart}>start</button>
                         }
 
 Users in Lobby
