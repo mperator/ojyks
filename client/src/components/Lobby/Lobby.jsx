@@ -31,7 +31,7 @@ export default class Lobby extends Component {
     }
 
     handleChange(e) {
-        this.setState({ [e.target.name] : e.target.value });
+        this.setState({ [e.target.name]: e.target.value });
     }
 
     handleSend(e) {
@@ -40,13 +40,13 @@ export default class Lobby extends Component {
         this.context.send({ type: 'request', action: 'message-lobby', payload: message });
         this.context.addMessage(message);
 
-        this.setState({ message: ""});
+        this.setState({ message: "" });
     }
 
     handleMessage(data) {
         if (data.type !== 'response') return;
-        
-        switch(data.action) {
+
+        switch (data.action) {
             case 'update-lobby': {
                 console.log("lobby update", data);
                 this.setState({ lobby: data.payload.lobby });
@@ -65,7 +65,7 @@ export default class Lobby extends Component {
     handleStart(e) {
         e.preventDefault();
 
-        this.context.send({ type: 'request', action: 'start-game', payload: { lobby: this.state.lobby.name}})
+        this.context.send({ type: 'request', action: 'start-game', payload: { lobby: this.state.lobby.name } })
     }
 
     componentDidMount() {
@@ -82,47 +82,43 @@ export default class Lobby extends Component {
 
     render() {
         // TODO router guard
-        if(!this.context.username) return (<Redirect to="/" />);
+        if (!this.context.username) return (<Redirect to="/" />);
 
         return (
-            <div>
-                <h1>Lobby</h1>
-                {this.context.username}
+            <div className="lobby container">
+                <div className="row">
+                    <div className="col s12">
+                        <h1>{this.state.lobby.name}</h1>
+                    </div>
 
-                Lobby name: {this.props.match.params.name}
-
-                {this.state.lobby && <Fragment>
-                    <div>
-                        <p>{this.state.lobby.name}</p>
-                        <p>{this.state.lobby.creator}</p>
+                    <div className="col m6 s12">
                         {this.state.lobby.creator === this.context.username &&
-                            <button onClick={this.handleStart}>start</button>
+                            <button className="btn" onClick={this.handleStart}>starten...</button>
                         }
+                        <h5>Benutzer in Lobby</h5>
+                        {this.state.lobby &&
+                            <ul>
+                                {this.state.lobby.users && this.state.lobby.users.map((u, i) => (
+                                    <li className="" key={i}>{u}</li>
+                                ))}
+                            </ul>}
+                    </div>
 
-Users in Lobby
-                <ul>
-                            {this.state.lobby.users && this.state.lobby.users.map((u, i) => (
-                                <li key={i}>{u}</li>
+                    <div className="col m6 s12">
+                        <div className="input-field">
+                            <input type="text" name="message" id="message" value={this.state.message} onChange={this.handleChange} />
+                            <label htmlFor="message">Nachricht:</label>
+                            <button className="btn" onClick={this.handleSend}>Senden</button>
+                        </div>
+
+                        <ul>
+                            {this.context.chat.map((m, i) => (
+                                <li key={i}>{m.user}: {m.message}</li>
                             ))}
                         </ul>
                     </div>
-                </Fragment>}
 
-                <div>
-                    <div>
-                        <label htmlFor="message">Nachricht</label>
-                        <input type="text" name="message" id="message" value={this.state.message} onChange={this.handleChange} />
-                        <button onClick={this.handleSend}>Senden</button>
-                    </div>
-
-                    <ul>
-                        {this.context.chat.map((m, i) => (
-                            <li key={i}>{m.user}: {m.message}</li>
-                        ))}
-                    </ul>
                 </div>
-
-
             </div>
         )
     }
