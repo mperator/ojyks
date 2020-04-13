@@ -16,6 +16,8 @@ const deckRules = [
     { value: 12, count: 10 }
 ];
 
+// TODO: Bug last turn skips 
+
 module.exports = class Ojyks {
     constructor(playerNames) {
         console.log(playerNames)
@@ -153,7 +155,7 @@ module.exports = class Ojyks {
             boardCards[6] = null;
             boardCards[10] = null;
         }
-        if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[3].value === boardCards[11].value) {
+        if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[11].value === boardCards[11].value) {
             this.discardPile = [boardCards[3], boardCards[7], boardCards[11], ...this.discardPile];
             boardCards[3] = null;
             boardCards[7] = null;
