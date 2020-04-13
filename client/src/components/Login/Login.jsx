@@ -40,7 +40,7 @@ export default class Login extends Component {
                 default: return;
             }
         } else {
-            this.setState({ errorMessage: "Bitte einen Benutzernamen eintragen." });
+            this.setState({ errorMessage: "Fehler: Kein Benutzername angegeben..." });
         }
     }
 
