@@ -82,7 +82,7 @@ export default class App extends Component {
               <Route exact path="/lobby/create" component={CreateLobby} />
               <Route exact path="/lobby/join" component={JoinLobby} />
               <Route exact path="/lobby/:name" component={Lobby} />
-              <Route path="/game" component={Ojyks} />
+              <Route path="/game/:name" component={Ojyks} />
             </Switch>
           </BrowserRouter>
         </UserContext.Provider>

@@ -103,7 +103,7 @@ module.exports = class Ojyks {
         const count = this.players.length;
 
         const player = this.players.find(p => p.name === this.currentPlayer)
-        if(player) {
+        if (player) {
             const index = this.players.indexOf(player);
             const nextIndex = (index + 1) % count;
 
@@ -113,8 +113,32 @@ module.exports = class Ojyks {
         return this.currentPlayer;
     }
 
+    completeTurn() {
+        // TODO check for game end.
+
+        var player = this.players.find(p => p.name === this.currentPlayer);
+        player.state = 'ready';
+
+        this.nextPlayer();
+
+        var player = this.players.find(p => p.name === this.currentPlayer);
+        player.state = 'play';
+    }
+
+    getCardFromDrawPile() {
+        if (this.drawPile.length === 0) {
+            // TODO Shuffle cards from discard and add them to this
+            return;
+        }
+
+        return this.drawPile[0];
+    }
+
     turn(playerName, source, cardIndex) {
+        console.log(playerName, source, cardIndex);
+
         const player = this.players.find(p => p.name === playerName);
+        if (!player) return;
 
         // validate cardIndex depending on source
         if (source === "board" && cardIndex < 0 || cardIndex >= 12) return;
@@ -143,6 +167,102 @@ module.exports = class Ojyks {
                 // enable ready player
                 this.findAndSetBeginningPlayer();
                 break;
+
+            case 'play':
+                switch (source) {
+                    case 'board': {
+                        const card = player.cards[cardIndex];
+                        if (!card) return;
+                        if (!card.faceDown) return;
+
+                        // turn card
+                        card.faceDown = false;
+
+                        this.completeTurn();
+                    } break;
+                    case 'draw': {
+                        const card = this.getCardFromDrawPile();
+                        if (!card) return;
+
+                        card.faceDown = false;
+                        player.state = "draw";
+
+                    } break;
+                    case 'discard':
+                        if (this.discardPile.length > 0) {
+                            player.state = "discard";
+                        }
+                        break;
+                }
+
+                break;
+
+            case 'draw':
+                switch (source) {
+                    case 'board': {
+                        // swap with card from board
+                        const boardCard = player.cards[cardIndex];
+                        boardCard.faceDown = false;
+
+                        this.discardPile = [boardCard, ...this.discardPile];
+
+                        const drawCard = this.drawPile.splice(0, 1)[0];
+                        player.cards[cardIndex] = drawCard;
+
+                        this.completeTurn();
+                    } break;
+                    case 'draw':
+                        break;
+                    case 'discard':
+                        const drawCard = this.drawPile.splice(0, 1)[0];
+                        this.discardPile = [drawCard, ...this.discardPile]
+
+                        player.state = "draw.open";
+                        break;
+                }
+                break;
+
+            case 'draw.open':
+                switch (source) {
+                    case 'board': {
+                        // open card on board
+                        const boardCard = player.cards[cardIndex];
+                        if (!boardCard.faceDown) return;
+
+                        boardCard.faceDown = false;
+
+                        this.completeTurn();
+                    } break;
+                    case 'draw':
+                        break;
+                    case 'discard':
+                        break;
+                }
+                break;
+
+            case 'discard':
+                switch (source) {
+                    case 'board': {
+                        // swap with card from board
+                        const boardCard = player.cards[cardIndex];
+                        boardCard.faceDown = false;
+                        
+                        const discardCard = this.discardPile.splice(0, 1)[0];
+                        player.cards[cardIndex] = discardCard;
+                        
+                        this.discardPile = [boardCard, ...this.discardPile];
+                        this.completeTurn();
+                    } break;
+                    case 'draw':
+                        break;
+                    case 'discard':
+                        break;
+                }
+                break;
+
+            case "ready":
+            default:
+                return;
         }
     }
 
@@ -150,7 +270,7 @@ module.exports = class Ojyks {
     // get player with highest open cards.
     findAndSetBeginningPlayer() {
         const playerInitCount = this.players.filter(p => p.state === "init").length;
-        if(playerInitCount > 0) return;
+        if (playerInitCount > 0) return;
 
         let beginner = "";
         let beginnerSum = -99;
@@ -158,10 +278,10 @@ module.exports = class Ojyks {
         // find player with highest score
         for (const player of this.players) {
             const playerSum = player.cards.filter(c => !c.faceDown)
-                                            .map(c => c.value)
-                                            .reduce((a, b) => a + b);
+                .map(c => c.value)
+                .reduce((a, b) => a + b);
 
-            if(playerSum > beginnerSum) {
+            if (playerSum > beginnerSum) {
                 beginner = player.name;
                 beginnerSum = playerSum;
             }

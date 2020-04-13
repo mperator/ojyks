@@ -78,6 +78,17 @@ wss.on('connection', (ws) => {
             }))[0];
         }
 
+        function getCurrentGameState(game) {
+            return {
+                // drawPileCount: game.drawPile.length,
+                // drawPileTopCard: null,
+                drawPile: game.drawPile,
+                discardPile: game.discardPile,
+                players: game.players,
+                currentPlayer: game.currentPlayer
+            }
+        }
+
         switch (data.action) {
             case 'create-lobby': {
                 // check if lobby already exists
@@ -164,6 +175,24 @@ wss.on('connection', (ws) => {
                 lobby.game = new Ojyks(playerNames);
 
                 broadcastToLobby(lobby.name, { type: 'response', action: 'start-game', payload: { lobby: lobby.name} })
+            }
+            case 'game-state': {
+                const { payload } = data;
+                const lobby = lobbies.find(l => l.name === payload.lobby);
+
+                send(ws, { type: 'response', action: 'game-state', payload: getCurrentGameState(lobby.game) })
+            }
+            case 'game-turn': {
+                const { payload } = data;
+
+                console.log(data)
+
+                const lobby = lobbies.find(l => l.name === payload.lobby);
+                const game = lobby.game;
+
+                game.turn(payload.user, payload.source, payload.cardIndex);
+
+                broadcastToLobby(lobby.name, { type: 'response', action: 'game-state', payload: getCurrentGameState(lobby.game) });               
             }
         }
 
