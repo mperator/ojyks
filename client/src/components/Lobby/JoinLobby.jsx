@@ -37,9 +37,8 @@ export default class JoinLobby extends Component {
                     console.log("join-lobby", data)
                     this.props.history.push(`/lobby/${data.payload.lobby}`);
                 } else {
-                    this.setState({ errorMessage: data.errorMessage });
+                    this.setState({ errorMessage: "Fehler: " + data.errorMessage });
                 }
-
                 break;
             default:
                 return;
@@ -63,32 +62,45 @@ export default class JoinLobby extends Component {
         if (!this.context.username) return (<Redirect to="/" />);
 
         return (
-            <div>
-                <h1>Join</h1>
-                {this.state.errorMessage && <span className="error">{this.state.errorMessage}</span>}
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Ersteller</th>
-                            <th>Spieler</th>
-                            <th>Status</th>
-                            <th>Beitreten</th>
-                        </tr>
-                    </thead>
+            <div className="lobby-join container">
+                <div className="row">
+                    <div className="col s12">
+                        <h1>Lobby beitreten</h1>
+                        <p className="flow-text">
+                            Trete einer Lobby bei.
+                        </p>
+                    </div>
 
-                    <tbody>
-                        {this.state.lobbies && this.state.lobbies.map(l => (
-                            <tr key={l.name}>
-                                <td>{l.name}</td>
-                                <td>{l.creator}</td>
-                                <td>{l.users} / {l.slots}</td>
-                                <td>{l.state}</td>
-                                <td><button disabled={l.state !== "open"} onClick={(e) => this.handleClick(e, l.name)}>Join</button></td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                    <div className="col s12">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Ersteller</th>
+                                    <th>Spieler</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {this.state.lobbies && this.state.lobbies.map(l => (
+                                    <tr key={l.name}>
+                                        <td>{l.name}</td>
+                                        <td>{l.creator}</td>
+                                        <td>{l.users} / {l.slots}</td>
+                                        <td>{l.state}</td>
+                                        <td><button className="btn" disabled={l.state !== "open"} onClick={(e) => this.handleClick(e, l.name)}>beitreten...</button></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div className="col s12 left text-red">
+                    {this.state.errorMessage ? <p>{this.state.errorMessage}</p> : null}
+                </div>
             </div>
         )
     }
