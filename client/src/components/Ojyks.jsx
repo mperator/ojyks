@@ -149,49 +149,49 @@ export default class Ojyks extends Component {
 
         }
 
-        const boardCards = this.state.boardCards;
-        if (boardCards[0] && boardCards[0].value === boardCards[4].value && boardCards[0].value === boardCards[8].value) {
-            boardCards[0] = null;
-            boardCards[4] = null;
-            boardCards[8] = null;
+        // const boardCards = this.state.boardCards;
+        // if (boardCards[0] && boardCards[0].value === boardCards[4].value && boardCards[0].value === boardCards[8].value) {
+        //     boardCards[0] = null;
+        //     boardCards[4] = null;
+        //     boardCards[8] = null;
 
-            // TODO add to discard pile
-        }
-        if (boardCards[1] && boardCards[1].value === boardCards[5].value && boardCards[1].value === boardCards[9].value) {
-            boardCards[1] = null;
-            boardCards[5] = null;
-            boardCards[9] = null;
+        //     // TODO add to discard pile
+        // }
+        // if (boardCards[1] && boardCards[1].value === boardCards[5].value && boardCards[1].value === boardCards[9].value) {
+        //     boardCards[1] = null;
+        //     boardCards[5] = null;
+        //     boardCards[9] = null;
 
-            // TODO add to discard pile
-        }
-        if (boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value) {
-            boardCards[2] = null;
-            boardCards[6] = null;
-            boardCards[10] = null;
+        //     // TODO add to discard pile
+        // }
+        // if (boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value) {
+        //     boardCards[2] = null;
+        //     boardCards[6] = null;
+        //     boardCards[10] = null;
 
-            // TODO add to discard pile
-        }
-        if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[3].value === boardCards[11].value) {
-            boardCards[3] = null;
-            boardCards[7] = null;
-            boardCards[11] = null;
+        //     // TODO add to discard pile
+        // }
+        // if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[3].value === boardCards[11].value) {
+        //     boardCards[3] = null;
+        //     boardCards[7] = null;
+        //     boardCards[11] = null;
 
-            // TODO add to discard pile
-        }
+        //     // TODO add to discard pile
+        // }
 
         // this.setState({ boardCards: boardCards })
 
         // check for game end
-        const cardsNotNull = this.state.boardCards.filter(c => c !== null);
+        // const cardsNotNull = this.state.boardCards.filter(c => c !== null);
 
-        const cardsOpened = cardsNotNull.filter(c => !c.faceDown);
+        // const cardsOpened = cardsNotNull.filter(c => !c.faceDown);
 
-        if (cardsOpened.length === cardsNotNull.length) {
-            // this.setState({
-            //     state: "end",
-            //     instruction: "Spiel beendet, drücke F5 oder lade die Seite neu..."
-            // })
-        }
+        // if (cardsOpened.length === cardsNotNull.length) {
+        //     // this.setState({
+        //     //     state: "end",
+        //     //     instruction: "Spiel beendet, drücke F5 oder lade die Seite neu..."
+        //     // })
+        // }
     }
 
     render() {

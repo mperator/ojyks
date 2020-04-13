@@ -134,6 +134,67 @@ module.exports = class Ojyks {
         return this.drawPile[0];
     }
 
+    cleanUpBoard(boardCards) {
+        if (boardCards[0] && boardCards[0].value === boardCards[4].value && boardCards[0].value === boardCards[8].value) {
+            this.discardPile = [boardCards[0], boardCards[4], boardCards[8], ...this.discardPile];
+            boardCards[0] = null;
+            boardCards[4] = null;
+            boardCards[8] = null;
+        }
+        if (boardCards[1] && boardCards[1].value === boardCards[5].value && boardCards[1].value === boardCards[9].value) {
+            this.discardPile = [boardCards[1], boardCards[5], boardCards[9], ...this.discardPile];
+            boardCards[1] = null;
+            boardCards[5] = null;
+            boardCards[9] = null;
+        }
+        if (boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value) {
+            this.discardPile = [boardCards[2], boardCards[6], boardCards[10], ...this.discardPile];
+            boardCards[2] = null;
+            boardCards[6] = null;
+            boardCards[10] = null;
+        }
+        if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[3].value === boardCards[11].value) {
+            this.discardPile = [boardCards[3], boardCards[7], boardCards[11], ...this.discardPile];
+            boardCards[3] = null;
+            boardCards[7] = null;
+            boardCards[11] = null;
+        }
+    }
+
+    detectLastRound(player) {
+        const count = this.players.filter(p => p.state === "end").length;
+        if(count > 0) {
+            player.state = "end"
+            return;
+        }
+
+        const cardsNotNull = player.cards.filter(c => c !== null);
+        const cardsOpened = cardsNotNull.filter(c => !c.faceDown);
+
+        if (cardsOpened.length === cardsNotNull.length) {
+            player.state = "end";
+        }
+    }
+
+    detectGameEnd() {
+        // if all player have state end then open all cards
+        // also enable score state
+
+        const count = this.players.length;
+        const countEnd = this.players.filter(p => p.state === "end").length;
+
+        if(count !== countEnd) return;
+
+        for(let player of this.players) {
+            player.state = "score";
+            for (const card of player.cards) {
+                if(card) {
+                    card.faceDown = false;
+                }
+            }
+        }
+    }
+
     turn(playerName, source, cardIndex) {
         console.log(playerName, source, cardIndex);
 
@@ -246,10 +307,10 @@ module.exports = class Ojyks {
                         // swap with card from board
                         const boardCard = player.cards[cardIndex];
                         boardCard.faceDown = false;
-                        
+
                         const discardCard = this.discardPile.splice(0, 1)[0];
                         player.cards[cardIndex] = discardCard;
-                        
+
                         this.discardPile = [boardCard, ...this.discardPile];
                         this.completeTurn();
                     } break;
@@ -264,6 +325,14 @@ module.exports = class Ojyks {
             default:
                 return;
         }
+
+        // remove cards if three in one column
+        this.cleanUpBoard(player.cards);
+
+        // check for last round
+        this.detectLastRound(player);
+
+        this.detectGameEnd();
     }
 
     // check if all players are ready
