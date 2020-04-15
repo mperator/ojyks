@@ -53,7 +53,7 @@ export default class App extends Component {
       addMessage: this.addMessage
     }
 
-    this.ws = new WebSocket('ws://localhost:8080');
+    this.ws = new WebSocket('ws://0.0.0.0:64182');
   }
 
   componentDidMount() {

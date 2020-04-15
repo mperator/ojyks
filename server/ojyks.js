@@ -18,8 +18,6 @@ const deckRules = [
 
 module.exports = class Ojyks {
     constructor(playerNames) {
-        console.log(playerNames)
-
         this.players = [];
         this.drawPile = [];
         this.discardPile = [];
@@ -30,7 +28,8 @@ module.exports = class Ojyks {
                 name: name,
                 online: true,
                 cards: [],  // this is an list of 12 objects,
-                state: "init"
+                state: "init",
+                score: 0
             });
         }
 

@@ -25,10 +25,6 @@
     grid-template-rows: 1fr 1fr;
 } 
 
-.room div {
-    
-}
-
 .chat { 
     background:lightgreen; 
     grid-column:2; 
