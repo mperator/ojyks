@@ -19,6 +19,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
+        
+    - name: Build site assets
+      working-directory: ${{ github.workspace }}
+      run: ls -la
 
     - name: npm install, build, and test
       run: |
