@@ -77,6 +77,7 @@ wss.on('connection', (ws) => {
                 slots: l.slots,
                 users: l.users.map(u => u.name),
                 game: null,
+                scores: []
             }))[0];
         }
 
@@ -104,7 +105,9 @@ wss.on('connection', (ws) => {
                         creator: data.user,
                         state: 'open',
                         slots: 8,
-                        users: [{ name: data.user, ws: ws }]
+                        users: [{ name: data.user, ws: ws }],
+                        game: null,
+                        scores: []
                     });
 
                     console.log(`Lobby ${data.lobby} was created by ${data.user}`);
@@ -194,7 +197,15 @@ wss.on('connection', (ws) => {
 
                 game.turn(payload.user, payload.source, payload.cardIndex);
 
-                broadcastToLobby(lobby.name, { type: 'response', action: 'game-state', payload: getCurrentGameState(lobby.game) });               
+                // game end -> score board
+                const scoreBoard = game.getScoreBoard();
+                if(scoreBoard) {
+                    // set score board to lobby
+
+                    lobby.scores = [...lobby.scores, scoreBoard];
+                }
+
+                broadcastToLobby(lobby.name, { type: 'response', action: 'game-state', payload: getCurrentGameState(lobby.game) });
             }
         }
 

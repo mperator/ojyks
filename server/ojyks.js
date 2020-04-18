@@ -203,6 +203,29 @@ module.exports = class Ojyks {
         }
     }
 
+    getScoreBoard() {
+        // check if all player have score 
+        const count = this.players.length;
+        const countScore = this.players.filter(p => p.state === "score").length;
+
+        if (count !== countScore) return null;
+
+        this.players.map(p => ({
+            player: p.name,
+            score: this.getScore(p)
+        }));
+    }
+
+    getScore(player) {
+        let score = 0;
+
+        for(const card of player.cards) {
+            if(card) {
+                score += card.value;
+            }
+        }
+    }
+
     turn(playerName, source, cardIndex) {
         console.log(playerName, source, cardIndex);
 
