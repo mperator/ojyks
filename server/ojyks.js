@@ -131,7 +131,13 @@ module.exports = class Ojyks {
 
     getCardFromDrawPile() {
         if (this.drawPile.length === 0) {
-            // TODO Shuffle cards from discard and add them to this
+            // Shuffle cards from discard and add them to this
+            const pile = this.discardPile;
+
+            const firstCard = pile.splice(0, 1);
+            this.discardPile = [firstCard];
+
+            this.drawPile = this.shuffle(pile);
             return;
         }
 

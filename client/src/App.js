@@ -53,6 +53,7 @@ export default class App extends Component {
       addMessage: this.addMessage
     }
 
+    // this.ws = new WebSocket('wss://ojyks-server.azurewebsites.net');
     this.ws = new WebSocket('ws://localhost:3001');
   }
 
