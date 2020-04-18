@@ -1,7 +1,9 @@
 const WebSocket = require('ws');
 const Ojyks = require('./ojyks')
 
-const wss = new WebSocket.Server({ port: 64182 });
+const port = process.env.PORT || 3001;
+
+const wss = new WebSocket.Server({ port: port });
 console.log("Starting server ...");
 
 // const lobby = {
