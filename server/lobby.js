@@ -1,6 +1,7 @@
 const Ojyks = require('./ojyks')
-/* Manager lobbies, create, delete
-*/
+/* Contains lobby logic, manage lobbys, creation, auto cleanup
+ * connections, connection loss and reconnections to lobby.
+ * */
 
 const lobbies = [];
 
