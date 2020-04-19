@@ -37,4 +37,4 @@ jobs:
         app-name: 'ojyks-server'
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_8d1607f2d93b451b982085b1e3476471 }}
-        package: .
+        publish_dir: ./server
