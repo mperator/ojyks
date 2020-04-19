@@ -15,7 +15,21 @@ console.log("Starting server ...");
 
 const lobbies = [];
 
+function test() {
+    console.log("asdasd");
+}
+
 wss.on('connection', (ws) => {
+    ws.on('open', (message) => {
+        console.log('open', message);
+    });
+
+    ws.on('close', (message) => {
+        console.log('close', message);
+
+        test(); // get name by ws set user to offline when in game else disconnect from lobby
+    });
+
     ws.on('message', (message) => {
         console.log(message);
         var data = JSON.parse(message);
