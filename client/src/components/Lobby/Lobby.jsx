@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react'
+import React, { Component } from 'react'
 import { Redirect } from 'react-router-dom'
 import { UserContext } from '../../context/user-context'
 
@@ -58,7 +58,10 @@ export default class Lobby extends Component {
 
             case 'start-game': {
                 this.props.history.push(`/game/${data.payload.lobby}`);
-            }
+            } break;
+
+            default:
+                return;
         }
     }
 

@@ -17,7 +17,7 @@ export default class Card extends Component {
         } else {
             if (card.value < 0) {
                 return "card-violet";
-            } else if (card.value == 0) {
+            } else if (card.value === 0) {
                 return "card-blue";
             } else if (card.value < 5) {
                 return "card-green";

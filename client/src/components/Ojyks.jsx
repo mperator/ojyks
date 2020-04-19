@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { Redirect } from 'react-router-dom'
 
-import createDeck, { cardTypes } from './gamelogic'
 import Board from './Board';
 import DrawPile from './DrawPile'
 import DiscardPile from './DiscardPile';
@@ -69,6 +68,9 @@ export default class Ojyks extends Component {
             case 'message-lobby': {
                 this.context.addMessage(data.payload)
             } break;
+
+            default:
+                return;
         }
     }
 
