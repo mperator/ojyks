@@ -175,7 +175,7 @@ export default class Ojyks extends Component {
     render() {
         if (!this.context.username) return (<Redirect to="/" />)
         if (this.state.state === null) return (<div>loading...|{this.state.lobby}|{this.context.username} </div>)
-        console.log(this.state);
+
         return (
 
             <div className="container2">
