@@ -18,31 +18,55 @@ function handleDisconnect(sender) {
 }
 
 function handleMessage(sender, data) {
-    switch (data.action) {
-        case 'create-lobby': {
-            // check if lobby already exists
-            const exists = lobbies.filter(l => l.name === data.lobby).length;
-
-            if (exists) {
-                sender.send(JSON.stringify({ type: 'response', action: 'create-lobby', state: 'error', errorMessage: `Lobby with name ${data.lobby} already exists, please use other name.`, user: data.user }))
+    const { action, payload } = data;
+    switch (action) {
+        case 'lobby-create':
+            const lobby = lobbies && lobbies.find(l => l.name === payload.lobby);
+            
+            if (lobby) {
+                sendDirectResponse(sender, {
+                    type: 'response',
+                    action: 'lobby-create',
+                    state: 'error',
+                    errorMessage: `Lobby with name ${payload.lobby} already exists, please use other name`,
+                    payload: null
+                })
             } else {
-                lobbies.push({
-                    name: data.lobby,
-                    creator: data.user,
+                const lobbyName = payload.lobby;
+                const playerName = payload.player.name;
+
+                // create new lobby if not exists.
+                const newLobby = {
+                    name: lobbyName,
+                    creator: playerName,
                     state: 'open',
                     slots: 8,
-                    users: [{ name: data.user, ws: sender }],
-                    game: null,
-                    scores: []
+                    players: [{ name: playerName, ws: sender, scores: [] }],
+                    game: null
+                };
+                lobbies.push(newLobby);
+
+                console.log(`Lobby ${lobbyName} was created by ${playerName}`);
+
+                // respond to creator
+                sendDirectResponse(sender, {
+                    type: 'response',
+                    action: 'lobby-create',
+                    state: 'success',
+                    payload: { lobby: newLobby }
                 });
 
-                console.log(`Lobby ${data.lobby} was created by ${data.user}`);
-
-                sender.send(JSON.stringify({ type: 'response', action: 'create-lobby', state: 'success', user: data.user, lobby: data.lobby }))
-                broadcast(sender, { type: 'response', action: 'update-lobbies', payload: { lobbies: getLobbies() } });
-                // TODO send all other information about lobby
+                // broadcast to all
+                broadcast(sender, {
+                    type: 'response',
+                    action: 'lobby-overview',
+                    payload: {
+                        lobbies: getLobbyOverview()
+                    }
+                });
             }
-        } break; // TODO send lobby update for all that are on lobby page
+
+            break; 
         case 'update-lobbies': {
             // returns all lobbies
             send(sender, { type: 'response', action: 'update-lobbies', payload: { lobbies: getLobbies() } });
@@ -63,13 +87,13 @@ function handleMessage(sender, data) {
                 send(sender, { type: "response", action: "join-lobby", state: "error", payload: null, errorMessge: "Lobby was closed" })
                 return; // error lobby not open
             }
-            if (lobby.users.length >= (lobby.slots - 1)) {
+            if (lobby.players.length >= (lobby.slots - 1)) {
                 broadcast(sender, { type: 'response', action: 'update-lobbies', payload: { lobbies: getLobbies() } });
                 send(sender, { type: "response", action: "join-lobby", state: "error", payload: null, errorMessge: "Lobby is full" })
                 return; // error lobby full
             }
 
-            lobby.users.push({ name: payload.user, ws: sender });
+            lobby.players.push({ name: payload.user, ws: sender });
 
             send(sender, { type: "response", action: "join-lobby", state: "success", payload: { lobby: payload.lobby } })
 
@@ -102,7 +126,7 @@ function handleMessage(sender, data) {
 
             console.log("create game for " + lobby.name)
 
-            const playerNames = lobby.users.map(u => u.name);
+            const playerNames = lobby.players.map(u => u.name);
             lobby.game = new Ojyks(playerNames);
 
             broadcastToLobby(null, lobby.name, { type: 'response', action: 'start-game', payload: { lobby: lobby.name } })
@@ -144,7 +168,21 @@ module.exports = {
     handleMessage
 }
 
+// send message to client.
+function sendDirectResponse(client, data) {
+    client.send(JSON.stringify(data));
+}
 
+// get dto for lobbies
+function getLobbyOverview() {
+    return lobbies.map(l => ({
+        name: l.name,
+        creator: l.creator,
+        state: l.state,
+        slots: 8,
+        playerCount: l.players.length
+    }));
+}
 
 function send(sender, data) {
     sender.send(JSON.stringify(data));
@@ -174,7 +212,7 @@ function broadcastTest(sender, clients, data) {
 function broadcastToLobby(sender, lobbyName, data) {
     const lobby = lobbies.find(l => l.name == lobbyName);
 
-    const clients = lobby.users.map(u => u.ws);
+    const clients = lobby.players.map(u => u.ws);
     this.sendToHandler(sender, clients, data);
 
     // for (const user of lobby.users) {
@@ -186,17 +224,19 @@ function broadcastToLobby(sender, lobbyName, data) {
     // }
 }
 
+
 function getLobbies() {
     const tmp = lobbies.map(l => ({
         name: l.name,
         creator: l.creator,
         state: l.state,
         slots: 8,
-        users: l.users.length
+        users: l.players.length
     }));
 
     return tmp;
 }
+
 
 function getLobby(lobbyname) {
     const results = lobbies.filter(l => l.name === lobbyname);
@@ -207,7 +247,7 @@ function getLobby(lobbyname) {
         creator: l.creator,
         state: l.state,
         slots: l.slots,
-        users: l.users.map(u => u.name),
+        users: l.players.map(u => u.name),
         game: null,
         scores: []
     }))[0];

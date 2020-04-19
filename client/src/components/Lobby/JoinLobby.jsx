@@ -26,18 +26,20 @@ export default class JoinLobby extends Component {
     }
 
     handleMessage(data) {
-        if (data.type !== 'response') return;
+        const { type, action, state, payload, errorMessage } = data;
 
-        switch (data.action) {
+        if (type !== 'response') return;
+        switch (action) {
+            case 'lobby-overiew':
             case 'update-lobbies':
-                this.setState({ lobbies: data.payload.lobbies });
+                this.setState({ lobbies: payload.lobbies });
                 break;
             case 'join-lobby':
-                if (data.state === "success") {
+                if (state === "success") {
                     console.log("join-lobby", data)
-                    this.props.history.push(`/lobby/${data.payload.lobby}`);
+                    this.props.history.push(`/lobby/${payload.lobby}`);
                 } else {
-                    this.setState({ errorMessage: "Fehler: " + data.errorMessage });
+                    this.setState({ errorMessage: "Fehler: " + errorMessage });
                 }
                 break;
             default:
