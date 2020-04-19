@@ -45,7 +45,6 @@
 .state {
     grid-row: 2;
     padding: 0px 15px;
-    color: white;
 }
 
 .game {
@@ -54,12 +53,4 @@
     height: 100%;
     align-self: center;
     justify-self: center;
-}
-
-.pile-draw {
-    display: inline-block;
-}
-
-.pile-discard  {
-    display: inline-block;
 }
