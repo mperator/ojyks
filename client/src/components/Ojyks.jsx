@@ -4,6 +4,7 @@ import { Redirect } from 'react-router-dom'
 import Board from './Board';
 import DrawPile from './DrawPile'
 import DiscardPile from './DiscardPile';
+import StateDisplay from './StateDisplay';
 
 import { UserContext } from '../context/user-context'
 
@@ -180,15 +181,13 @@ export default class Ojyks extends Component {
             <div className="container2">
                 <div className="player">
                     <div className="pile">
-                        <div>
-                            <p>{this.state.state}</p>
-                        </div>
+                        <div></div>
                         <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
                         <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
                         <div></div>
                     </div>
                     <div className="state">
-                        <p>{this.state.instruction}</p>
+                        <StateDisplay state={this.state} />
                     </div>
                     <div className="game">
                         {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}
