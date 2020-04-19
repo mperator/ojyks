@@ -30,8 +30,7 @@ export default class JoinLobby extends Component {
 
         if (type !== 'response') return;
         switch (action) {
-            case 'lobby-overiew':
-            case 'update-lobbies':
+            case 'lobby-overview':
                 this.setState({ lobbies: payload.lobbies });
                 break;
             case 'join-lobby':
@@ -52,7 +51,7 @@ export default class JoinLobby extends Component {
 
         this.context.registerCallback('joinLobbyMessageHandler', this.handleMessage);
 
-        this.context.send({ type: 'request', action: 'update-lobbies' });
+        this.context.send({ type: 'request', action: 'lobby-overview' });
     }
 
     componentWillUnmount() {
@@ -90,7 +89,7 @@ export default class JoinLobby extends Component {
                                     <tr key={l.name}>
                                         <td>{l.name}</td>
                                         <td>{l.creator}</td>
-                                        <td>{l.users} / {l.slots}</td>
+                                        <td>{l.playerCount} / {l.slots}</td>
                                         <td>{l.state}</td>
                                         <td><button className="btn" disabled={l.state !== "open"} onClick={(e) => this.handleClick(e, l.name)}>beitreten...</button></td>
                                     </tr>
