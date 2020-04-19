@@ -49,7 +49,6 @@ export default class Ojyks extends Component {
                 console.log("game state", data);
 
                 const player = payload.players.find(p => p.name === this.context.username);
-                const others = payload.players.filter(p => p.name !== this.context.username);
                 //const currentPlayer = payload.players.find(p => p.name === payload.currentPlayer);
 
                 this.setState({
@@ -59,7 +58,7 @@ export default class Ojyks extends Component {
                     boardCards: player.cards,
                     state: player.state,
 
-                    players: others
+                    players: payload.players
                     //currentPlayerCards: currentPlayer.cards
                 });
 
