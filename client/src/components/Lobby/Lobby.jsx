@@ -13,13 +13,7 @@ export default class Lobby extends Component {
         super(prop);
 
         this.state = {
-            lobby: {
-                // name: '',
-                // creator: '',
-                // slots: 0,
-                // state: '',
-                // users: []
-            },
+            lobby: null,
             message: ''
         }
 
@@ -47,8 +41,7 @@ export default class Lobby extends Component {
         if (data.type !== 'response') return;
 
         switch (data.action) {
-            case 'update-lobby': {
-                console.log("lobby update", data);
+            case 'lobby-update': {
                 this.setState({ lobby: data.payload.lobby });
             } break;
 
@@ -73,7 +66,7 @@ export default class Lobby extends Component {
 
         this.context.registerCallback('lobbyMessageHandler', this.handleMessage);
 
-        this.context.send({ type: 'request', action: 'update-lobby', payload: { lobbyname: this.props.match.params.name } });
+        this.context.send({ type: 'request', action: 'lobby-update', payload: { lobby: this.props.match.params.name } });
     }
 
     componentWillUnmount() {
@@ -83,6 +76,8 @@ export default class Lobby extends Component {
     render() {
         // TODO router guard
         if (!this.context.username) return (<Redirect to="/" />);
+
+        if(!this.state.lobby) return null;
 
         return (
             <div className="lobby container">
@@ -98,7 +93,7 @@ export default class Lobby extends Component {
                         <h5>Benutzer in Lobby</h5>
                         {this.state.lobby &&
                             <ul>
-                                {this.state.lobby.users && this.state.lobby.users.map((u, i) => (
+                                {this.state.lobby.players && this.state.lobby.players.map((u, i) => (
                                     <li className="" key={i}>{u}</li>
                                 ))}
                             </ul>}

@@ -61,7 +61,6 @@ function handleMessage(sender, data) {
                 // TODO: only need to broadcast to players that are not in lobby yet.
                 broadcast(sender, createResponseLobbyOverview());
             }
-
             break;
         case 'lobby-overview':
             // a player requests the lobby overview data.
@@ -78,7 +77,7 @@ function handleMessage(sender, data) {
                     errorMessage: "Lobby was not found",
                     payload: null
                 });
-            } else if(lobbyToJoin.state !== "open") {
+            } else if (lobbyToJoin.state !== "open") {
                 sendDirectResponse(sender, {
                     type: "response",
                     action: "lobby-join",
@@ -86,7 +85,7 @@ function handleMessage(sender, data) {
                     errorMessage: "Lobby is not open anymore.",
                     payload: null
                 });
-            } else if(lobbyToJoin.players.length >= (lobbyToJoin.slots)) {
+            } else if (lobbyToJoin.players.length >= (lobbyToJoin.slots)) {
                 sendDirectResponse(sender, {
                     type: "response",
                     action: "lobby-join",
@@ -108,18 +107,16 @@ function handleMessage(sender, data) {
                     }
                 });
 
-                // TODO
-                broadcastToLobby(null, lobbyName, { type: 'response', action: 'update-lobby', payload: { lobby: getLobbyDTO(lobbyName) } })
+                broadcastToLobby(null, lobbyName, createResponseLobbyUpdate(lobbyName));
             }
-
             // update lobby overview for all connected players 
             // TODO: only need to broadcast to players that are not in lobby yet.
             broadcast(sender, createResponseLobbyOverview());
             break;
-        case 'update-lobby': {
-            // user requests an update of the lobby data
-            send(sender, { type: 'response', action: 'update-lobby', payload: { lobby: getLobbyDTO(data.payload.lobbyname) } })
-        } break;
+        case 'lobby-update':
+            // user requests an update of a specific lobby
+            sendDirectResponse(sender, createResponseLobbyUpdate(payload.lobby));
+            break;
         case 'message-lobby': {
             // const results = lobbies.filter(l => l.name === data.payload.lobby);
             // if (results.length === 0) {
@@ -131,7 +128,6 @@ function handleMessage(sender, data) {
             const { payload } = data;
             const lobby = lobbies.find(l => l.name === payload.lobby);
             broadcastToLobby(sender, lobby.name, { type: 'response', action: 'message-lobby', payload: data.payload })
-
         } break;
         case 'start-game': {
             const { payload } = data;
@@ -207,6 +203,17 @@ function createResponseLobbyOverview() {
     }
 }
 
+// create lobby update response.
+function createResponseLobbyUpdate(lobbyName) {
+    return {
+        type: 'response',
+        action: 'lobby-update',
+        payload: {
+            lobby: getLobbyDTO(lobbyName)
+        }
+    };
+}
+
 // create lobby dto.
 function getLobbyDTO(lobbyName) {
     const lobby = lobbies.find(l => l.name === lobbyName);
@@ -217,7 +224,7 @@ function getLobbyDTO(lobbyName) {
         creator: lobby.creator,
         state: lobby.state,
         slots: lobby.slots,
-        users: lobby.players.map(u => u.name),
+        players: lobby.players.map(u => u.name),
         game: null,
         scores: []
     };
