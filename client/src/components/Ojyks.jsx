@@ -1,10 +1,10 @@
 import React, { Component } from 'react'
 import { Redirect } from 'react-router-dom'
 
-import createDeck, { cardTypes } from './gamelogic'
 import Board from './Board';
 import DrawPile from './DrawPile'
 import DiscardPile from './DiscardPile';
+import StateDisplay from './StateDisplay';
 
 import { UserContext } from '../context/user-context'
 
@@ -67,7 +67,6 @@ export default class Ojyks extends Component {
                 console.log("game state", data);
 
                 const player = payload.players.find(p => p.name === this.context.username);
-                const others = payload.players.filter(p => p.name !== this.context.username);
                 //const currentPlayer = payload.players.find(p => p.name === payload.currentPlayer);
 
                 this.setState({
@@ -77,7 +76,7 @@ export default class Ojyks extends Component {
                     boardCards: player.cards,
                     state: player.state,
 
-                    players: others
+                    players: payload.players
                     //currentPlayerCards: currentPlayer.cards
                 });
 
@@ -86,6 +85,9 @@ export default class Ojyks extends Component {
             case 'lobby-message':
                 this.context.addMessage(data.payload)
                 break;
+
+            default:
+                return;
         }
     }
 
@@ -184,15 +186,13 @@ export default class Ojyks extends Component {
             <div className="container2">
                 <div className="player">
                     <div className="pile">
-                        <div>
-                            <p>{this.state.state}</p>
-                        </div>
+                        <div></div>
                         <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
                         <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
                         <div></div>
                     </div>
                     <div className="state">
-                        <p>{this.state.instruction}</p>
+                        <StateDisplay state={this.state} />
                     </div>
                     <div className="game">
                         {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}
