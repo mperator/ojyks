@@ -32,20 +32,37 @@ export default class Ojyks extends Component {
 
             lobby: props.match.params.name,
 
-            currentPlayerCards: []
+            currentPlayerCards: [],
+            message: ''
         }
 
 
 
         this.executeTurn = this.executeTurn.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
+        this.handleSend = this.handleSend.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+    }
+
+    handleChange(e) {
+        this.setState({ [e.target.name]: e.target.value });
+    }
+
+
+    handleSend(e) {
+        e.preventDefault();
+        const message = { player: this.context.username, lobby: this.props.match.params.name, message: this.state.message };
+        this.context.send({ type: 'request', action: 'lobby-message', payload: message });
+        this.context.addMessage(message);
+
+        this.setState({ message: "" });
     }
 
     handleMessage(data) {
         if (data.type !== 'response') return;
 
         switch (data.action) {
-            case 'game-state': {
+            case 'game-state':
                 const { payload } = data;
                 console.log("game state", data);
 
@@ -64,25 +81,13 @@ export default class Ojyks extends Component {
                     //currentPlayerCards: currentPlayer.cards
                 });
 
-            } break;
+                break;
 
-            case 'message-lobby': {
+            case 'lobby-message':
                 this.context.addMessage(data.payload)
-            } break;
+                break;
         }
     }
-
-    // componentDidMount() {
-    //     this.setState({
-    //         drawPile: data.drawPile,
-    //         boardCards: data.boardCards,
-    //         discardPile: data.discardPile,
-
-    //         state: data.state,
-
-    //         players: data.players
-    //     })
-    // }
 
     componentDidMount() {
         if (!this.context.username) return;
@@ -201,8 +206,18 @@ export default class Ojyks extends Component {
                         </div>
                     ))}
                 </div>
-                <div className="chat">chat
+                <div className="chat">
+                    <div className="input-field">
+                        <input type="text" name="message" id="message" value={this.state.message} onChange={this.handleChange} />
+                        <label htmlFor="message">Nachricht:</label>
+                        <button className="btn" onClick={this.handleSend}>Senden</button>
+                    </div>
 
+                    <ul>
+                        {this.context.chat.map((m, i) => (
+                            <li key={i}>{m.player}: {m.message}</li>
+                        ))}
+                    </ul>
                 </div>
             </div>
         )
