@@ -117,18 +117,14 @@ function handleMessage(sender, data) {
             // user requests an update of a specific lobby
             sendDirectResponse(sender, createResponseLobbyUpdate(payload.lobby));
             break;
-        case 'message-lobby': {
-            // const results = lobbies.filter(l => l.name === data.payload.lobby);
-            // if (results.length === 0) {
-            //     return; // error
-            // }
+        case 'lobby-message':
+            const lobbyToMessage = lobbies && lobbies.find(l => l.name === payload.lobby);
+            if(!lobbyToMessage) return
+            
+            broadcastToLobby(sender, lobbyToMessage.name, { type: 'response', action: 'lobby-message', payload: payload })
+        break;
 
-            // const lobby = results[0];
-            // var usersWs = lobby.users.map(u => u.ws);
-            const { payload } = data;
-            const lobby = lobbies.find(l => l.name === payload.lobby);
-            broadcastToLobby(sender, lobby.name, { type: 'response', action: 'message-lobby', payload: data.payload })
-        } break;
+        
         case 'start-game': {
             const { payload } = data;
             const lobby = lobbies.find(l => l.name === payload.lobby);

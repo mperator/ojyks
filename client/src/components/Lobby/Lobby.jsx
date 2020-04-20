@@ -30,8 +30,8 @@ export default class Lobby extends Component {
 
     handleSend(e) {
         e.preventDefault();
-        const message = { user: this.context.username, lobby: this.props.match.params.name, message: this.state.message };
-        this.context.send({ type: 'request', action: 'message-lobby', payload: message });
+        const message = { player: this.context.username, lobby: this.props.match.params.name, message: this.state.message };
+        this.context.send({ type: 'request', action: 'lobby-message', payload: message });
         this.context.addMessage(message);
 
         this.setState({ message: "" });
@@ -45,7 +45,7 @@ export default class Lobby extends Component {
                 this.setState({ lobby: data.payload.lobby });
             } break;
 
-            case 'message-lobby': {
+            case 'lobby-message': {
                 this.context.addMessage(data.payload)
             } break;
 
@@ -108,7 +108,7 @@ export default class Lobby extends Component {
 
                         <ul>
                             {this.context.chat.map((m, i) => (
-                                <li key={i}>{m.user}: {m.message}</li>
+                                <li key={i}>{m.player}: {m.message}</li>
                             ))}
                         </ul>
                     </div>
