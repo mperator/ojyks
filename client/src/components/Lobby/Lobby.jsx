@@ -13,13 +13,7 @@ export default class Lobby extends Component {
         super(prop);
 
         this.state = {
-            lobby: {
-                // name: '',
-                // creator: '',
-                // slots: 0,
-                // state: '',
-                // users: []
-            },
+            lobby: null,
             message: ''
         }
 
@@ -36,8 +30,8 @@ export default class Lobby extends Component {
 
     handleSend(e) {
         e.preventDefault();
-        const message = { user: this.context.username, lobby: this.props.match.params.name, message: this.state.message };
-        this.context.send({ type: 'request', action: 'message-lobby', payload: message });
+        const message = { player: this.context.username, lobby: this.props.match.params.name, message: this.state.message };
+        this.context.send({ type: 'request', action: 'lobby-message', payload: message });
         this.context.addMessage(message);
 
         this.setState({ message: "" });
@@ -47,16 +41,15 @@ export default class Lobby extends Component {
         if (data.type !== 'response') return;
 
         switch (data.action) {
-            case 'update-lobby': {
-                console.log("lobby update", data);
+            case 'lobby-update': {
                 this.setState({ lobby: data.payload.lobby });
             } break;
 
-            case 'message-lobby': {
+            case 'lobby-message': {
                 this.context.addMessage(data.payload)
             } break;
 
-            case 'start-game': {
+            case 'game-start': {
                 this.props.history.push(`/game/${data.payload.lobby}`);
             } break;
 
@@ -68,7 +61,7 @@ export default class Lobby extends Component {
     handleStart(e) {
         e.preventDefault();
 
-        this.context.send({ type: 'request', action: 'start-game', payload: { lobby: this.state.lobby.name } })
+        this.context.send({ type: 'request', action: 'game-start', payload: { lobby: this.state.lobby.name } })
     }
 
     componentDidMount() {
@@ -76,7 +69,7 @@ export default class Lobby extends Component {
 
         this.context.registerCallback('lobbyMessageHandler', this.handleMessage);
 
-        this.context.send({ type: 'request', action: 'update-lobby', payload: { lobbyname: this.props.match.params.name } });
+        this.context.send({ type: 'request', action: 'lobby-update', payload: { lobby: this.props.match.params.name } });
     }
 
     componentWillUnmount() {
@@ -86,6 +79,8 @@ export default class Lobby extends Component {
     render() {
         // TODO router guard
         if (!this.context.username) return (<Redirect to="/" />);
+
+        if(!this.state.lobby) return null;
 
         return (
             <div className="lobby container">
@@ -101,7 +96,7 @@ export default class Lobby extends Component {
                         <h5>Benutzer in Lobby</h5>
                         {this.state.lobby &&
                             <ul>
-                                {this.state.lobby.users && this.state.lobby.users.map((u, i) => (
+                                {this.state.lobby.players && this.state.lobby.players.map((u, i) => (
                                     <li className="" key={i}>{u}</li>
                                 ))}
                             </ul>}
@@ -116,7 +111,7 @@ export default class Lobby extends Component {
 
                         <ul>
                             {this.context.chat.map((m, i) => (
-                                <li key={i}>{m.user}: {m.message}</li>
+                                <li key={i}>{m.player}: {m.message}</li>
                             ))}
                         </ul>
                     </div>
