@@ -19,10 +19,19 @@ export default class JoinLobby extends Component {
         this.handleClick = this.handleClick.bind(this);
     }
 
-    handleClick(e, lobbyname) {
+    handleClick(e, lobbyName) {
         e.preventDefault();
 
-        this.context.send({ type: 'request', action: 'join-lobby', payload: { user: this.context.username, lobby: lobbyname } });
+        this.context.send({
+            type: 'request', 
+            action: 'lobby-join',
+            payload: {
+                lobby: lobbyName,
+                player: {
+                    name: this.context.username
+                }
+            }
+        });
     }
 
     handleMessage(data) {
@@ -33,10 +42,10 @@ export default class JoinLobby extends Component {
             case 'lobby-overview':
                 this.setState({ lobbies: payload.lobbies });
                 break;
-            case 'join-lobby':
+            case 'lobby-join':
                 if (state === "success") {
-                    console.log("join-lobby", data)
-                    this.props.history.push(`/lobby/${payload.lobby}`);
+                    console.log("lobby-join", data)
+                    this.props.history.push(`/lobby/${payload.lobby.name}`);
                 } else {
                     this.setState({ errorMessage: "Fehler: " + errorMessage });
                 }
