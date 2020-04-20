@@ -119,37 +119,42 @@ function handleMessage(sender, data) {
             break;
         case 'lobby-message':
             const lobbyToMessage = lobbies && lobbies.find(l => l.name === payload.lobby);
-            if(!lobbyToMessage) return
-            
+            if (!lobbyToMessage) return
+
             broadcastToLobby(sender, lobbyToMessage.name, { type: 'response', action: 'lobby-message', payload: payload })
-        break;
+            break;
 
-        
-        case 'start-game': {
-            const { payload } = data;
-            const lobby = lobbies.find(l => l.name === payload.lobby);
-            lobby.state = 'closed'
+        // messages for game start
+        case 'game-start':
+            // a player requests to start the game
+            const lobbyToStartGame = lobbies.find(l => l.name === payload.lobby);
+            lobbyToStartGame.state = 'closed'
 
-            console.log("create game for " + lobby.name)
+            console.log("create game for " + lobbyToStartGame.name)
 
-            const playerNames = lobby.players.map(u => u.name);
-            lobby.game = new Ojyks(playerNames);
+            const playerNames = lobbyToStartGame.players.map(u => u.name);
+            lobbyToStartGame.game = new Ojyks(playerNames);
 
-            broadcastToLobby(null, lobby.name, { type: 'response', action: 'start-game', payload: { lobby: lobby.name } })
-        }
-        case 'game-state': {
-            const { payload } = data;
-            const lobby = lobbies.find(l => l.name === payload.lobby);
+            broadcastToLobby(null, lobbyToStartGame.name, { 
+                type: 'response', 
+                action: 'game-start', 
+                payload: { lobby: lobbyToStartGame.name } 
+            });
+            break;
 
-            send(sender, { type: 'response', action: 'game-state', payload: getCurrentGameState(lobby.game) })
-        }
+        case 'game-state':
+            // a player requests the current game state
+            const lobbyGameState = lobbies.find(l => l.name === payload.lobby);
+
+            sendDirectResponse(sender, {
+                type: 'response',
+                action: 'game-state',
+                payload: getCurrentGameState(lobbyGameState.game)
+            });
         case 'game-turn': {
-            const { payload } = data;
-
-            console.log(data)
-
-            const lobby = lobbies.find(l => l.name === payload.lobby);
-            const game = lobby.game;
+            // a player executes a game turn.
+            const lobbyGameTurn = lobbies.find(l => l.name === payload.lobby);
+            const game = lobbyGameTurn.game;
 
             game.turn(payload.user, payload.source, payload.cardIndex);
 
@@ -158,10 +163,14 @@ function handleMessage(sender, data) {
             if (scoreBoard) {
                 // set score board to lobby
 
-                lobby.scores = [...lobby.scores, scoreBoard];
+                lobbyGameTurn.scores = [...lobbyGameTurn.scores, scoreBoard];
             }
 
-            broadcastToLobby(null, lobby.name, { type: 'response', action: 'game-state', payload: getCurrentGameState(lobby.game) });
+            broadcastToLobby(null, lobbyGameTurn.name, {
+                type: 'response',
+                action: 'game-state',
+                payload: getCurrentGameState(lobbyGameTurn.game)
+            });
         }
     }
 

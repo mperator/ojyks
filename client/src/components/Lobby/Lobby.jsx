@@ -49,7 +49,7 @@ export default class Lobby extends Component {
                 this.context.addMessage(data.payload)
             } break;
 
-            case 'start-game': {
+            case 'game-start': {
                 this.props.history.push(`/game/${data.payload.lobby}`);
             }
         }
@@ -58,7 +58,7 @@ export default class Lobby extends Component {
     handleStart(e) {
         e.preventDefault();
 
-        this.context.send({ type: 'request', action: 'start-game', payload: { lobby: this.state.lobby.name } })
+        this.context.send({ type: 'request', action: 'game-start', payload: { lobby: this.state.lobby.name } })
     }
 
     componentDidMount() {
