@@ -6,12 +6,12 @@ Card.propTypes = {
     card: PropTypes.object.isRequired,
     cell: PropTypes.number.isRequired,
     source: PropTypes.string.isRequired,
-    handleClick: PropTypes.func.isRequired
+    handleClick: PropTypes.func
 };
 
 export default function Card({card, cell, source, handleClick}) {
     return (
-        <div className="card2" onClick={() => handleClick({ source: source, cell: cell })}>
+        <div className="card2" onClick={() => handleClick && handleClick({ source: source, cell: cell })}>
             <div className={getClassName(card)} >
                 <div className="card-number">
                     {card.faceDown ?
