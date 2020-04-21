@@ -202,7 +202,7 @@ export default class Ojyks extends Component {
                     {this.state.players && this.state.players.map(p => (
                         <div>
                             <div><Board cards={p.cards} small /></div>
-                            <p>{p.name}</p>
+                            <p>{p.name} ({p.online.toString()})</p>
                         </div>
                     ))}
                 </div>

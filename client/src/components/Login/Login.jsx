@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 
 import { UserContext } from '../../context/user-context'
+import { Redirect } from 'react-router-dom';
 
 export default class Login extends Component {
     static contextType = UserContext;
@@ -29,22 +30,20 @@ export default class Login extends Component {
 
         if (this.state.username) {
             this.context.setUsername(this.state.username);
-
-            switch (e.target.name) {
-                case "create":
-                    this.props.history.push("/lobby/create");
-                    break;
-                case "join":
-                    this.props.history.push("/lobby/join");
-                    break;
-                default: return;
-            }
+            this.props.history.push("/lobby/join");
         } else {
             this.setState({ errorMessage: "Fehler: Kein Benutzername angegeben..." });
         }
     }
 
+    componentDidMount() {
+        this.setState({ username: this.context.username});
+    }
+
     render() {
+        // automatically push to lobby overview if user exists
+        //if (this.context.username) return (<Redirect to="/lobby/join" />);
+
         return (
             <div className="login container">
                 <div className="row">
@@ -54,22 +53,19 @@ export default class Login extends Component {
                             Geb einen Namen ein um in eine Lobby beizutreten oder eine Lobby zu erstellen.
                         </p>
                     </div>
-
                     <div className="input-field col s12">
-                        <input type="text" name="username" id="username" value={this.state.username} onChange={this.handleChange} />
+                        <input type="text" name="username" id="username" value={this.state.username} onChange={this.handleChange} disabled={this.context.uuid}/>
                         <label htmlFor="username">Benutzername:</label>
                     </div>
 
                     <div className="input-field col s12">
-                        <button className="btn right ml5" name="create" onClick={this.handleClick}>erstellen...</button>
-
-                        <button className="btn right ml5" name="join" onClick={this.handleClick}>beitreten...</button>
+                        <button className="btn right ml5" name="login" onClick={this.handleClick}>login</button>
                     </div>
 
                     <div className="col s12 left red-text">
                         {this.state.errorMessage ? <p>{this.state.errorMessage}</p> : null}
                     </div>
-                </div>                
+                </div>
             </div>
         )
     }

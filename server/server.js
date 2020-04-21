@@ -28,7 +28,7 @@ function send(sender, clients, data) {
     if(clients.length === 0) return;
 
     for(const client of clients) {
-        if (client !== sender && client.readyState === WebSocket.OPEN) {
+        if (client && client !== sender && client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify(data));
         }
     }
