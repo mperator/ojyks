@@ -23,7 +23,7 @@ function toReadableText(state) {
         case 'ready':
             const otherPlayer = getActivePlayer(state);
             if (otherPlayer) {
-                return `It is ${otherPlayer.name}\'s turn!`;
+                return `It is ${otherPlayer.name}'s turn!`;
             }
             return 'It is another players turn!';
         case 'end':

@@ -9,7 +9,7 @@ export default function Board(props) {
         <div className="board2">
             {props.cards.map((card, i) => 
                 <div className="board-card-place" key={i}>
-                    {card && <Card card={card} cell={i} handleClick={props.handleClick} source={"board"}/>}
+                    {card && <Card card={card} cell={i} handleClick={props.handleClick} source="board"/>}
                 </div>
             )}
         </div>
