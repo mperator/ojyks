@@ -14,7 +14,20 @@ function registerSendCallback(callback) {
 }
 
 function handleDisconnect(sender) {
-    //this.sendToHandler("disconnect")
+    const lobbiesContainingSender = lobbies && lobbies.filter(f => f.players.find(p => p.ws === sender))
+    for (const lobby of lobbiesContainingSender) {
+        const player = lobby.players.find(p => p.ws === sender);
+        player.ws = null;
+
+        if (lobby.game)
+            lobby.game.setPlayerNetworkState(player.uuid, false);
+
+        broadcastToLobby(null, lobby.name, {
+            type: 'response',
+            action: 'game-state',
+            payload: getCurrentGameState(lobby.game)
+        });
+    }
 }
 
 function handleMessage(sender, data) {
@@ -35,6 +48,7 @@ function handleMessage(sender, data) {
             } else {
                 const lobbyName = payload.lobby;
                 const playerName = payload.player.name;
+                const playerUUID = payload.player.uuid;
 
                 // create new lobby if not exists.
                 const newLobby = {
@@ -42,7 +56,7 @@ function handleMessage(sender, data) {
                     creator: playerName,
                     state: 'open',
                     slots: 8,
-                    players: [{ name: playerName, ws: sender, scores: [] }],
+                    players: [{ name: playerName, uuid: playerUUID, ws: sender, scores: [] }],
                     game: null
                 };
                 lobbies.push(newLobby);
@@ -77,38 +91,48 @@ function handleMessage(sender, data) {
                     errorMessage: "Lobby was not found",
                     payload: null
                 });
-            } else if (lobbyToJoin.state !== "open") {
-                sendDirectResponse(sender, {
-                    type: "response",
-                    action: "lobby-join",
-                    state: "error",
-                    errorMessage: "Lobby is not open anymore.",
-                    payload: null
-                });
-            } else if (lobbyToJoin.players.length >= (lobbyToJoin.slots)) {
-                sendDirectResponse(sender, {
-                    type: "response",
-                    action: "lobby-join",
-                    state: "error",
-                    errorMessage: "Maximum player count reached.",
-                    payload: null
-                });
             } else {
-                lobbyToJoin.players.push({ name: payload.player.name, ws: sender, scores: [] });
+                // if player already exists in lobby replace him and player was marked as offline
 
-                const lobbyName = payload.lobby;
 
-                sendDirectResponse(sender, {
-                    type: "response",
-                    action: "lobby-join",
-                    state: "success",
-                    payload: {
-                        lobby: getLobbyDTO(lobbyName),
-                    }
-                });
+                if (lobbyToJoin.state !== "open") {
+                    sendDirectResponse(sender, {
+                        type: "response",
+                        action: "lobby-join",
+                        state: "error",
+                        errorMessage: "Lobby is not open anymore.",
+                        payload: null
+                    });
+                } else if (lobbyToJoin.players.length >= (lobbyToJoin.slots)) {
+                    sendDirectResponse(sender, {
+                        type: "response",
+                        action: "lobby-join",
+                        state: "error",
+                        errorMessage: "Maximum player count reached.",
+                        payload: null
+                    });
+                } else {
+                    lobbyToJoin.players.push({
+                        name: payload.player.name,
+                        uuid: payload.player.uuid,
+                        ws: sender, scores: []
+                    });
 
-                broadcastToLobby(null, lobbyName, createResponseLobbyUpdate(lobbyName));
+                    const lobbyName = payload.lobby;
+
+                    sendDirectResponse(sender, {
+                        type: "response",
+                        action: "lobby-join",
+                        state: "success",
+                        payload: {
+                            lobby: getLobbyDTO(lobbyName),
+                        }
+                    });
+
+                    broadcastToLobby(null, lobbyName, createResponseLobbyUpdate(lobbyName));
+                }
             }
+
             // update lobby overview for all connected players 
             // TODO: only need to broadcast to players that are not in lobby yet.
             broadcast(sender, createResponseLobbyOverview());
@@ -132,13 +156,13 @@ function handleMessage(sender, data) {
 
             console.log("create game for " + lobbyToStartGame.name)
 
-            const playerNames = lobbyToStartGame.players.map(u => u.name);
+            const playerNames = lobbyToStartGame.players.map(u => ({ name: u.name, uuid: u.uuid }));
             lobbyToStartGame.game = new Ojyks(playerNames);
 
-            broadcastToLobby(null, lobbyToStartGame.name, { 
-                type: 'response', 
-                action: 'game-start', 
-                payload: { lobby: lobbyToStartGame.name } 
+            broadcastToLobby(null, lobbyToStartGame.name, {
+                type: 'response',
+                action: 'game-start',
+                payload: { lobby: lobbyToStartGame.name }
             });
             break;
 
@@ -173,8 +197,6 @@ function handleMessage(sender, data) {
             });
         }
     }
-
-
 }
 
 module.exports = {
@@ -196,7 +218,8 @@ function createResponseLobbyOverview() {
         creator: l.creator,
         state: l.state,
         slots: 8,
-        playerCount: l.players.length
+        players: l.players.map(u => ({ name: u.name, uuid: u.uuid })),
+        playerCount: l.players.length, // obsolete
     }));
 
     return {

@@ -17,15 +17,16 @@ const deckRules = [
 ];
 
 module.exports = class Ojyks {
-    constructor(playerNames) {
+    constructor(initPlayers) {
         this.players = [];
         this.drawPile = [];
         this.discardPile = [];
 
         // initialize players
-        for (const name of playerNames) {
+        for (const { name, uuid } of initPlayers) {
             this.players.push({
                 name: name,
+                uuid: uuid,
                 online: true,
                 cards: [],  // this is an list of 12 objects,
                 state: "init",
@@ -40,16 +41,6 @@ module.exports = class Ojyks {
         this.currentState = "init";
 
         this.gameState = "init"
-
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-
-
     }
 
     // creates cards and add it to the drawPile.
@@ -122,9 +113,13 @@ module.exports = class Ojyks {
             player.state = 'ready';
         }
 
-        this.nextPlayer();
+        var player = null;
+        do {
+            this.nextPlayer();
 
-        var player = this.players.find(p => p.name === this.currentPlayer);
+            player = this.players.find(p => p.name === this.currentPlayer);
+        } while(!player.online)
+        
         if (player.state === "ready")
             player.state = 'play';
     }
@@ -189,9 +184,11 @@ module.exports = class Ojyks {
         // also enable score state
 
         const count = this.players.length;
+        const onlineCount = this.players.filter(p => p.online === true).length;
+
         const countEnd = this.players.filter(p => p.state === "end").length;
 
-        if (count !== countEnd) return;
+        if (countEnd < onlineCount) return;
 
         for (let player of this.players) {
             player.state = "score";
@@ -219,8 +216,8 @@ module.exports = class Ojyks {
     getScore(player) {
         let score = 0;
 
-        for(const card of player.cards) {
-            if(card) {
+        for (const card of player.cards) {
+            if (card) {
                 score += card.value;
             }
         }
@@ -394,4 +391,11 @@ module.exports = class Ojyks {
         this.currentPlayer = player.name;
     }
 
+    setPlayerNetworkState(uuid, isOnline) {
+        const player = this.players.find(p => p.uuid === uuid);
+        player.online = isOnline;
+
+        if(this.currentPlayer === player.name)
+            this.completeTurn();
+    }
 }
