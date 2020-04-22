@@ -9,7 +9,7 @@ import StateDisplay from './StateDisplay';
 import { UserContext } from '../context/user-context'
 
 import './Ojyks.css'
-import data from './ojyks-mock'
+import { data } from './ojyks-mock'
 
 export default class Ojyks extends Component {
     static contextType = UserContext
@@ -36,8 +36,6 @@ export default class Ojyks extends Component {
             message: ''
         }
 
-
-
         this.executeTurn = this.executeTurn.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
         this.handleSend = this.handleSend.bind(this);
@@ -47,7 +45,6 @@ export default class Ojyks extends Component {
     handleChange(e) {
         this.setState({ [e.target.name]: e.target.value });
     }
-
 
     handleSend(e) {
         e.preventDefault();
@@ -92,6 +89,9 @@ export default class Ojyks extends Component {
     }
 
     componentDidMount() {
+        // use this for debug
+        //this.setState(data);
+        
         if (!this.context.username) return;
 
         this.context.registerCallback('gameMessageHandler', this.handleMessage);
@@ -115,7 +115,7 @@ export default class Ojyks extends Component {
                         lobby: this.state.lobby,
                         user: this.context.username,
                         source: info.source,
-                        cardIndex: info.cell
+                        cardIndex: info.cardIndex
                     }
                 })
                 break;
@@ -127,7 +127,7 @@ export default class Ojyks extends Component {
                         lobby: this.state.lobby,
                         user: this.context.username,
                         source: info.source,
-                        cardIndex: info.cell
+                        cardIndex: info.cardIndex
                     }
                 });
                 break;
@@ -140,7 +140,7 @@ export default class Ojyks extends Component {
                         lobby: this.state.lobby,
                         user: this.context.username,
                         source: info.source,
-                        cardIndex: info.cell
+                        cardIndex: info.cardIndex
                     }
                 });
                 break;
@@ -153,7 +153,7 @@ export default class Ojyks extends Component {
                         lobby: this.state.lobby,
                         user: this.context.username,
                         source: info.source,
-                        cardIndex: info.cell
+                        cardIndex: info.cardIndex
                     }
                 });
                 break;
@@ -166,7 +166,7 @@ export default class Ojyks extends Component {
                         lobby: this.state.lobby,
                         user: this.context.username,
                         source: info.source,
-                        cardIndex: info.cell
+                        cardIndex: info.cardIndex
                     }
                 });
                 break;
