@@ -48,6 +48,8 @@ export default class JoinLobby extends Component {
     handleMessage(data) {
         const { type, action, state, payload, errorMessage } = data;
 
+        console.log(data);
+
         if (type !== 'response') return;
         switch (action) {
             case 'lobby-overview':
@@ -57,6 +59,14 @@ export default class JoinLobby extends Component {
                 if (state === "success") {
                     console.log("lobby-join", data)
                     this.props.history.push(`/lobby/${payload.lobby.name}`);
+                } else {
+                    this.setState({ errorMessage: "Fehler: " + errorMessage });
+                }
+                break;
+            case 'game-start':
+                if (state === "success") {
+                    console.log("go to game page", data)
+                    this.props.history.push(`/game/${payload.lobby}`);
                 } else {
                     this.setState({ errorMessage: "Fehler: " + errorMessage });
                 }

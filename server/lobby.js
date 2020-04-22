@@ -19,14 +19,15 @@ function handleDisconnect(sender) {
         const player = lobby.players.find(p => p.ws === sender);
         player.ws = null;
 
-        if (lobby.game)
+        if (lobby.game) {
             lobby.game.setPlayerNetworkState(player.uuid, false);
 
-        broadcastToLobby(null, lobby.name, {
-            type: 'response',
-            action: 'game-state',
-            payload: getCurrentGameState(lobby.game)
-        });
+            broadcastToLobby(null, lobby.name, {
+                type: 'response',
+                action: 'game-state',
+                payload: getCurrentGameState(lobby.game)
+            });
+        }
     }
 }
 
@@ -91,11 +92,41 @@ function handleMessage(sender, data) {
                     errorMessage: "Lobby was not found",
                     payload: null
                 });
-            } else {
-                // if player already exists in lobby replace him and player was marked as offline
+            } else if (lobbyToJoin.state !== "open") {
+                // id player exists in lobby and state is disconnected -> join
+                const player = lobbyToJoin.players.find(p => p.uuid === payload.player.uuid);
+                if (player && !player.ws) {
+                    // player exists but is currently not connected -> reconnect
+                    // TODO This can only happen i game is runninf
+                    player.ws = sender;
 
+                    // if game is runnig also reconnect to game 
+                    if (lobbyToJoin.game) {
+                        console.log("Player reconnected to game")
+                        lobbyToJoin.game.setPlayerNetworkState(player.uuid, true);
 
-                if (lobbyToJoin.state !== "open") {
+                        // go to game
+                        sendDirectResponse(sender, {
+                            type: 'response',
+                            action: 'game-start',
+                            state: 'success',
+                            payload: { lobby: lobbyToJoin.name }
+                        });
+                    } else {
+                        console.log("Player reconnected to lobby")
+
+                        // go to lobby
+                        sendDirectResponse(sender, {
+                            type: "response",
+                            action: "lobby-join",
+                            state: "success",
+                            payload: {
+                                lobby: getLobbyDTO(lobbyToJoin.name),
+                            }
+                        });
+                    }
+                } else {
+                    // player does not exists or exists and is already connected
                     sendDirectResponse(sender, {
                         type: "response",
                         action: "lobby-join",
@@ -103,7 +134,43 @@ function handleMessage(sender, data) {
                         errorMessage: "Lobby is not open anymore.",
                         payload: null
                     });
-                } else if (lobbyToJoin.players.length >= (lobbyToJoin.slots)) {
+                }
+            } else if (lobbyToJoin.players.length >= (lobbyToJoin.slots)) {
+                // id player exists in lobby and state is disconnected -> join
+                // id player exists in lobby and state is disconnected -> join
+                const player = lobbyToJoin.players.find(p => p.uuid === payload.player.uuid);
+                if (player && !player.ws) {
+                    // player exists but is currently not connected -> reconnect
+                    // TODO This can only happen i game is runninf
+                    player.ws = sender;
+
+                    // if game is runnig also reconnect to game 
+                    if (lobbyToJoin.game) {
+                        lobbyToJoin.game.setPlayerNetworkState(player.uuid, true);
+                        console.log("player reconnecte to game")
+
+                        // go to game
+                        sendDirectResponse(sender, {
+                            type: 'response',
+                            action: 'game-start',
+                            state: 'success',
+                            payload: { lobby: lobbyToJoin.name }
+                        });
+                    } else {
+                        console.log("player reconnecte to lobby")
+                        // go to lobby
+                        sendDirectResponse(sender, {
+                            type: "response",
+                            action: "lobby-join",
+                            state: "success",
+                            payload: {
+                                lobby: getLobbyDTO(lobbyToJoin.name),
+                            }
+                        });
+                    }
+                } else {
+                    // does not exist and lobby is full
+                    // or player exists and is already connected
                     sendDirectResponse(sender, {
                         type: "response",
                         action: "lobby-join",
@@ -111,26 +178,43 @@ function handleMessage(sender, data) {
                         errorMessage: "Maximum player count reached.",
                         payload: null
                     });
-                } else {
+                }
+
+            } else {
+                console.log("normal player connection")
+
+                 // id player exists in lobby and state is disconnected -> join
+                 const player = lobbyToJoin.players.find(p => p.uuid === payload.player.uuid);
+                 if (player && !player.ws) {
+                     // player exists but is currently not connected -> reconnect
+                     // TODO This can only happen i game is runninf
+                     player.ws = sender;
+ 
+                    console.log("player reconencted");
+
+                 } else {
+                    console.log("player new connect");
+
                     lobbyToJoin.players.push({
                         name: payload.player.name,
                         uuid: payload.player.uuid,
-                        ws: sender, scores: []
+                        ws: sender, 
+                        scores: []
                     });
+                 }
 
-                    const lobbyName = payload.lobby;
+                const lobbyName = payload.lobby;
 
-                    sendDirectResponse(sender, {
-                        type: "response",
-                        action: "lobby-join",
-                        state: "success",
-                        payload: {
-                            lobby: getLobbyDTO(lobbyName),
-                        }
-                    });
+                sendDirectResponse(sender, {
+                    type: "response",
+                    action: "lobby-join",
+                    state: "success",
+                    payload: {
+                        lobby: getLobbyDTO(lobbyName),
+                    }
+                });
 
-                    broadcastToLobby(null, lobbyName, createResponseLobbyUpdate(lobbyName));
-                }
+                broadcastToLobby(null, lobbyName, createResponseLobbyUpdate(lobbyName));
             }
 
             // update lobby overview for all connected players 
