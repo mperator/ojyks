@@ -159,14 +159,18 @@ module.exports = class Ojyks {
             boardCards[5] = null;
             boardCards[9] = null;
         }
-        if (boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value &&
+        if (boardCards[2] && 
+            boardCards[2].value === boardCards[6].value && 
+            boardCards[2].value === boardCards[10].value &&
             !boardCards[2].faceDown && !boardCards[6].faceDown && !boardCards[10].faceDown) {
             this.discardPile = [boardCards[2], boardCards[6], boardCards[10], ...this.discardPile];
             boardCards[2] = null;
             boardCards[6] = null;
             boardCards[10] = null;
         }
-        if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[11].value === boardCards[11].value &&
+        if (boardCards[3] && 
+            boardCards[3].value === boardCards[7].value && 
+            boardCards[3].value === boardCards[11].value &&
             !boardCards[3].faceDown && !boardCards[7].faceDown && !boardCards[11].faceDown) {
             this.discardPile = [boardCards[3], boardCards[7], boardCards[11], ...this.discardPile];
             boardCards[3] = null;
