@@ -208,7 +208,18 @@ export default class Ojyks extends Component {
                 </div>
                 <div className="chat">
                     <div className="input-field">
-                        <input type="text" name="message" id="message" value={this.state.message} onChange={this.handleChange} />
+                        <input 
+                            type="text"
+                            name="message"
+                            id="message"
+                            value={this.state.message}
+                            onChange={this.handleChange}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    this.handleSend(e);
+                                }
+                            }} 
+                        />
                         <label htmlFor="message">Nachricht:</label>
                         <button className="btn" onClick={this.handleSend}>Senden</button>
                     </div>
