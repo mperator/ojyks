@@ -22,7 +22,7 @@ export default class App extends Component {
 
             localStorage.setItem('ojyks-user', username);
 
-            if(!localStorage.getItem('ojyks-uuid'))
+            if (!localStorage.getItem('ojyks-uuid'))
                 localStorage.setItem('ojyks-uuid', uuid());
 
             this.setState({
@@ -54,7 +54,7 @@ export default class App extends Component {
         }
 
         const ws = new WebSocket('ws://localhost:3001');
-        
+
 
         this.state = {
             username: localStorage.getItem('ojyks-user'),
@@ -85,7 +85,15 @@ export default class App extends Component {
 
             console.log('send');
 
-            this.send({ type: "response", action: "reconnect" }) 
+            this.send({
+                type: "response",
+                action: "reconnect",
+                payload: {
+                    player: {
+                        uuid: this.state.uuid
+                    }
+                }
+            });
             // TODO do forward by server useer can reinit from current state
         }
         ws.onmessage = event => {
@@ -98,8 +106,8 @@ export default class App extends Component {
                 callbacks[name](JSON.parse(event.data))
             }
         }
-        
-        this.setState({ ws : ws});
+
+        this.setState({ ws: ws });
     }
 
     componentDidUpdate() {
@@ -117,7 +125,7 @@ export default class App extends Component {
                             <Route exact path="/lobby/create" component={CreateLobby} />
                             <Route exact path="/lobby/join" component={JoinLobby} />
                             <Route exact path="/lobby/:name" component={Lobby} />
-                            <Route path="/game/:name" component={Ojyks} />
+                            <Route exact path="/game/:name" component={Ojyks} />
                         </Switch>
                     </BrowserRouter>
                 </UserContext.Provider>

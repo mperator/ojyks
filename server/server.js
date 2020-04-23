@@ -36,6 +36,7 @@ function send(sender, clients, data) {
 
 // listen to socket and delegate data
 wss.on('connection', (ws) => {
+
     ws.on('close', (message) => {
         // delegate event to lobby
         handleDisconnect(ws, message);

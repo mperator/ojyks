@@ -21,6 +21,7 @@ module.exports = class Ojyks {
         this.players = [];
         this.drawPile = [];
         this.discardPile = [];
+        this.state = "active";
 
         // initialize players
         for (const { name, uuid } of initPlayers) {
@@ -113,15 +114,19 @@ module.exports = class Ojyks {
             player.state = 'ready';
         }
 
-        var player = null;
-        do {
-            this.nextPlayer();
+        // safty mechanism if only on player plays
+        if (this.players.filter(p => p.online).length > 0) {
+            console.log('test#')
+            var player = null;
+            do {
+                this.nextPlayer();
 
-            player = this.players.find(p => p.name === this.currentPlayer);
-        } while(!player.online)
-        
-        if (player.state === "ready")
-            player.state = 'play';
+                player = this.players.find(p => p.name === this.currentPlayer);
+            } while (!player.online)
+
+            if (player.state === "ready")
+                player.state = 'play';
+        };
     }
 
     getCardFromDrawPile() {
@@ -198,6 +203,8 @@ module.exports = class Ojyks {
                 }
             }
         }
+
+        this.state = "score";
     }
 
     getScoreBoard() {
@@ -394,8 +401,23 @@ module.exports = class Ojyks {
     setPlayerNetworkState(uuid, isOnline) {
         const player = this.players.find(p => p.uuid === uuid);
         player.online = isOnline;
+        player.state = "ready";
 
-        if(this.currentPlayer === player.name)
+        console.log(player, this.currentPlayer)
+
+        if (this.currentPlayer === player.name) {
+            const card = this.drawPile.splice(0, 1)[0];
+
+            console.log(card)
+
+            if(card && card.faceDown) {
+                this.drawPile = [card, ...this.drawPile];
+            } else {
+                card.faceDown = false;
+                this.discardPile = [card, ...this.discardPile];
+            }
+
             this.completeTurn();
+        }
     }
 }

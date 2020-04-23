@@ -38,26 +38,27 @@ export default class Lobby extends Component {
     }
 
     handleMessage(data) {
-        if (data.type !== 'response') return;
-
-        switch (data.action) {
-            case 'reconnect': 
-                // this.context.send({ type: 'request', action: 'lobby-update', payload: { lobby: this.props.match.params.name } });
-
-                this.context.send({
-                    type: 'request',
-                    action: 'lobby-join',
-                    payload: {
-                        lobby: data.payload.lobby,
-                        player: {
-                            name: this.context.username,
-                            uuid: this.context.uuid
-                        }
+        const { type, action, payload } = data;
+        if (type !== 'response') return;
+        switch (action) {
+            case 'reconnect':
+                if (payload.lobby) {
+                    if (payload.gameState === 'active') {
+                        this.props.history.push(`/game/${payload.lobby}`);
+                    } else {
+                        this.context.send({
+                            type: 'request',
+                            action: 'lobby-update',
+                            payload: {
+                                lobby: this.props.match.params.name
+                            }
+                        });
                     }
-                });
-
-
-            break;
+                } else {
+                    // no lobby specified player will be redirect to lobby overview
+                    this.props.history.push(`/lobby/join`);
+                }
+                break;
 
             case 'lobby-update': {
                 this.setState({ lobby: data.payload.lobby });
@@ -85,9 +86,9 @@ export default class Lobby extends Component {
     componentDidMount() {
         this.context.registerCallback('lobbyMessageHandler', this.handleMessage);
 
-        if(this.context.ws.readyState === this.context.ws.OPEN) {
+        if (this.context.ws.readyState === this.context.ws.OPEN) {
             console.log("ready ready yet")
-            
+
             this.context.send({ type: 'request', action: 'lobby-update', payload: { lobby: this.props.match.params.name } });
 
             // TODO: test if game is in progress then navigate to game
@@ -105,7 +106,7 @@ export default class Lobby extends Component {
 
     render() {
         // TODO router guard
-        if(!this.state.lobby) return null;
+        if (!this.state.lobby) return null;
 
         return (
             <div className="lobby container">
