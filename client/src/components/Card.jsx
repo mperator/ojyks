@@ -29,6 +29,10 @@ export default class Card extends Component {
         }
     }
 
+    componentDidMount() {
+        console.log("Card mounted")
+    }
+
     render() {
         const { card, cell } = this.props;
         return (

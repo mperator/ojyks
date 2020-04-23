@@ -34,6 +34,19 @@ function handleDisconnect(sender) {
 function handleMessage(sender, data) {
     const { action, payload } = data;
     switch (action) {
+        case 'reconnect':
+            // TODO distinguish bettween lobby and game if refreshing game or lobby page also notify lobbies or game that player is back online  else echo reconnect
+
+            sendDirectResponse(sender, { 
+                type: 'response',
+                action: 'reconnect',
+                state: 'success',
+                payload: null
+            })
+
+
+            break;
+
         case 'lobby-create':
             // a player requests to create a new lobby.
             const lobby = lobbies && lobbies.find(l => l.name === payload.lobby);
