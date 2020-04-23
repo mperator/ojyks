@@ -1,35 +1,9 @@
-/* .board {
-    width: 600px;
-    height: 450px;
-    border: solid 1px #000;
-}
-
-.board div { 
-    box-sizing: border-box;
-    float: left;
-    width: 150px; 
-    height: 150px; 
-    margin: 0;
-    padding: 0;  
-    border: 1px solid #404040; 
-} */
-
 .board2 {
     box-sizing: border-box;
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr;
-    /* gap: 15px;
-    padding: 15px; */
-    /* grid-template-columns: 1fr 1fr 1fr; */
     gap: 2px;
     padding: 2px;
-
     grid-template-rows: 1fr 1fr 1fr;
     height: 100%;
-
-}
-
-.board-card-place {
-    background-color: #244534;
-    border-radius: 5px;
 }

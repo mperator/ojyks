@@ -1,4 +1,4 @@
-const data = {
+export const data = {
     lobby: "testname",
     drawPile: [
         { id: 50, value: -2, faceDown: false },
@@ -173,5 +173,3 @@ const data = {
     }
     ]
 }
-
-export default data;

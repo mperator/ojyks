@@ -1,15 +1,15 @@
 import React, { Component } from 'react'
 import { Redirect } from 'react-router-dom'
 
-import createDeck, { cardTypes } from './gamelogic'
 import Board from './Board';
 import DrawPile from './DrawPile'
 import DiscardPile from './DiscardPile';
+import StateDisplay from './StateDisplay';
 
 import { UserContext } from '../context/user-context'
 
 import './Ojyks.css'
-import data from './ojyks-mock'
+import { data } from './ojyks-mock'
 
 export default class Ojyks extends Component {
     static contextType = UserContext
@@ -32,25 +32,38 @@ export default class Ojyks extends Component {
 
             lobby: props.match.params.name,
 
-            currentPlayerCards: []
+            currentPlayerCards: [],
+            message: ''
         }
-
-
 
         this.executeTurn = this.executeTurn.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
+        this.handleSend = this.handleSend.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+    }
+
+    handleChange(e) {
+        this.setState({ [e.target.name]: e.target.value });
+    }
+
+    handleSend(e) {
+        e.preventDefault();
+        const message = { player: this.context.username, lobby: this.props.match.params.name, message: this.state.message };
+        this.context.send({ type: 'request', action: 'lobby-message', payload: message });
+        this.context.addMessage(message);
+
+        this.setState({ message: "" });
     }
 
     handleMessage(data) {
         if (data.type !== 'response') return;
 
         switch (data.action) {
-            case 'game-state': {
+            case 'game-state':
                 const { payload } = data;
                 console.log("game state", data);
 
                 const player = payload.players.find(p => p.name === this.context.username);
-                const others = payload.players.filter(p => p.name !== this.context.username);
                 //const currentPlayer = payload.players.find(p => p.name === payload.currentPlayer);
 
                 this.setState({
@@ -60,31 +73,25 @@ export default class Ojyks extends Component {
                     boardCards: player.cards,
                     state: player.state,
 
-                    players: others
+                    players: payload.players
                     //currentPlayerCards: currentPlayer.cards
                 });
 
-            } break;
+                break;
 
-            case 'message-lobby': {
+            case 'lobby-message':
                 this.context.addMessage(data.payload)
-            } break;
+                break;
+
+            default:
+                return;
         }
     }
 
-    // componentDidMount() {
-    //     this.setState({
-    //         drawPile: data.drawPile,
-    //         boardCards: data.boardCards,
-    //         discardPile: data.discardPile,
-
-    //         state: data.state,
-
-    //         players: data.players
-    //     })
-    // }
-
     componentDidMount() {
+        // use this for debug
+        //this.setState(data);
+        
         if (!this.context.username) return;
 
         this.context.registerCallback('gameMessageHandler', this.handleMessage);
@@ -108,7 +115,7 @@ export default class Ojyks extends Component {
                         lobby: this.state.lobby,
                         user: this.context.username,
                         source: info.source,
-                        cardIndex: info.cell
+                        cardIndex: info.cardIndex
                     }
                 })
                 break;
@@ -120,7 +127,7 @@ export default class Ojyks extends Component {
                         lobby: this.state.lobby,
                         user: this.context.username,
                         source: info.source,
-                        cardIndex: info.cell
+                        cardIndex: info.cardIndex
                     }
                 });
                 break;
@@ -133,7 +140,7 @@ export default class Ojyks extends Component {
                         lobby: this.state.lobby,
                         user: this.context.username,
                         source: info.source,
-                        cardIndex: info.cell
+                        cardIndex: info.cardIndex
                     }
                 });
                 break;
@@ -146,7 +153,7 @@ export default class Ojyks extends Component {
                         lobby: this.state.lobby,
                         user: this.context.username,
                         source: info.source,
-                        cardIndex: info.cell
+                        cardIndex: info.cardIndex
                     }
                 });
                 break;
@@ -159,7 +166,7 @@ export default class Ojyks extends Component {
                         lobby: this.state.lobby,
                         user: this.context.username,
                         source: info.source,
-                        cardIndex: info.cell
+                        cardIndex: info.cardIndex
                     }
                 });
                 break;
@@ -179,15 +186,13 @@ export default class Ojyks extends Component {
             <div className="container2">
                 <div className="player">
                     <div className="pile">
-                        <div>
-                            <p>{this.state.state}</p>
-                        </div>
+                        <div></div>
                         <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
                         <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
                         <div></div>
                     </div>
                     <div className="state">
-                        <p>{this.state.instruction}</p>
+                        <StateDisplay state={this.state} />
                     </div>
                     <div className="game">
                         {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}
@@ -201,8 +206,18 @@ export default class Ojyks extends Component {
                         </div>
                     ))}
                 </div>
-                <div className="chat">chat
+                <div className="chat">
+                    <div className="input-field">
+                        <input type="text" name="message" id="message" value={this.state.message} onChange={this.handleChange} />
+                        <label htmlFor="message">Nachricht:</label>
+                        <button className="btn" onClick={this.handleSend}>Senden</button>
+                    </div>
 
+                    <ul>
+                        {this.context.chat.map((m, i) => (
+                            <li key={i}>{m.player}: {m.message}</li>
+                        ))}
+                    </ul>
                 </div>
             </div>
         )

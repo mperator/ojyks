@@ -1,47 +1,33 @@
-import React, { Component } from 'react'
-import './Card.css'
-// todo card index
-// is visible 
-// value
-export default class Card extends Component {
-    constructor(props) {
-        super(props);
+import React from 'react';
+import PropTypes from 'prop-types';
+import './Card.css';
 
-        this.getClassName = this.getClassName.bind(this);
-    }
+Card.propTypes = {
+    card: PropTypes.object.isRequired,
+    cardIndex: PropTypes.number.isRequired,
+    source: PropTypes.string.isRequired,
+    handleClick: PropTypes.func
+};
 
-    getClassName() {
-        const { card } = this.props;
-        if (card.faceDown) {
-            return "card-facedown";
-        } else {
-            if (card.value < 0) {
-                return "card-violet";
-            } else if (card.value == 0) {
-                return "card-blue";
-            } else if (card.value < 5) {
-                return "card-green";
-            } else if (card.value < 9) {
-                return "card-yellow";
-            } else {
-                return "card-red";
-            }
-        }
-    }
+export default function Card({card, cardIndex, source, handleClick}) {
+    return (
+        <div class={getCardClassName(card)} onClick={() => handleClick && handleClick({ source, cardIndex })}>
+            <div class='face back' />
+            <div class={getFrontClassName(card)} />
+        </div>
+    );
+}
 
-    render() {
-        const { card, cell } = this.props;
-        return (
-            <div className="card2" onClick={() => this.props.handleClick({ source: this.props.source, cell: cell })}>
-                <div className={this.getClassName()} >
-                    <div className="card-number">
-                        {card.faceDown ?
-                            "" :
-                            card.value
-                        }
-                    </div>
-                </div>
-            </div>
-        )
+function getFrontClassName(card) {
+    if (card.faceDown) {
+        return 'face front';
     }
+    return `face front card${card.value}`;
+}
+
+function getCardClassName(card) {
+    if (card.faceDown) {
+        return 'cardWrapper';
+    }
+    return 'cardWrapper card-flipped';
 }

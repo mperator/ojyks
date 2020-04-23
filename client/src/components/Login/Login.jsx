@@ -69,7 +69,7 @@ export default class Login extends Component {
                     <div className="col s12 left red-text">
                         {this.state.errorMessage ? <p>{this.state.errorMessage}</p> : null}
                     </div>
-                </div>               
+                </div>                
             </div>
         )
     }

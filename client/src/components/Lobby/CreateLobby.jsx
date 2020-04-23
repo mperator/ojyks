@@ -30,20 +30,29 @@ export default class CreateLobby extends Component {
         e.preventDefault();
 
         if(this.state.lobby) {
-            this.context.send({ user: this.context.username, lobby: this.state.lobby, action: 'create-lobby' });
+            this.context.send({
+                type: 'request',
+                action: 'lobby-create',
+                payload: {
+                    lobby: this.state.lobby,
+                    player: {
+                        name: this.context.username
+                    }
+                }
+            });
         } else {
             this.setState({ errorMessage: "Fehler: Kein Lobby-Name angegeben..."})
         }
     }
 
     handleMessage(data) {
-        if (data.type !== 'response' ||
-            data.action !== 'create-lobby') return;
+        const { type, action, state, payload, errorMessage } = data;
+        if (type !== 'response' || action !== 'lobby-create') return;
 
-        if (data.state === 'success') {
-            this.props.history.push(`/lobby/${data.lobby}`);
+        if (state === 'success') {
+            this.props.history.push(`/lobby/${payload.lobby.name}`);
         } else {
-            this.setState({ errorMessage: "Fehler: " + data.errorMessage });
+            this.setState({ errorMessage: "Fehler: " + errorMessage });
         }
     }
 
