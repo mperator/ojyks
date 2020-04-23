@@ -48,10 +48,17 @@ export default class JoinLobby extends Component {
     handleMessage(data) {
         const { type, action, state, payload, errorMessage } = data;
 
-        console.log(data);
+        console.log("message:",  data);
 
         if (type !== 'response') return;
         switch (action) {
+            case 'reconnect':
+                console.log("reconnect")
+                this.context.send({ type: 'request', action: 'lobby-overview' });
+
+
+                break;
+
             case 'lobby-overview':
                 this.setState({ lobbies: payload.lobbies });
                 break;
@@ -77,11 +84,14 @@ export default class JoinLobby extends Component {
     }
 
     componentDidMount() {
-        if (!this.context.username) return;
-
         this.context.registerCallback('joinLobbyMessageHandler', this.handleMessage);
 
-        this.context.send({ type: 'request', action: 'lobby-overview' });
+        if(this.context.ws.readyState === this.context.ws.OPEN) {
+            console.log("ready ready yet")
+            this.context.send({ type: 'request', action: 'lobby-overview' });
+        } else {
+            console.log("is not ready yet")
+        }
     }
 
     componentWillUnmount() {
@@ -126,10 +136,6 @@ export default class JoinLobby extends Component {
 
 
     render() {
-        
-        // TODO router guard
-        if (!this.context.username) return (<Redirect to="/" />);
-
         return (
             <div className="lobby-join container">
                 <div className="row">

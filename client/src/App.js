@@ -53,6 +53,9 @@ export default class App extends Component {
             this.setState(state => ({ chat: [msg, ...state.chat] }));
         }
 
+        const ws = new WebSocket('ws://localhost:3001');
+        
+
         this.state = {
             username: localStorage.getItem('ojyks-user'),
             uuid: localStorage.getItem('ojyks-uuid'),
@@ -62,8 +65,9 @@ export default class App extends Component {
             send: this.send,
             callbacks: {},
             chat: [],
-            ws: new WebSocket('ws://localhost:3001'),
-            addMessage: this.addMessage
+            ws: ws,
+            addMessage: this.addMessage,
+            networkState: ws.CLOSED
         }
 
         // this.ws = new WebSocket('wss://ojyks-server.azurewebsites.net');
@@ -71,27 +75,35 @@ export default class App extends Component {
     }
 
     componentDidMount() {
-        console.log("mounted")
+        console.log("App mounted")
 
-        //const ws = new WebSocket('ws://localhost:3001');
         const ws = this.state.ws;
         ws.onopen = () => {
             console.log('connected');
+
+            this.setState({ networkState: this.state.ws.readyState })
+
+            console.log('send');
+
+            this.send({ type: "response", action: "reconnect" }) 
+            // TODO do forward by server useer can reinit from current state
         }
         ws.onmessage = event => {
             var callbacks = this.state.callbacks;
+
+            console.log('messge main', event.data);
 
             // distribute message to all registered callback functions.
             for (const name in callbacks) {
                 callbacks[name](JSON.parse(event.data))
             }
         }
+        
+        this.setState({ ws : ws});
+    }
 
-        // this.setState({ ws: ws });
-
-        // const username = localStorage.getItem('ojyks-user');
-        // const uuid = localStorage.getItem('ojyks-uuid');
-        // this.setState({ username: username, uuid: uuid });
+    componentDidUpdate() {
+        console.log(this.state)
     }
 
     render() {

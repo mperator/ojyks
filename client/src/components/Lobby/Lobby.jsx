@@ -41,6 +41,24 @@ export default class Lobby extends Component {
         if (data.type !== 'response') return;
 
         switch (data.action) {
+            case 'reconnect': 
+                // this.context.send({ type: 'request', action: 'lobby-update', payload: { lobby: this.props.match.params.name } });
+
+                this.context.send({
+                    type: 'request',
+                    action: 'lobby-join',
+                    payload: {
+                        lobby: data.payload.lobby,
+                        player: {
+                            name: this.context.username,
+                            uuid: this.context.uuid
+                        }
+                    }
+                });
+
+
+            break;
+
             case 'lobby-update': {
                 this.setState({ lobby: data.payload.lobby });
             } break;
@@ -65,11 +83,20 @@ export default class Lobby extends Component {
     }
 
     componentDidMount() {
-        if (!this.context.username) return;
-
         this.context.registerCallback('lobbyMessageHandler', this.handleMessage);
 
-        this.context.send({ type: 'request', action: 'lobby-update', payload: { lobby: this.props.match.params.name } });
+        if(this.context.ws.readyState === this.context.ws.OPEN) {
+            console.log("ready ready yet")
+            
+            this.context.send({ type: 'request', action: 'lobby-update', payload: { lobby: this.props.match.params.name } });
+
+            // TODO: test if game is in progress then navigate to game
+
+        } else {
+            console.log("is not ready yet")
+        }
+
+
     }
 
     componentWillUnmount() {
@@ -78,8 +105,6 @@ export default class Lobby extends Component {
 
     render() {
         // TODO router guard
-        if (!this.context.username) return (<Redirect to="/" />);
-
         if(!this.state.lobby) return null;
 
         return (

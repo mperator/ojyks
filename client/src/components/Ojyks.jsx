@@ -59,6 +59,22 @@ export default class Ojyks extends Component {
         if (data.type !== 'response') return;
 
         switch (data.action) {
+            case 'reconnect':
+                
+                this.context.send({
+                    type: 'request',
+                    action: 'lobby-join',
+                    payload: {
+                        lobby: this.state.lobby,
+                        player: {
+                            name: this.context.username,
+                            uuid: this.context.uuid
+                        }
+                    }
+                });
+
+                break;
+
             case 'game-state':
                 const { payload } = data;
                 console.log("game state", data);
@@ -89,13 +105,22 @@ export default class Ojyks extends Component {
     }
 
     componentDidMount() {
+<<<<<<< HEAD
         // use this for debug
         //this.setState(data);
         
         if (!this.context.username) return;
 
+=======
+>>>>>>> enhanced reconnection handling.
         this.context.registerCallback('gameMessageHandler', this.handleMessage);
-        this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.state.lobby } });
+
+        if(this.context.ws.readyState === this.context.ws.OPEN) {
+            console.log("is not ready yet")
+            this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.props.match.params.name } });
+        } else {
+            console.log("ready")
+        }
     }
 
     componentWillUnmount() {
@@ -178,8 +203,10 @@ export default class Ojyks extends Component {
     }
 
     render() {
-        if (!this.context.username) return (<Redirect to="/" />)
-        if (this.state.state === null) return (<div>loading...|{this.state.lobby}|{this.context.username} </div>)
+        // if (!this.context.username || this.context.ws.readyState !== this.context.ws.OPEN) 
+        //     return (<Redirect to="/" />)
+
+        if (this.state.state === null) return (<div>loading...|{this.state.lobby}|{this.context.username}|{this.context.networkState} </div>)
 
         return (
 
