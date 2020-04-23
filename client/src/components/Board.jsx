@@ -5,7 +5,6 @@ import './Board.css'
 
 export default function Board(props) {
     // click card tu turn, to swap
-    console.log(props.handleClick);
     return (
         <div className="board2">
             {props.cards.map((card, i) => 
