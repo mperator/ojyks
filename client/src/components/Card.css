@@ -1,4 +1,4 @@
-.cardWrapper {
+.card-wrapper {
 	width: 80px;
     height: 120px;
     position: relative;
@@ -6,11 +6,20 @@
 	border: transparent;
 }
 
-.cardWrapper:hover .face {
+.card-wrapper:hover .face {
 	box-shadow: 0 0 16px #000;
 }
 
+.card-wrapper span {
+    color: white;
+    font-size: 42pt;
+    font-weight: bold;
+}
+
 .face {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     box-shadow: 0 0 16px #666;
 	border-radius: 10px;
 	width: 100%;
@@ -22,7 +31,7 @@
 }
 
 .back {
-	background: #999 url(/assets/cards.png) 0 -240px;
+	background: #999 url(/assets/cards.png);
 	z-index: 10;
 }
 
@@ -41,64 +50,24 @@
 	opacity: 0;
 }
 
-.card-2 {
-    background-position: -80px -120px;
+.card-purple {
+    background-position-x: -80px;
 }
 
-.card-1 {
-    background-position: 0 -120px;
+.card-blue {
+    background-position-x: -160px;
 }
 
-.card0 {
-    background-position: 0 0;
+.card-green {
+    background-position-x: -240px;
 }
 
-.card1 {
-    background-position: -80px 0;
+.card-yellow {
+    background-position-x: -320px;
 }
 
-.card2 {
-    background-position: -160px 0;
-}
-
-.card3 {
-    background-position: -240px 0;
-}
-
-.card4 {
-    background-position: -320px 0;
-}
-
-.card5 {
-    background-position: -400px 0;
-}
-
-.card6 {
-    background-position: -480px 0;
-}
-
-.card7 {
-    background-position: -560px 0;
-}
-
-.card8 {
-    background-position: -640px 0;
-}
-
-.card9 {
-    background-position: -720px 0;
-}
-
-.card10 {
-    background-position: -800px 0;
-}
-
-.card11 {
-    background-position: -880px 0;
-}
-
-.card12 {
-    background-position: -960px 0;
+.card-red {
+    background-position-x: -400px;
 }
 
 .card-flipped .back {
