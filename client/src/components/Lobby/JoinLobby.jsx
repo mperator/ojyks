@@ -48,15 +48,19 @@ export default class JoinLobby extends Component {
     handleMessage(data) {
         const { type, action, state, payload, errorMessage } = data;
 
-        console.log("message:",  data);
-
         if (type !== 'response') return;
         switch (action) {
             case 'reconnect':
-                console.log("reconnect")
-                this.context.send({ type: 'request', action: 'lobby-overview' });
-
-
+                if (payload.lobby) {
+                    if (payload.gameState === 'active') {
+                        this.props.history.push(`/game/${payload.lobby}`);
+                    } else {
+                        this.props.history.push(`/lobby/${payload.lobby}`);
+                    }
+                } else {
+                    // if no lobby was specified refresh data on page
+                    this.context.send({ type: 'request', action: 'lobby-overview' });
+                }
                 break;
 
             case 'lobby-overview':
@@ -88,7 +92,18 @@ export default class JoinLobby extends Component {
 
         if(this.context.ws.readyState === this.context.ws.OPEN) {
             console.log("ready ready yet")
-            this.context.send({ type: 'request', action: 'lobby-overview' });
+
+            this.context.send({
+                type: "response",
+                action: "reconnect",
+                payload: {
+                    player: {
+                        uuid: this.context.uuid
+                    }
+                }
+            });
+
+
         } else {
             console.log("is not ready yet")
         }

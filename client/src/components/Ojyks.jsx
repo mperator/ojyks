@@ -56,27 +56,24 @@ export default class Ojyks extends Component {
     }
 
     handleMessage(data) {
-        if (data.type !== 'response') return;
+        const { type, action, payload} = data;
+        if (type !== 'response') return;
 
-        switch (data.action) {
+        switch (action) {
             case 'reconnect':
-                
-                this.context.send({
-                    type: 'request',
-                    action: 'lobby-join',
-                    payload: {
-                        lobby: this.state.lobby,
-                        player: {
-                            name: this.context.username,
-                            uuid: this.context.uuid
-                        }
+                if (payload.lobby) {
+                    if (payload.gameState === 'active') {
+                        this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.props.match.params.name } });
+                    } else {
+                        this.props.history.push(`/lobby/${payload.lobby}`);
                     }
-                });
-
+                } else {
+                    // if no lobby was specified refresh data on page
+                    this.props.history.push(`/lobby/join`);
+                }
                 break;
 
             case 'game-state':
-                const { payload } = data;
                 console.log("game state", data);
 
                 const player = payload.players.find(p => p.name === this.context.username);
@@ -115,7 +112,7 @@ export default class Ojyks extends Component {
 >>>>>>> enhanced reconnection handling.
         this.context.registerCallback('gameMessageHandler', this.handleMessage);
 
-        if(this.context.ws.readyState === this.context.ws.OPEN) {
+        if (this.context.ws.readyState === this.context.ws.OPEN) {
             console.log("is not ready yet")
             this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.props.match.params.name } });
         } else {
