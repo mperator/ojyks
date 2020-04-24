@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import { Redirect } from 'react-router-dom'
 
 import Board from './Board';
 import DrawPile from './DrawPile'
@@ -9,15 +8,13 @@ import StateDisplay from './StateDisplay';
 import { UserContext } from '../context/user-context'
 
 import './Ojyks.css'
-import data from './ojyks-mock'
+// import data from './ojyks-mock'
 
 export default class Ojyks extends Component {
     static contextType = UserContext
 
     constructor(props) {
         super(props);
-
-        console.log(data)
 
         this.state = {
             players: [],
@@ -35,8 +32,6 @@ export default class Ojyks extends Component {
             currentPlayerCards: [],
             message: ''
         }
-
-
 
         this.executeTurn = this.executeTurn.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
@@ -77,10 +72,7 @@ export default class Ojyks extends Component {
                 break;
 
             case 'game-state':
-                console.log("game state", data);
-
                 const player = payload.players.find(p => p.name === this.context.username);
-                //const currentPlayer = payload.players.find(p => p.name === payload.currentPlayer);
 
                 this.setState({
                     drawPile: payload.drawPile,
@@ -90,7 +82,6 @@ export default class Ojyks extends Component {
                     state: player.state,
 
                     players: payload.players
-                    //currentPlayerCards: currentPlayer.cards
                 });
 
                 break;
@@ -108,10 +99,7 @@ export default class Ojyks extends Component {
         this.context.registerCallback('gameMessageHandler', this.handleMessage);
 
         if (this.context.ws.readyState === this.context.ws.OPEN) {
-            console.log("is not ready yet")
             this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.props.match.params.name } });
-        } else {
-            console.log("ready")
         }
     }
 
@@ -195,13 +183,9 @@ export default class Ojyks extends Component {
     }
 
     render() {
-        // if (!this.context.username || this.context.ws.readyState !== this.context.ws.OPEN) 
-        //     return (<Redirect to="/" />)
-
         if (this.state.state === null) return (<div>loading...|{this.state.lobby}|{this.context.username}|{this.context.networkState} </div>)
 
         return (
-
             <div className="container2">
                 <div className="player">
                     <div className="pile">
