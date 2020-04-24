@@ -107,7 +107,7 @@ module.exports = class Ojyks {
     completeTurn() {
         const count = this.players.filter(p => p.state === "end").length;
 
-        var player = this.players.find(p => p.name === this.currentPlayer);
+        let player = this.players.find(p => p.name === this.currentPlayer);
         if (count > 0) {
             player.state = "end"
         } else {
@@ -116,8 +116,7 @@ module.exports = class Ojyks {
 
         // safty mechanism if only on player plays
         if (this.players.filter(p => p.online).length > 0) {
-            console.log('test#')
-            var player = null;
+            let player = null;
             do {
                 this.nextPlayer();
 
@@ -407,12 +406,8 @@ module.exports = class Ojyks {
         player.online = isOnline;
         player.state = "ready";
 
-        console.log(player, this.currentPlayer)
-
         if (this.currentPlayer === player.name) {
             const card = this.drawPile.splice(0, 1)[0];
-
-            console.log(card)
 
             if(card && card.faceDown) {
                 this.drawPile = [card, ...this.drawPile];
