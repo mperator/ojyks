@@ -18,8 +18,6 @@ export default class App extends Component {
         super(props);
 
         this.setUsername = (username) => {
-            console.log(username)
-
             localStorage.setItem('ojyks-user', username);
 
             if (!localStorage.getItem('ojyks-uuid'))
@@ -53,9 +51,6 @@ export default class App extends Component {
             this.setState(state => ({ chat: [msg, ...state.chat] }));
         }
 
-        const ws = new WebSocket('ws://localhost:3001');
-
-
         this.state = {
             username: localStorage.getItem('ojyks-user'),
             uuid: localStorage.getItem('ojyks-uuid'),
@@ -65,25 +60,16 @@ export default class App extends Component {
             send: this.send,
             callbacks: {},
             chat: [],
-            ws: ws,
+            ws: new WebSocket('ws://localhost:3001'),
             addMessage: this.addMessage,
             networkState: ws.CLOSED
         }
-
-        // this.ws = new WebSocket('wss://ojyks-server.azurewebsites.net');
-        // this.ws = new WebSocket('ws://localhost:3001');
     }
 
     componentDidMount() {
-        console.log("App mounted")
-
         const ws = this.state.ws;
         ws.onopen = () => {
-            console.log('connected');
-
             this.setState({ networkState: this.state.ws.readyState })
-
-            console.log('send');
 
             this.send({
                 type: "response",
@@ -94,12 +80,9 @@ export default class App extends Component {
                     }
                 }
             });
-            // TODO do forward by server useer can reinit from current state
         }
         ws.onmessage = event => {
             var callbacks = this.state.callbacks;
-
-            console.log('messge main', event.data);
 
             // distribute message to all registered callback functions.
             for (const name in callbacks) {
@@ -108,10 +91,6 @@ export default class App extends Component {
         }
 
         this.setState({ ws: ws });
-    }
-
-    componentDidUpdate() {
-        console.log(this.state)
     }
 
     render() {
