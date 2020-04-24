@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import { Redirect } from 'react-router-dom'
 import { UserContext } from '../../context/user-context'
 
 // displays all users
@@ -87,17 +86,8 @@ export default class Lobby extends Component {
         this.context.registerCallback('lobbyMessageHandler', this.handleMessage);
 
         if (this.context.ws.readyState === this.context.ws.OPEN) {
-            console.log("ready ready yet")
-
             this.context.send({ type: 'request', action: 'lobby-update', payload: { lobby: this.props.match.params.name } });
-
-            // TODO: test if game is in progress then navigate to game
-
-        } else {
-            console.log("is not ready yet")
         }
-
-
     }
 
     componentWillUnmount() {
