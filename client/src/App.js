@@ -62,7 +62,7 @@ export default class App extends Component {
             chat: [],
             ws: new WebSocket('ws://localhost:3001'),
             addMessage: this.addMessage,
-            networkState: ws.CLOSED
+            networkState: WebSocket.CLOSED
         }
     }
 
