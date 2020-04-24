@@ -201,7 +201,7 @@ export default class Ojyks extends Component {
                 <div className="room">
                     {this.state.players && this.state.players.map(p => (
                         <div>
-                            <div><Board cards={p.cards} /></div>
+                            <div><Board cards={p.cards} small /></div>
                             <p>{p.name}</p>
                         </div>
                     ))}
