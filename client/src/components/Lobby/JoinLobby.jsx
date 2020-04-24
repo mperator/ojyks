@@ -1,6 +1,4 @@
 import React, { Component } from 'react'
-import { Redirect } from 'react-router-dom'
-
 import { UserContext } from '../../context/user-context'
 
 // shows a list of currently active lobbies
@@ -68,7 +66,6 @@ export default class JoinLobby extends Component {
                 break;
             case 'lobby-join':
                 if (state === "success") {
-                    console.log("lobby-join", data)
                     this.props.history.push(`/lobby/${payload.lobby.name}`);
                 } else {
                     this.setState({ errorMessage: "Fehler: " + errorMessage });
@@ -76,7 +73,6 @@ export default class JoinLobby extends Component {
                 break;
             case 'game-start':
                 if (state === "success") {
-                    console.log("go to game page", data)
                     this.props.history.push(`/game/${payload.lobby}`);
                 } else {
                     this.setState({ errorMessage: "Fehler: " + errorMessage });
@@ -91,7 +87,6 @@ export default class JoinLobby extends Component {
         this.context.registerCallback('joinLobbyMessageHandler', this.handleMessage);
 
         if(this.context.ws.readyState === this.context.ws.OPEN) {
-            console.log("ready ready yet")
 
             this.context.send({
                 type: "response",
@@ -102,10 +97,6 @@ export default class JoinLobby extends Component {
                     }
                 }
             });
-
-
-        } else {
-            console.log("is not ready yet")
         }
     }
 
@@ -113,13 +104,10 @@ export default class JoinLobby extends Component {
         this.context.unregisterCallback('joinLobbyMessageHandler');
     }
 
-
     getLobbiesToReconnect() {
         // get all lobbies where player is in lobby
         const lobbiesToReconnect = this.state.lobbies.filter(l => l.players && l.players.find(p => p.uuid === this.context.uuid));
         if (!lobbiesToReconnect) return null;
-
-        console.log(lobbiesToReconnect)
 
         return (lobbiesToReconnect.map(l => (
             <tr key={l.name}>
@@ -146,9 +134,6 @@ export default class JoinLobby extends Component {
             </tr>
         )));
     }
-
-
-
 
     render() {
         return (
