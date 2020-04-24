@@ -51,7 +51,6 @@ function getCardClassName(card, small) {
     return className;
 }
 
-<<<<<<< HEAD
 function getColor(value) {
     if (value < 0) {
         return 'purple';
@@ -61,26 +60,6 @@ function getColor(value) {
         return 'green';
     } else if (value <= 8) {
         return 'yellow';
-=======
-    componentDidMount() {
-        console.log("Card mounted")
-    }
-
-    render() {
-        const { card, cell } = this.props;
-        return (
-            <div className="card2" onClick={() => this.props.handleClick({ source: this.props.source, cell: cell })}>
-                <div className={this.getClassName()} >
-                    <div className="card-number">
-                        {card.faceDown ?
-                            "" :
-                            card.value
-                        }
-                    </div>
-                </div>
-            </div>
-        )
->>>>>>> enhanced reconnection handling.
     }
     return 'red';
 }
