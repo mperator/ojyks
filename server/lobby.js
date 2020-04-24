@@ -16,10 +16,11 @@ function registerSendCallback(callback) {
 function handleDisconnect(sender) {
     const lobbiesContainingSender = lobbies && lobbies.filter(f => f.players.find(p => p.ws === sender))
 
-    console.log("player disconnected")
     for (const lobby of lobbiesContainingSender) {
         const player = lobby.players.find(p => p.ws === sender);
         player.ws = null;
+
+        console.log(`player [${player.name} |${player.uuid}] disconnected....`);
 
         if (lobby.game) {
             lobby.game.setPlayerNetworkState(player.uuid, false);
@@ -50,7 +51,6 @@ function handleMessage(sender, data) {
                     player.ws = sender;
 
                     if (lobby.game && lobby.game.state === 'active') {
-                        console.log("hello world")
                         lobby.game.setPlayerNetworkState(player.uuid, true);
 
                         broadcastToLobby(null, lobby.name, {
@@ -213,8 +213,6 @@ function handleMessage(sender, data) {
             // a player requests to start the game
             const lobbyToStartGame = lobbies.find(l => l.name === payload.lobby);
             lobbyToStartGame.state = 'closed'
-
-            console.log("create game for " + lobbyToStartGame.name)
 
             const playerNames = lobbyToStartGame.players.map(u => ({ name: u.name, uuid: u.uuid }));
             lobbyToStartGame.game = new Ojyks(playerNames);
