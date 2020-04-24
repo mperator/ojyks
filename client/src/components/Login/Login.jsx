@@ -1,7 +1,5 @@
 import React, { Component } from 'react'
-
 import { UserContext } from '../../context/user-context'
-import { Redirect } from 'react-router-dom';
 
 export default class Login extends Component {
     static contextType = UserContext;
@@ -41,9 +39,6 @@ export default class Login extends Component {
     }
 
     render() {
-        // automatically push to lobby overview if user exists
-        //if (this.context.username) return (<Redirect to="/lobby/join" />);
-
         return (
             <div className="login container">
                 <div className="row">
