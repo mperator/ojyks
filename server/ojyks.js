@@ -262,7 +262,10 @@ module.exports = class Ojyks {
             challengerScore.doubled = true;
 
             console.log(betterPlayers.map(p => p.name), ` are better than ${this.playerInitLastRound.name}`);
+
+            console.log("challanger score after loosing:", challengerScore)
         }
+        
      
         this.state = "score";
     }
