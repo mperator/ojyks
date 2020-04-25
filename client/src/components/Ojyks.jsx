@@ -1,23 +1,21 @@
-import React, { Component } from 'react'
-import { Redirect } from 'react-router-dom'
+import React, { Component } from 'react';
 
-import Board from './Board';
-import DrawPile from './DrawPile'
+import Chat from './Chat';
+import CardDeck from './CardDeck';
+import DrawPile from './DrawPile';
 import DiscardPile from './DiscardPile';
 import StateDisplay from './StateDisplay';
 
 import { UserContext } from '../context/user-context'
 
-import './Ojyks.css'
-import { data } from './ojyks-mock'
+import locals from './Ojyks.module.css'
+// import { data } from './ojyks-mock'
 
 export default class Ojyks extends Component {
     static contextType = UserContext
 
     constructor(props) {
         super(props);
-
-        console.log(data)
 
         this.state = {
             players: [],
@@ -38,33 +36,28 @@ export default class Ojyks extends Component {
 
         this.executeTurn = this.executeTurn.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
-        this.handleSend = this.handleSend.bind(this);
-        this.handleChange = this.handleChange.bind(this);
-    }
-
-    handleChange(e) {
-        this.setState({ [e.target.name]: e.target.value });
-    }
-
-    handleSend(e) {
-        e.preventDefault();
-        const message = { player: this.context.username, lobby: this.props.match.params.name, message: this.state.message };
-        this.context.send({ type: 'request', action: 'lobby-message', payload: message });
-        this.context.addMessage(message);
-
-        this.setState({ message: "" });
     }
 
     handleMessage(data) {
-        if (data.type !== 'response') return;
+        const { type, action, payload} = data;
+        if (type !== 'response') return;
 
-        switch (data.action) {
+        switch (action) {
+            case 'reconnect':
+                if (payload.lobby) {
+                    if (payload.gameState === 'active') {
+                        this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.props.match.params.name } });
+                    } else {
+                        this.props.history.push(`/lobby/${payload.lobby}`);
+                    }
+                } else {
+                    // if no lobby was specified refresh data on page
+                    this.props.history.push(`/lobby/join`);
+                }
+                break;
+
             case 'game-state':
-                const { payload } = data;
-                console.log("game state", data);
-
                 const player = payload.players.find(p => p.name === this.context.username);
-                //const currentPlayer = payload.players.find(p => p.name === payload.currentPlayer);
 
                 this.setState({
                     drawPile: payload.drawPile,
@@ -74,7 +67,6 @@ export default class Ojyks extends Component {
                     state: player.state,
 
                     players: payload.players
-                    //currentPlayerCards: currentPlayer.cards
                 });
 
                 break;
@@ -89,13 +81,11 @@ export default class Ojyks extends Component {
     }
 
     componentDidMount() {
-        // use this for debug
-        //this.setState(data);
-        
-        if (!this.context.username) return;
-
         this.context.registerCallback('gameMessageHandler', this.handleMessage);
-        this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.state.lobby } });
+
+        if (this.context.ws.readyState === this.context.ws.OPEN) {
+            this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.props.match.params.name } });
+        }
     }
 
     componentWillUnmount() {
@@ -178,48 +168,46 @@ export default class Ojyks extends Component {
     }
 
     render() {
-        if (!this.context.username) return (<Redirect to="/" />)
-        if (this.state.state === null) return (<div>loading...|{this.state.lobby}|{this.context.username} </div>)
+        if (this.state.state === null) return (<div>loading...|{this.state.lobby}|{this.context.username}|{this.context.networkState} </div>)
 
         return (
-
-            <div className="container2">
-                <div className="player">
-                    <div className="pile">
-                        <div></div>
-                        <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
-                        <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
-                        <div></div>
+            <div className="container">
+                <div className="row">
+                    <div className={`ol s12 ${locals.overflowContainer}`}>
+                        {this.state.players && this.state.players.map((player, i) => (
+                            <div key={i} className={locals.deckContainer}>
+                                <div><CardDeck cards={player.cards} small /></div>
+                                <p className={`${locals.name} ${!player.online && locals.offline}`}>{player.name}</p>
+                            </div>
+                        ))}
                     </div>
-                    <div className="state">
+                </div>
+                <div className="row">
+                    <div className="col s12">
+                        <div className={locals.drawDiscardContainer}>
+                            <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
+                            <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
+                        </div>
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col s12">
                         <StateDisplay state={this.state} />
                     </div>
-                    <div className="game">
-                        {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}
+                </div>
+                <div className="row">
+                    <div className="col s12">
+                        {this.state.boardCards.length > 0 &&
+                            <CardDeck cards={this.state.boardCards} handleClick={this.executeTurn} />
+                        }
                     </div>
                 </div>
-                <div className="room">
-                    {this.state.players && this.state.players.map(p => (
-                        <div>
-                            <div><Board cards={p.cards} /></div>
-                            <p>{p.name}</p>
-                        </div>
-                    ))}
-                </div>
-                <div className="chat">
-                    <div className="input-field">
-                        <input type="text" name="message" id="message" value={this.state.message} onChange={this.handleChange} />
-                        <label htmlFor="message">Nachricht:</label>
-                        <button className="btn" onClick={this.handleSend}>Senden</button>
+                <div className="row">
+                    <div className="col s12">
+                        <Chat context={this.context} lobby={this.props.match.params.name} />
                     </div>
-
-                    <ul>
-                        {this.context.chat.map((m, i) => (
-                            <li key={i}>{m.player}: {m.message}</li>
-                        ))}
-                    </ul>
                 </div>
             </div>
-        )
+        );
     }
 }

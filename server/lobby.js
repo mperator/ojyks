@@ -14,12 +14,85 @@ function registerSendCallback(callback) {
 }
 
 function handleDisconnect(sender) {
-    //this.sendToHandler("disconnect")
+    const lobbiesContainingSender = lobbies && lobbies.filter(f => f.players.find(p => p.ws === sender))
+
+    for (const lobby of lobbiesContainingSender) {
+        const player = lobby.players.find(p => p.ws === sender);
+        player.ws = null;
+
+        console.log(`player [${player.name} |${player.uuid}] disconnected....`);
+
+        if (lobby.game) {
+            lobby.game.setPlayerNetworkState(player.uuid, false);
+        
+            broadcastToLobby(null, lobby.name, {
+                type: 'response',
+                action: 'game-state',
+                payload: getCurrentGameState(lobby.game)
+            });
+        }
+    }
 }
 
 function handleMessage(sender, data) {
     const { action, payload } = data;
     switch (action) {
+        case 'reconnect':
+            /* if the player reconnects the player should automatically navigate to the site he was on before losing 
+             * the websocket connection but als depending on the current state of the lobby. 
+             * */
+            {
+                // get lobby player is in by the players uuid
+                const lobby = lobbies && lobbies.find(l => l.players.find(p => p.uuid === payload.player.uuid));
+
+                if (lobby) {
+                    // get player with uuid
+                    const player = lobby.players.find(p => p.uuid === payload.player.uuid);
+                    player.ws = sender;
+
+                    if (lobby.game) {
+                        lobby.game.setPlayerNetworkState(player.uuid, true);
+
+                        broadcastToLobby(null, lobby.name, {
+                            type: 'response',
+                            action: 'game-state',
+                            payload: getCurrentGameState(lobby.game)
+                        });
+                    }
+
+                    // response with lobby and game state
+                    const gameState = lobby.game ? lobby.game.state : 'score';
+
+                    sendDirectResponse(sender, {
+                        type: 'response',
+                        action: 'reconnect',
+                        state: 'success',
+                        payload: {
+                            player: {
+                                uuid: payload.player.uuid
+                            },
+                            lobby: lobby.name,
+                            gameState: gameState,
+                        }
+                    });
+                } else {
+                    // the player was not connect to lobby yet.
+                    sendDirectResponse(sender, {
+                        type: 'response',
+                        action: 'reconnect',
+                        state: 'success',
+                        payload: {
+                            player: {
+                                uuid: payload.player.uuid
+                            },
+                            lobby: null,
+                            gameState: null,
+                        }
+                    });
+                }
+            }
+            break;
+
         case 'lobby-create':
             // a player requests to create a new lobby.
             const lobby = lobbies && lobbies.find(l => l.name === payload.lobby);
@@ -35,6 +108,7 @@ function handleMessage(sender, data) {
             } else {
                 const lobbyName = payload.lobby;
                 const playerName = payload.player.name;
+                const playerUUID = payload.player.uuid;
 
                 // create new lobby if not exists.
                 const newLobby = {
@@ -42,8 +116,8 @@ function handleMessage(sender, data) {
                     creator: playerName,
                     state: 'open',
                     slots: 8,
-                    players: [{ name: playerName, ws: sender, scores: [] }],
-                    game: null
+                    players: [{ name: playerName, uuid: playerUUID, ws: sender, scores: [] }],
+                    game: new Ojyks()
                 };
                 lobbies.push(newLobby);
 
@@ -78,6 +152,7 @@ function handleMessage(sender, data) {
                     payload: null
                 });
             } else if (lobbyToJoin.state !== "open") {
+                // player does not exists or exists and is already connected
                 sendDirectResponse(sender, {
                     type: "response",
                     action: "lobby-join",
@@ -86,6 +161,8 @@ function handleMessage(sender, data) {
                     payload: null
                 });
             } else if (lobbyToJoin.players.length >= (lobbyToJoin.slots)) {
+                // does not exist and lobby is full
+                // or player exists and is already connected
                 sendDirectResponse(sender, {
                     type: "response",
                     action: "lobby-join",
@@ -93,8 +170,14 @@ function handleMessage(sender, data) {
                     errorMessage: "Maximum player count reached.",
                     payload: null
                 });
+
             } else {
-                lobbyToJoin.players.push({ name: payload.player.name, ws: sender, scores: [] });
+                lobbyToJoin.players.push({
+                    name: payload.player.name,
+                    uuid: payload.player.uuid,
+                    ws: sender,
+                    scores: []
+                });
 
                 const lobbyName = payload.lobby;
 
@@ -109,6 +192,7 @@ function handleMessage(sender, data) {
 
                 broadcastToLobby(null, lobbyName, createResponseLobbyUpdate(lobbyName));
             }
+
             // update lobby overview for all connected players 
             // TODO: only need to broadcast to players that are not in lobby yet.
             broadcast(sender, createResponseLobbyOverview());
@@ -130,15 +214,14 @@ function handleMessage(sender, data) {
             const lobbyToStartGame = lobbies.find(l => l.name === payload.lobby);
             lobbyToStartGame.state = 'closed'
 
-            console.log("create game for " + lobbyToStartGame.name)
+            const playerNames = lobbyToStartGame.players.map(u => ({ name: u.name, uuid: u.uuid }));
+            lobbyToStartGame.game.tryInit(playerNames)
+            lobbyToStartGame.game.start();
 
-            const playerNames = lobbyToStartGame.players.map(u => u.name);
-            lobbyToStartGame.game = new Ojyks(playerNames);
-
-            broadcastToLobby(null, lobbyToStartGame.name, { 
-                type: 'response', 
-                action: 'game-start', 
-                payload: { lobby: lobbyToStartGame.name } 
+            broadcastToLobby(null, lobbyToStartGame.name, {
+                type: 'response',
+                action: 'game-start',
+                payload: { lobby: lobbyToStartGame.name }
             });
             break;
 
@@ -156,15 +239,12 @@ function handleMessage(sender, data) {
             const lobbyGameTurn = lobbies.find(l => l.name === payload.lobby);
             const game = lobbyGameTurn.game;
 
-            game.turn(payload.user, payload.source, payload.cardIndex);
-
-            // game end -> score board
-            const scoreBoard = game.getScoreBoard();
-            if (scoreBoard) {
-                // set score board to lobby
-
-                lobbyGameTurn.scores = [...lobbyGameTurn.scores, scoreBoard];
+            if(game.state === "score") {
+                console.log("execution on game end!!!!")
+                return;
             }
+
+            game.turn(payload.user, payload.source, payload.cardIndex);
 
             broadcastToLobby(null, lobbyGameTurn.name, {
                 type: 'response',
@@ -173,8 +253,6 @@ function handleMessage(sender, data) {
             });
         }
     }
-
-
 }
 
 module.exports = {
@@ -196,7 +274,7 @@ function createResponseLobbyOverview() {
         creator: l.creator,
         state: l.state,
         slots: 8,
-        playerCount: l.players.length
+        players: l.players.map(u => ({ name: u.name, uuid: u.uuid })),
     }));
 
     return {
@@ -231,7 +309,7 @@ function getLobbyDTO(lobbyName) {
         slots: lobby.slots,
         players: lobby.players.map(u => u.name),
         game: null,
-        scores: []
+        scores: lobby.game && lobby.game.getScores()
     };
 }
 
@@ -240,12 +318,6 @@ function send(sender, data) {
 }
 
 function broadcast(sender, data) {
-    // wss.clients.forEach(function each(client) {
-    //     if (client !== ws && client.readyState === WebSocket.OPEN) {
-    //         client.send(JSON.stringify(data));
-    //     }
-    // });
-
     this.sendToHandler(sender, null, data);
 }
 
@@ -254,22 +326,10 @@ function broadcastToLobby(sender, lobbyName, data) {
 
     const clients = lobby.players.map(u => u.ws);
     this.sendToHandler(sender, clients, data);
-
-    // for (const user of lobby.users) {
-    //     const ws = user.ws;
-
-    //     if (ws.readyState === WebSocket.OPEN) {
-    //         ws.send(JSON.stringify(data));
-    //     }
-    // }
 }
-
-
 
 function getCurrentGameState(game) {
     return {
-        // drawPileCount: game.drawPile.length,
-        // drawPileTopCard: null,
         drawPile: game.drawPile,
         discardPile: game.discardPile,
         players: game.players,

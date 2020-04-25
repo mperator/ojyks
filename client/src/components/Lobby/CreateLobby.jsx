@@ -20,7 +20,7 @@ export default class CreateLobby extends Component {
     }
 
     handleChange(e) {
-        this.setState({ 
+        this.setState({
             [e.target.name]: e.target.value,
             errorMessage: ""
         });
@@ -29,19 +29,20 @@ export default class CreateLobby extends Component {
     handleClick(e) {
         e.preventDefault();
 
-        if(this.state.lobby) {
+        if (this.state.lobby) {
             this.context.send({
                 type: 'request',
                 action: 'lobby-create',
                 payload: {
                     lobby: this.state.lobby,
                     player: {
-                        name: this.context.username
+                        name: this.context.username,
+                        uuid: this.context.uuid
                     }
                 }
             });
         } else {
-            this.setState({ errorMessage: "Fehler: Kein Lobby-Name angegeben..."})
+            this.setState({ errorMessage: "Fehler: Kein Lobby-Name angegeben..." })
         }
     }
 
@@ -69,7 +70,7 @@ export default class CreateLobby extends Component {
         if (!this.context.username) return (<Redirect to="/" />);
 
         return (
-            <div className="lobby-create container">
+            <div className="container">
                 <div className="row">
                     <div className="col s12">
                         <h1>Lobby erstellen</h1>
@@ -91,7 +92,7 @@ export default class CreateLobby extends Component {
 
                     <div className="col s12 left red-text">
                         {this.state.errorMessage && <p>{this.state.errorMessage}</p>}
-                    </div>                    
+                    </div>
                 </div>
             </div>
         )

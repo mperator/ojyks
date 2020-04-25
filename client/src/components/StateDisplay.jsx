@@ -1,10 +1,10 @@
 import React from 'react';
 
-import './StateDisplay.css';
+import locals from './StateDisplay.module.css';
 
 export default function StateDisplay({state}) {
     return (
-        <p className="text">{toReadableText(state)}</p>
+        <p className={locals.text}>{toReadableText(state)}</p>
     );
 }
 
@@ -23,13 +23,13 @@ function toReadableText(state) {
         case 'ready':
             const otherPlayer = getActivePlayer(state);
             if (otherPlayer) {
-                return `It is ${otherPlayer.name}'s turn!`;
+                return `It is ${otherPlayer.name}'s turn.`;
             }
-            return 'It is another players turn!';
+            return 'Waiting for other players...';
         case 'end':
-            return 'Wating for the others to finish!';
+            return 'Wating for the others to finish...';
         case 'score':
-            return 'The game has finished!';
+            return 'The game has finished.';
         default:
             return '';
     }        
