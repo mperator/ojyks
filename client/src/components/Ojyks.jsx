@@ -1,7 +1,8 @@
-import React, { Component } from 'react'
+import React, { Component } from 'react';
 
+import Chat from './Chat';
 import CardDeck from './CardDeck';
-import DrawPile from './DrawPile'
+import DrawPile from './DrawPile';
 import DiscardPile from './DiscardPile';
 import StateDisplay from './StateDisplay';
 
@@ -35,21 +36,6 @@ export default class Ojyks extends Component {
 
         this.executeTurn = this.executeTurn.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
-        this.handleSend = this.handleSend.bind(this);
-        this.handleChange = this.handleChange.bind(this);
-    }
-
-    handleChange(e) {
-        this.setState({ [e.target.name]: e.target.value });
-    }
-
-    handleSend(e) {
-        e.preventDefault();
-        const message = { player: this.context.username, lobby: this.props.match.params.name, message: this.state.message };
-        this.context.send({ type: 'request', action: 'lobby-message', payload: message });
-        this.context.addMessage(message);
-
-        this.setState({ message: "" });
     }
 
     handleMessage(data) {
@@ -218,30 +204,7 @@ export default class Ojyks extends Component {
                 </div>
                 <div className="row">
                     <div className="col s12">
-                        <div>
-                            <div className="input-field">
-                                <input 
-                                    type="text"
-                                    name="message"
-                                    id="message"
-                                    value={this.state.message}
-                                    onChange={this.handleChange}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            this.handleSend(e);
-                                        }
-                                    }} 
-                                />
-                                <label htmlFor="message">Nachricht:</label>
-                                <button className="btn" onClick={this.handleSend}>Senden</button>
-                            </div>
-
-                            <ul>
-                                {this.context.chat.map((m, i) => (
-                                    <li key={i}>{m.player}: {m.message}</li>
-                                ))}
-                            </ul>
-                        </div>
+                        <Chat context={this.context} lobby={this.props.match.params.name} />
                     </div>
                 </div>
             </div>
