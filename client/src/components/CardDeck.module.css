@@ -1,0 +1,14 @@
+.container {
+    align-content: center;
+    justify-content: center;
+    display: flex;
+}
+
+.cardDeck {
+    box-sizing: border-box;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 0;
+    padding: 0;
+    grid-template-rows: 1fr 1fr 1fr;
+}

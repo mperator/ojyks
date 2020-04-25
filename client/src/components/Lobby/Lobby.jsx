@@ -59,17 +59,17 @@ export default class Lobby extends Component {
                 }
                 break;
 
-            case 'lobby-update': {
+            case 'lobby-update':
                 this.setState({ lobby: data.payload.lobby });
-            } break;
+                break;
 
-            case 'lobby-message': {
+            case 'lobby-message':
                 this.context.addMessage(data.payload)
-            } break;
+                break;
 
-            case 'game-start': {
+            case 'game-start':
                 this.props.history.push(`/game/${data.payload.lobby}`);
-            } break;
+                break;
 
             default:
                 return;
@@ -99,7 +99,7 @@ export default class Lobby extends Component {
         if (!this.state.lobby) return null;
 
         return (
-            <div className="lobby container">
+            <div className="container">
                 <div className="row">
                     <div className="col s12">
                         <h1>{this.state.lobby.name}</h1>
@@ -113,7 +113,7 @@ export default class Lobby extends Component {
                         {this.state.lobby &&
                             <ul>
                                 {this.state.lobby.players && this.state.lobby.players.map((u, i) => (
-                                    <li className="" key={i}>{u}</li>
+                                    <li key={i}>{u}</li>
                                 ))}
                             </ul>}
                     </div>

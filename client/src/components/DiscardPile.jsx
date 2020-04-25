@@ -1,14 +1,20 @@
 import React from 'react'
 import Card from './Card'
-import './DiscardPile.css'
+import CardPlaceholder from './CardPlaceholder';
+import locals from './DiscardPile.module.css';
 
 export default function DiscardPile(props) {
     return (
-        // only activate function on discard pile if no card exists
-        <div onClick={props.cards.length === 0 ? () => props.handleClick({source: "discard"}) : () => {}}>
+        <div className={locals.stackContainer} onClick={props.cards.length === 0 ? () => props.handleClick({source: "discard"}) : () => {}}>
             {props.cards.length > 0 && (
-                <Card card={props.cards[0]} cardIndex={-1} handleClick={props.handleClick} source="discard"/>
+                <div className={locals.stackItem}>
+                    <Card card={props.cards[0]} cardIndex={-1} handleClick={props.handleClick} source="discard"/>
+                </div>
+                
             )}
+            <div className={locals.stackItem}>
+                <CardPlaceholder className={locals.stackItem} />
+            </div>
         </div>
     )
 }

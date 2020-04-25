@@ -137,7 +137,7 @@ export default class JoinLobby extends Component {
 
     render() {
         return (
-            <div className="lobby-join container">
+            <div className="container">
                 <div className="row">
                     <div className="col s12">
                         <h1>Lobby beitreten</h1>

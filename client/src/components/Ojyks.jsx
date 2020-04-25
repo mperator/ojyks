@@ -1,14 +1,14 @@
 import React, { Component } from 'react'
 
-import Board from './Board';
+import CardDeck from './CardDeck';
 import DrawPile from './DrawPile'
 import DiscardPile from './DiscardPile';
 import StateDisplay from './StateDisplay';
 
 import { UserContext } from '../context/user-context'
 
-import './Ojyks.css'
-// import data from './ojyks-mock'
+import locals from './Ojyks.module.css'
+// import { data } from './ojyks-mock'
 
 export default class Ojyks extends Component {
     static contextType = UserContext
@@ -185,54 +185,66 @@ export default class Ojyks extends Component {
         if (this.state.state === null) return (<div>loading...|{this.state.lobby}|{this.context.username}|{this.context.networkState} </div>)
 
         return (
-            <div className="container2">
-                <div className="player">
-                    <div className="pile">
-                        <div></div>
-                        <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
-                        <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
-                        <div></div>
+            <div className="container">
+                <div className="row">
+                    <div className={`ol s12 ${locals.overflowContainer}`}>
+                        {this.state.players && this.state.players.map((player, i) => (
+                            <div key={i} className={locals.deckContainer}>
+                                <div><CardDeck cards={player.cards} small /></div>
+                                <p className={`${locals.name} ${!player.online && locals.offline}`}>{player.name}</p>
+                            </div>
+                        ))}
                     </div>
-                    <div className="state">
+                </div>
+                <div className="row">
+                    <div className="col s12">
+                        <div className={locals.drawDiscardContainer}>
+                            <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
+                            <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
+                        </div>
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col s12">
                         <StateDisplay state={this.state} />
                     </div>
-                    <div className="game">
-                        {this.state.boardCards.length > 0 && <Board cards={this.state.boardCards} handleClick={this.executeTurn} />}
+                </div>
+                <div className="row">
+                    <div className="col s12">
+                        {this.state.boardCards.length > 0 &&
+                            <CardDeck cards={this.state.boardCards} handleClick={this.executeTurn} />
+                        }
                     </div>
                 </div>
-                <div className="room">
-                    {this.state.players && this.state.players.map(p => (
+                <div className="row">
+                    <div className="col s12">
                         <div>
-                            <div><Board cards={p.cards} small /></div>
-                            <p>{p.name} ({p.online.toString()})</p>
-                        </div>
-                    ))}
-                </div>
-                <div className="chat">
-                    <div className="input-field">
-                        <input 
-                            type="text"
-                            name="message"
-                            id="message"
-                            value={this.state.message}
-                            onChange={this.handleChange}
-                            onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                    this.handleSend(e);
-                                }
-                            }} 
-                        />
-                        <label htmlFor="message">Nachricht:</label>
-                        <button className="btn" onClick={this.handleSend}>Senden</button>
-                    </div>
+                            <div className="input-field">
+                                <input 
+                                    type="text"
+                                    name="message"
+                                    id="message"
+                                    value={this.state.message}
+                                    onChange={this.handleChange}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            this.handleSend(e);
+                                        }
+                                    }} 
+                                />
+                                <label htmlFor="message">Nachricht:</label>
+                                <button className="btn" onClick={this.handleSend}>Senden</button>
+                            </div>
 
-                    <ul>
-                        {this.context.chat.map((m, i) => (
-                            <li key={i}>{m.player}: {m.message}</li>
-                        ))}
-                    </ul>
+                            <ul>
+                                {this.context.chat.map((m, i) => (
+                                    <li key={i}>{m.player}: {m.message}</li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
-        )
+        );
     }
 }
