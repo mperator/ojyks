@@ -59,7 +59,7 @@ module.exports = class Ojyks {
 
         for (const player of this.players) {
             player.cards = [],
-            player.state = "init"
+                player.state = "init"
         }
 
         this.drawPile = this.initialize(deckRules);
@@ -127,6 +127,19 @@ module.exports = class Ojyks {
     }
 
     completeTurn() {
+
+        // check if draw pile is empty and reuse discard pile
+        if (this.drawPile.length === 0) {
+            console.log("Reuse cards from discardPile")
+
+            // Shuffle cards from discard and add them to this
+            const pile = this.discardPile;
+            this.discardPile = pile.splice(0, 1);
+
+            this.drawPile = this.shuffle(pile);
+        }
+
+
         const count = this.players.filter(p => p.state === "end").length;
 
         let player = this.players.find(p => p.name === this.currentPlayer);
@@ -152,13 +165,6 @@ module.exports = class Ojyks {
 
     getCardFromDrawPile() {
         if (this.drawPile.length === 0) {
-            // Shuffle cards from discard and add them to this
-            const pile = this.discardPile;
-
-            const firstCard = pile.splice(0, 1);
-            this.discardPile = [firstCard];
-
-            this.drawPile = this.shuffle(pile);
             return;
         }
 
@@ -242,18 +248,18 @@ module.exports = class Ojyks {
             player.scores.push(score);
         }
         const challengerScore = this.playerInitLastRound.scores.slice(-1)[0];
-        
+
         // get all player whos last score is better than challanger score
-        const betterPlayers = this.players.filter(p => 
+        const betterPlayers = this.players.filter(p =>
             p !== this.playerInitLastRound &&
             p.scores.slice(-1)[0].value <= challengerScore.value);
 
-        if(betterPlayers.length > 0) {
+        if (betterPlayers.length > 0) {
             challengerScore.value *= 2;
             challengerScore.doubled = true;
         }
-        
-     
+
+
         this.state = "score";
     }
 
@@ -437,7 +443,7 @@ module.exports = class Ojyks {
     setPlayerNetworkState(uuid, isOnline) {
         const player = this.players.find(p => p.uuid === uuid);
 
-        if(!player) return;
+        if (!player) return;
 
         player.online = isOnline;
         player.state = "ready";
