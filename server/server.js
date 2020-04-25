@@ -28,7 +28,7 @@ function send(sender, clients, data) {
     if(clients.length === 0) return;
 
     for(const client of clients) {
-        if (client !== sender && client.readyState === WebSocket.OPEN) {
+        if (client && client !== sender && client.readyState === WebSocket.OPEN) {
             client.send(JSON.stringify(data));
         }
     }
@@ -36,6 +36,7 @@ function send(sender, clients, data) {
 
 // listen to socket and delegate data
 wss.on('connection', (ws) => {
+
     ws.on('close', (message) => {
         // delegate event to lobby
         handleDisconnect(ws, message);

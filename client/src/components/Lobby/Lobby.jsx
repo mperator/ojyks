@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import { Redirect } from 'react-router-dom'
 import { UserContext } from '../../context/user-context'
 
 // displays all users
@@ -38,9 +37,28 @@ export default class Lobby extends Component {
     }
 
     handleMessage(data) {
-        if (data.type !== 'response') return;
+        const { type, action, payload } = data;
+        if (type !== 'response') return;
+        switch (action) {
+            case 'reconnect':
+                if (payload.lobby) {
+                    if (payload.gameState === 'active') {
+                        this.props.history.push(`/game/${payload.lobby}`);
+                    } else {
+                        this.context.send({
+                            type: 'request',
+                            action: 'lobby-update',
+                            payload: {
+                                lobby: this.props.match.params.name
+                            }
+                        });
+                    }
+                } else {
+                    // no lobby specified player will be redirect to lobby overview
+                    this.props.history.push(`/lobby/join`);
+                }
+                break;
 
-        switch (data.action) {
             case 'lobby-update': {
                 this.setState({ lobby: data.payload.lobby });
             } break;
@@ -65,11 +83,11 @@ export default class Lobby extends Component {
     }
 
     componentDidMount() {
-        if (!this.context.username) return;
-
         this.context.registerCallback('lobbyMessageHandler', this.handleMessage);
 
-        this.context.send({ type: 'request', action: 'lobby-update', payload: { lobby: this.props.match.params.name } });
+        if (this.context.ws.readyState === this.context.ws.OPEN) {
+            this.context.send({ type: 'request', action: 'lobby-update', payload: { lobby: this.props.match.params.name } });
+        }
     }
 
     componentWillUnmount() {
@@ -78,9 +96,7 @@ export default class Lobby extends Component {
 
     render() {
         // TODO router guard
-        if (!this.context.username) return (<Redirect to="/" />);
-
-        if(!this.state.lobby) return null;
+        if (!this.state.lobby) return null;
 
         return (
             <div className="lobby container">

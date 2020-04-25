@@ -17,15 +17,17 @@ const deckRules = [
 ];
 
 module.exports = class Ojyks {
-    constructor(playerNames) {
+    constructor(initPlayers) {
         this.players = [];
         this.drawPile = [];
         this.discardPile = [];
+        this.state = "active";
 
         // initialize players
-        for (const name of playerNames) {
+        for (const { name, uuid } of initPlayers) {
             this.players.push({
                 name: name,
+                uuid: uuid,
                 online: true,
                 cards: [],  // this is an list of 12 objects,
                 state: "init",
@@ -40,16 +42,6 @@ module.exports = class Ojyks {
         this.currentState = "init";
 
         this.gameState = "init"
-
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-        // console.log(this.nextPlayer());
-
-
     }
 
     // creates cards and add it to the drawPile.
@@ -115,18 +107,25 @@ module.exports = class Ojyks {
     completeTurn() {
         const count = this.players.filter(p => p.state === "end").length;
 
-        var player = this.players.find(p => p.name === this.currentPlayer);
+        let player = this.players.find(p => p.name === this.currentPlayer);
         if (count > 0) {
             player.state = "end"
         } else {
             player.state = 'ready';
         }
 
-        this.nextPlayer();
+        // safty mechanism if only on player plays
+        if (this.players.filter(p => p.online).length > 0) {
+            let player = null;
+            do {
+                this.nextPlayer();
 
-        var player = this.players.find(p => p.name === this.currentPlayer);
-        if (player.state === "ready")
-            player.state = 'play';
+                player = this.players.find(p => p.name === this.currentPlayer);
+            } while (!player.online)
+
+            if (player.state === "ready")
+                player.state = 'play';
+        };
     }
 
     getCardFromDrawPile() {
@@ -159,14 +158,18 @@ module.exports = class Ojyks {
             boardCards[5] = null;
             boardCards[9] = null;
         }
-        if (boardCards[2] && boardCards[2].value === boardCards[6].value && boardCards[2].value === boardCards[10].value &&
+        if (boardCards[2] && 
+            boardCards[2].value === boardCards[6].value && 
+            boardCards[2].value === boardCards[10].value &&
             !boardCards[2].faceDown && !boardCards[6].faceDown && !boardCards[10].faceDown) {
             this.discardPile = [boardCards[2], boardCards[6], boardCards[10], ...this.discardPile];
             boardCards[2] = null;
             boardCards[6] = null;
             boardCards[10] = null;
         }
-        if (boardCards[3] && boardCards[3].value === boardCards[7].value && boardCards[11].value === boardCards[11].value &&
+        if (boardCards[3] && 
+            boardCards[3].value === boardCards[7].value && 
+            boardCards[3].value === boardCards[11].value &&
             !boardCards[3].faceDown && !boardCards[7].faceDown && !boardCards[11].faceDown) {
             this.discardPile = [boardCards[3], boardCards[7], boardCards[11], ...this.discardPile];
             boardCards[3] = null;
@@ -189,9 +192,11 @@ module.exports = class Ojyks {
         // also enable score state
 
         const count = this.players.length;
+        const onlineCount = this.players.filter(p => p.online === true).length;
+
         const countEnd = this.players.filter(p => p.state === "end").length;
 
-        if (count !== countEnd) return;
+        if (countEnd < onlineCount) return;
 
         for (let player of this.players) {
             player.state = "score";
@@ -201,6 +206,8 @@ module.exports = class Ojyks {
                 }
             }
         }
+
+        this.state = "score";
     }
 
     getScoreBoard() {
@@ -219,8 +226,8 @@ module.exports = class Ojyks {
     getScore(player) {
         let score = 0;
 
-        for(const card of player.cards) {
-            if(card) {
+        for (const card of player.cards) {
+            if (card) {
                 score += card.value;
             }
         }
@@ -394,4 +401,22 @@ module.exports = class Ojyks {
         this.currentPlayer = player.name;
     }
 
+    setPlayerNetworkState(uuid, isOnline) {
+        const player = this.players.find(p => p.uuid === uuid);
+        player.online = isOnline;
+        player.state = "ready";
+
+        if (this.currentPlayer === player.name) {
+            const card = this.drawPile.splice(0, 1)[0];
+
+            if(card && card.faceDown) {
+                this.drawPile = [card, ...this.drawPile];
+            } else {
+                card.faceDown = false;
+                this.discardPile = [card, ...this.discardPile];
+            }
+
+            this.completeTurn();
+        }
+    }
 }
