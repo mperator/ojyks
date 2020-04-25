@@ -103,7 +103,10 @@ export default class Lobby extends Component {
                     <td>Total</td>
                     {scores && scores.map(s => (
                         <td key={s.uuid}>
-                            {s.rounds.map(r => r.value).reduce((a, c) => a + c)}
+                            {s.rounds.length > 0 ? 
+                                s.rounds.map(r => r.value).reduce((a, c) => a + c) :
+                                0
+                            }
                         </td>
                     ))}
                 </tr>
