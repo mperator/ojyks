@@ -17,31 +17,53 @@ const deckRules = [
 ];
 
 module.exports = class Ojyks {
-    constructor(initPlayers) {
+    constructor() {
         this.players = [];
+
+        this.state = "init";
         this.drawPile = [];
         this.discardPile = [];
-        this.state = "active";
 
-        // initialize players
-        for (const { name, uuid } of initPlayers) {
-            this.players.push({
-                name: name,
-                uuid: uuid,
-                online: true,
-                cards: [],  // this is an list of 12 objects,
-                state: "init",
-                score: 0
-            });
+        this.currentPlayer = null;
+        this.playerInitLastRound = null;
+    }
+
+    tryInit(initPlayers) {
+        if (this.state === "init") {
+            console.log("Ojyks: ", "Initialize game ...");
+            // initialize players
+            for (const { name, uuid } of initPlayers) {
+                this.players.push({
+                    name: name,
+                    uuid: uuid,
+                    online: true,
+                    cards: [],  // this is an list of 12 objects,
+                    state: "init",
+                    scores: []
+                });
+            }
+
+            this.state = "initialized";
+        }
+    }
+
+    // reset the game and deal cards.
+    start() {
+        console.log("Ojyks: ", "Start new game ...");
+
+        this.state = "active";
+        this.drawPile = [];
+        this.discardPile = [];
+        this.currentPlayer = null;
+        this.playerInitLastRound = null;
+
+        for (const player of this.players) {
+            player.cards = [],
+            player.state = "init"
         }
 
         this.drawPile = this.initialize(deckRules);
         this.deal(this.drawPile, this.players);
-
-        this.currentPlayer = null;
-        this.currentState = "init";
-
-        this.gameState = "init"
     }
 
     // creates cards and add it to the drawPile.
@@ -158,8 +180,8 @@ module.exports = class Ojyks {
             boardCards[5] = null;
             boardCards[9] = null;
         }
-        if (boardCards[2] && 
-            boardCards[2].value === boardCards[6].value && 
+        if (boardCards[2] &&
+            boardCards[2].value === boardCards[6].value &&
             boardCards[2].value === boardCards[10].value &&
             !boardCards[2].faceDown && !boardCards[6].faceDown && !boardCards[10].faceDown) {
             this.discardPile = [boardCards[2], boardCards[6], boardCards[10], ...this.discardPile];
@@ -167,8 +189,8 @@ module.exports = class Ojyks {
             boardCards[6] = null;
             boardCards[10] = null;
         }
-        if (boardCards[3] && 
-            boardCards[3].value === boardCards[7].value && 
+        if (boardCards[3] &&
+            boardCards[3].value === boardCards[7].value &&
             boardCards[3].value === boardCards[11].value &&
             !boardCards[3].faceDown && !boardCards[7].faceDown && !boardCards[11].faceDown) {
             this.discardPile = [boardCards[3], boardCards[7], boardCards[11], ...this.discardPile];
@@ -184,53 +206,64 @@ module.exports = class Ojyks {
 
         if (cardsOpened.length === cardsNotNull.length) {
             player.state = "end";
+
+            // set player who initialized last round
+            if (!this.playerInitLastRound)
+                this.playerInitLastRound = player;
         }
     }
 
     detectGameEnd() {
         // if all player have state end then open all cards
         // also enable score state
-
         const count = this.players.length;
         const onlineCount = this.players.filter(p => p.online === true).length;
-
         const countEnd = this.players.filter(p => p.state === "end").length;
 
         if (countEnd < onlineCount) return;
 
-        for (let player of this.players) {
+        // TODO if end initializer has more points than any count his points twice
+        // also save if has smalles score who wons multiply twice
+        // create scores
+        for (const player of this.players) {
             player.state = "score";
+            let score = {
+                value: 0,
+                end: player.uuid === this.playerInitLastRound.uuid,
+                doubled: false
+            };
+
             for (const card of player.cards) {
                 if (card) {
                     card.faceDown = false;
+                    score.value = score.value + card.value;
                 }
             }
+            player.scores.push(score);
         }
+        const challengerScore = this.playerInitLastRound.scores.slice(-1)[0];
+        
+        // get all player whos last score is better than challanger score
+        const betterPlayers = this.players.filter(p => 
+            p !== this.playerInitLastRound &&
+            p.scores.slice(-1)[0].value <= challengerScore.value);
 
+        if(betterPlayers.length > 0) {
+            challengerScore.value *= 2;
+            challengerScore.doubled = true;
+        }
+        
+     
         this.state = "score";
     }
 
-    getScoreBoard() {
-        // check if all player have score 
-        const count = this.players.length;
-        const countScore = this.players.filter(p => p.state === "score").length;
-
-        if (count !== countScore) return null;
-
-        this.players.map(p => ({
-            player: p.name,
-            score: this.getScore(p)
+    // returns score table 
+    getScores() {
+        return this.players && this.players.map(p => ({
+            name: p.name,
+            uuid: p.uuid,
+            rounds: p.scores
         }));
-    }
-
-    getScore(player) {
-        let score = 0;
-
-        for (const card of player.cards) {
-            if (card) {
-                score += card.value;
-            }
-        }
     }
 
     turn(playerName, source, cardIndex) {
@@ -403,13 +436,16 @@ module.exports = class Ojyks {
 
     setPlayerNetworkState(uuid, isOnline) {
         const player = this.players.find(p => p.uuid === uuid);
+
+        if(!player) return;
+
         player.online = isOnline;
         player.state = "ready";
 
         if (this.currentPlayer === player.name) {
             const card = this.drawPile.splice(0, 1)[0];
 
-            if(card && card.faceDown) {
+            if (card && card.faceDown) {
                 this.drawPile = [card, ...this.drawPile];
             } else {
                 card.faceDown = false;
