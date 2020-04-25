@@ -117,7 +117,7 @@ function handleMessage(sender, data) {
                     state: 'open',
                     slots: 8,
                     players: [{ name: playerName, uuid: playerUUID, ws: sender, scores: [] }],
-                    game: null
+                    game: new Ojyks()
                 };
                 lobbies.push(newLobby);
 
@@ -215,7 +215,8 @@ function handleMessage(sender, data) {
             lobbyToStartGame.state = 'closed'
 
             const playerNames = lobbyToStartGame.players.map(u => ({ name: u.name, uuid: u.uuid }));
-            lobbyToStartGame.game = new Ojyks(playerNames);
+            lobbyToStartGame.game.tryInit(playerNames)
+            lobbyToStartGame.game.start();
 
             broadcastToLobby(null, lobbyToStartGame.name, {
                 type: 'response',
@@ -239,14 +240,6 @@ function handleMessage(sender, data) {
             const game = lobbyGameTurn.game;
 
             game.turn(payload.user, payload.source, payload.cardIndex);
-
-            // game end -> score board
-            const scoreBoard = game.getScoreBoard();
-            if (scoreBoard) {
-                // set score board to lobby
-
-                lobbyGameTurn.scores = [...lobbyGameTurn.scores, scoreBoard];
-            }
 
             broadcastToLobby(null, lobbyGameTurn.name, {
                 type: 'response',
@@ -277,7 +270,6 @@ function createResponseLobbyOverview() {
         state: l.state,
         slots: 8,
         players: l.players.map(u => ({ name: u.name, uuid: u.uuid })),
-        playerCount: l.players.length, // obsolete
     }));
 
     return {
@@ -312,7 +304,7 @@ function getLobbyDTO(lobbyName) {
         slots: lobby.slots,
         players: lobby.players.map(u => u.name),
         game: null,
-        scores: []
+        scores: lobby.game && lobby.game.getScores()
     };
 }
 
@@ -321,12 +313,6 @@ function send(sender, data) {
 }
 
 function broadcast(sender, data) {
-    // wss.clients.forEach(function each(client) {
-    //     if (client !== ws && client.readyState === WebSocket.OPEN) {
-    //         client.send(JSON.stringify(data));
-    //     }
-    // });
-
     this.sendToHandler(sender, null, data);
 }
 
@@ -335,22 +321,10 @@ function broadcastToLobby(sender, lobbyName, data) {
 
     const clients = lobby.players.map(u => u.ws);
     this.sendToHandler(sender, clients, data);
-
-    // for (const user of lobby.users) {
-    //     const ws = user.ws;
-
-    //     if (ws.readyState === WebSocket.OPEN) {
-    //         ws.send(JSON.stringify(data));
-    //     }
-    // }
 }
-
-
 
 function getCurrentGameState(game) {
     return {
-        // drawPileCount: game.drawPile.length,
-        // drawPileTopCard: null,
         drawPile: game.drawPile,
         discardPile: game.discardPile,
         players: game.players,
