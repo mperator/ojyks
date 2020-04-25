@@ -275,7 +275,7 @@ module.exports = class Ojyks {
         return this.players && this.players.map(p => ({
             name: p.name,
             uuid: p.uuid,
-            scores: p.scores
+            rounds: p.scores
         }));
     }
 
@@ -449,6 +449,9 @@ module.exports = class Ojyks {
 
     setPlayerNetworkState(uuid, isOnline) {
         const player = this.players.find(p => p.uuid === uuid);
+
+        if(!player) return;
+
         player.online = isOnline;
         player.state = "ready";
 
