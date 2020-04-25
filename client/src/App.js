@@ -29,6 +29,16 @@ export default class App extends Component {
             });
         }
 
+        this.resetUsername = () => {
+            localStorage.removeItem('ojyks-user');
+            localStorage.removeItem('ojyks-uuid');
+
+            this.setState({
+                username: localStorage.getItem('ojyks-user'),
+                uuid: localStorage.getItem('ojyks-uuid')
+            });
+        }
+
         this.registerCallback = (name, callback) => {
             const callbacks = this.state.callbacks;
             callbacks[name] = callback;
@@ -55,6 +65,7 @@ export default class App extends Component {
             username: localStorage.getItem('ojyks-user'),
             uuid: localStorage.getItem('ojyks-uuid'),
             setUsername: this.setUsername,
+            resetUsername: this.resetUsername,
             registerCallback: this.registerCallback,
             unregisterCallback: this.unregisterCallback,
             send: this.send,
