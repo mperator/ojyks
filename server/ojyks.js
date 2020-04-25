@@ -220,9 +220,6 @@ module.exports = class Ojyks {
         const onlineCount = this.players.filter(p => p.online === true).length;
         const countEnd = this.players.filter(p => p.state === "end").length;
 
-        console.log("onlinecount", onlineCount);
-        console.log("count end", countEnd);
-
         if (countEnd < onlineCount) return;
 
         // TODO if end initializer has more points than any count his points twice
@@ -244,26 +241,16 @@ module.exports = class Ojyks {
             }
             player.scores.push(score);
         }
-
-
         const challengerScore = this.playerInitLastRound.scores.slice(-1)[0];
-        console.log("challanger score: ", this.playerInitLastRound.scores);
-        console.log("challanger score: ", challengerScore);
         
         // get all player whos last score is better than challanger score
         const betterPlayers = this.players.filter(p => 
             p !== this.playerInitLastRound &&
             p.scores.slice(-1)[0].value <= challengerScore.value);
-        console.log("better players: ", betterPlayers);
-        console.log("better players scores: ", betterPlayers.map(b => { b.scores }));
 
         if(betterPlayers.length > 0) {
             challengerScore.value *= 2;
             challengerScore.doubled = true;
-
-            console.log(betterPlayers.map(p => p.name), ` are better than ${this.playerInitLastRound.name}`);
-
-            console.log("challanger score after loosing:", challengerScore)
         }
         
      

@@ -47,8 +47,6 @@ export default class Lobby extends Component {
 
             case 'lobby-update':
                 this.setState({ lobby: payload.lobby });
-
-                console.log(payload.lobby)
                 break;
 
             case 'lobby-message':
@@ -117,8 +115,6 @@ export default class Lobby extends Component {
                 return null;
 
             const numOfRounds = scores[0].rounds.length;
-            console.log(numOfRounds)
-
             const rounds = [];
 
             for (let i = 0; i < numOfRounds; i++) {
