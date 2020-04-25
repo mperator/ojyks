@@ -70,7 +70,7 @@ export default class CreateLobby extends Component {
         if (!this.context.username) return (<Redirect to="/" />);
 
         return (
-            <div className="lobby-create container">
+            <div className="container">
                 <div className="row">
                     <div className="col s12">
                         <h1>Lobby erstellen</h1>

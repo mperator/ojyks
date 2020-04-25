@@ -1,9 +1,0 @@
-.board2 {
-    box-sizing: border-box;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 2px;
-    padding: 2px;
-    grid-template-rows: 1fr 1fr 1fr;
-    height: 100%;
-}

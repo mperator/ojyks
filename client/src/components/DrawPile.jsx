@@ -1,6 +1,5 @@
 import React from 'react'
 import Card from './Card'
-import './DrawPile.css'
 
 export default function DrawPile(props) {
     return (
