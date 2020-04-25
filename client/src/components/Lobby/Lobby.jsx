@@ -1,4 +1,7 @@
-import React, { Component } from 'react'
+import React, { Component } from 'react';
+
+import Chat from '../Chat';
+
 import { UserContext } from '../../context/user-context'
 
 // displays all users
@@ -17,23 +20,7 @@ export default class Lobby extends Component {
         }
 
         this.handleMessage = this.handleMessage.bind(this);
-        this.handleChange = this.handleChange.bind(this);
-        this.handleSend = this.handleSend.bind(this);
-
         this.handleStart = this.handleStart.bind(this);
-    }
-
-    handleChange(e) {
-        this.setState({ [e.target.name]: e.target.value });
-    }
-
-    handleSend(e) {
-        e.preventDefault();
-        const message = { player: this.context.username, lobby: this.props.match.params.name, message: this.state.message };
-        this.context.send({ type: 'request', action: 'lobby-message', payload: message });
-        this.context.addMessage(message);
-
-        this.setState({ message: "" });
     }
 
     handleMessage(data) {
@@ -119,28 +106,7 @@ export default class Lobby extends Component {
                     </div>
 
                     <div className="col m6 s12">
-                        <div className="input-field">
-                            <input 
-                                type="text"
-                                name="message"
-                                id="message"
-                                value={this.state.message}
-                                onChange={this.handleChange}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        this.handleSend(e);
-                                    }
-                                }}
-                            />
-                            <label htmlFor="message">Nachricht:</label>
-                            <button className="btn" onClick={this.handleSend}>Senden</button>
-                        </div>
-
-                        <ul>
-                            {this.context.chat.map((m, i) => (
-                                <li key={i}>{m.player}: {m.message}</li>
-                            ))}
-                        </ul>
+                        <Chat context={this.context} lobby={this.props.match.params.name} />
                     </div>
 
                 </div>
