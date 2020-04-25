@@ -19,12 +19,13 @@ const deckRules = [
 module.exports = class Ojyks {
     constructor() {
         this.players = [];
-        
+
         this.state = "init";
         this.drawPile = [];
         this.discardPile = [];
 
         this.currentPlayer = null;
+        this.playerInitLastRound = null;
     }
 
     tryInit(initPlayers) {
@@ -54,6 +55,7 @@ module.exports = class Ojyks {
         this.drawPile = [];
         this.discardPile = [];
         this.currentPlayer = null;
+        this.playerInitLastRound = null;
 
         for (const player of this.players) {
             player.cards = [],
@@ -204,17 +206,22 @@ module.exports = class Ojyks {
 
         if (cardsOpened.length === cardsNotNull.length) {
             player.state = "end";
+
+            // set player who initialized last round
+            if (!this.playerInitLastRound)
+                this.playerInitLastRound = player;
         }
     }
 
     detectGameEnd() {
         // if all player have state end then open all cards
         // also enable score state
-
         const count = this.players.length;
         const onlineCount = this.players.filter(p => p.online === true).length;
-
         const countEnd = this.players.filter(p => p.state === "end").length;
+
+        console.log("onlinecount", onlineCount);
+        console.log("count end", countEnd);
 
         if (countEnd < onlineCount) return;
 
@@ -223,18 +230,40 @@ module.exports = class Ojyks {
         // create scores
         for (const player of this.players) {
             player.state = "score";
-            let score = 0;
+            let score = {
+                value: 0,
+                end: player.uuid === this.playerInitLastRound.uuid,
+                doubled: false
+            };
+
             for (const card of player.cards) {
                 if (card) {
                     card.faceDown = false;
-                    score += card.value;
+                    score.value = score.value + card.value;
                 }
             }
             player.scores.push(score);
         }
 
-        console.log(this.players)
 
+        const challengerScore = this.playerInitLastRound.scores.slice(-1)[0];
+        console.log("challanger score: ", this.playerInitLastRound.scores);
+        console.log("challanger score: ", challengerScore);
+        
+        // get all player whos last score is better than challanger score
+        const betterPlayers = this.players.filter(p => 
+            p !== this.playerInitLastRound &&
+            p.scores.slice(-1)[0].value <= challengerScore.value);
+        console.log("better players: ", betterPlayers);
+        console.log("better players scores: ", betterPlayers.map(b => { b.scores }));
+
+        if(betterPlayers.length > 0) {
+            challengerScore.value *= 2;
+            challengerScore.doubled = true;
+
+            console.log(betterPlayers.map(p => p.name), ` are better than ${this.playerInitLastRound.name}`);
+        }
+     
         this.state = "score";
     }
 

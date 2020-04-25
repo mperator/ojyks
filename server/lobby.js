@@ -50,7 +50,7 @@ function handleMessage(sender, data) {
                     const player = lobby.players.find(p => p.uuid === payload.player.uuid);
                     player.ws = sender;
 
-                    if (lobby.game && lobby.game.state === 'active') {
+                    if (lobby.game) {
                         lobby.game.setPlayerNetworkState(player.uuid, true);
 
                         broadcastToLobby(null, lobby.name, {
@@ -238,6 +238,11 @@ function handleMessage(sender, data) {
             // a player executes a game turn.
             const lobbyGameTurn = lobbies.find(l => l.name === payload.lobby);
             const game = lobbyGameTurn.game;
+
+            if(game.state === "score") {
+                console.log("execution on game end!!!!")
+                return;
+            }
 
             game.turn(payload.user, payload.source, payload.cardIndex);
 
