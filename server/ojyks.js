@@ -64,6 +64,10 @@ module.exports = class Ojyks {
 
         this.drawPile = this.initialize(deckRules);
         this.deal(this.drawPile, this.players);
+
+        // open first card and place it on discard pile
+        this.discardPile = this.drawPile.splice(0, 1);
+        this.discardPile[0].faceDown = false;
     }
 
     // creates cards and add it to the drawPile.
