@@ -15,7 +15,9 @@ export default function Card({ card, cardIndex, source, handleClick, small }) {
         <div className={getCardClassName(card, small)} onClick={() => handleClick && handleClick({ source, cardIndex })}>
             <div className={getBackClassName(card, small)} />
             <div className={getFrontClassName(card, small)}>
-                <span>{card.value}</span>
+                {!card.faceDown &&
+                    <span>{card.value}</span>
+                }
             </div>
         </div>
     );
