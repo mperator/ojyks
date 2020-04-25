@@ -26,12 +26,19 @@ export default class Login extends Component {
     handleClick(e) {
         e.preventDefault();
 
-        if (this.state.username) {
-            this.context.setUsername(this.state.username);
-            this.props.history.push("/lobby/join");
-        } else {
-            this.setState({ errorMessage: "Fehler: Kein Benutzername angegeben..." });
+        if(e.target.name === "login") {
+            if (this.state.username) {
+                this.context.setUsername(this.state.username);
+                this.props.history.push("/lobby/join");
+            } else {
+                this.setState({ errorMessage: "Fehler: Kein Benutzername angegeben..." });
+            }
+        } else if(e.target.name === "reset") {
+            this.context.resetUsername();
+            this.setState({username: ""});
         }
+
+        
     }
 
     componentDidMount() {
@@ -55,6 +62,9 @@ export default class Login extends Component {
 
                     <div className="input-field col s12">
                         <button className="btn right ml5" name="login" onClick={this.handleClick}>login</button>
+                        <button className="btn right ml5" 
+                        disabled={!this.context.uuid}
+                        name="reset" onClick={this.handleClick}>reset</button>
                     </div>
 
                     <div className="col s12 left red-text">
