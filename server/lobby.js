@@ -24,7 +24,7 @@ function handleDisconnect(sender) {
 
         if (lobby.game) {
             lobby.game.setPlayerNetworkState(player.uuid, false);
-        
+
             broadcastToLobby(null, lobby.name, {
                 type: 'response',
                 action: 'game-state',
@@ -129,6 +129,47 @@ function handleMessage(sender, data) {
         case 'lobby-overview':
             // a player requests the lobby overview data.
             sendDirectResponse(sender, createResponseLobbyOverview());
+            break;
+        case 'lobby-leave':
+            const lobbyToLeave = lobbies && lobbies.find(l => l.name === payload.lobby);
+
+            const pid = lobbyToLeave.players.findIndex(p => p.uuid === payload.player.uuid);
+            const removedPlayer = lobbyToLeave.players.splice(pid, 1)[0];
+
+            if (lobbyToLeave.game && !lobbyToLeave.game.state === 'init') {
+                // remove player from game
+                lobbyToLeave.game.removePlayer(payload.player.uuid);
+                if (lobbyToLeave.game.state === 'active') {
+                    // Ontify players
+                }
+            }
+
+            sendDirectResponse(sender, {
+                type: "response",
+                action: "lobby-leave",
+                state: "success",
+                payload: null
+            });
+
+            console.log(removedPlayer.name, lobbyToLeave.creator);
+            if(removedPlayer.name === lobbyToLeave.creator) {
+                /// change to other player in the 
+                if(lobbyToLeave.players.length > 0) {
+                    lobbyToLeave.creator = lobbyToLeave.players[0].name;
+                }
+            }
+
+            // notifiy lobby
+            broadcastToLobby(null, lobbyToLeave.name, createResponseLobbyUpdate(lobbyToLeave.name));
+
+            if(lobbyToLeave.players.length === 0) {
+                // delete lobby
+                const lid = lobbies.findIndex(l => l.name === lobbyToLeave.name);
+                lobbies.splice(lid, 1);
+            }
+
+            broadcast(sender, createResponseLobbyOverview());
+
             break;
         case 'lobby-join':
             // a player requests to join the lobby.
@@ -241,7 +282,7 @@ function handleMessage(sender, data) {
             const lobbyGameTurn = lobbies.find(l => l.name === payload.lobby);
             const game = lobbyGameTurn.game;
 
-            if(game.state === "score") {
+            if (game.state === "score") {
                 console.log("execution on game end!!!!")
                 return;
             }

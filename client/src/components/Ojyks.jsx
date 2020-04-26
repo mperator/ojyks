@@ -37,6 +37,25 @@ export default class Ojyks extends Component {
 
         this.executeTurn = this.executeTurn.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
+        this.handleQuit = this.handleQuit.bind(this);
+    }
+
+    handleQuit(e) {
+        e.preventDefault();
+
+        this.context.send({
+            type: 'request',
+            action: 'lobby-leave',
+            payload: {
+                lobby: this.props.match.params.name,
+                player: {
+                    name: this.context.username,
+                    uuid: this.context.uuid
+                }
+            }
+        });
+
+        this.props.history.push(`/login`);
     }
 
     handleMessage(data) {
@@ -193,6 +212,9 @@ export default class Ojyks extends Component {
 
         return (
             <div className="container">
+                <div className="row">
+                    <button className="btn red right" onClick={this.handleQuit}>RAGE QUIT</button>
+                </div>
                 <div className="row">
                     <div className={`ol s12 ${locals.overflowContainer}`}>
                         {this.state.players && this.state.players.map((player, i) => (

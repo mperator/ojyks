@@ -20,6 +20,26 @@ export default class Lobby extends Component {
 
         this.handleMessage = this.handleMessage.bind(this);
         this.handleStart = this.handleStart.bind(this);
+        this.handleQuit = this.handleQuit.bind(this);
+    }
+
+
+    handleQuit(e) {
+        e.preventDefault();
+
+        this.context.send({
+            type: 'request',
+            action: 'lobby-leave',
+            payload: {
+                lobby: this.props.match.params.name,
+                player: {
+                    name: this.context.username,
+                    uuid: this.context.uuid
+                }
+            }
+        });
+
+        this.props.history.push(`/login`);
     }
 
     handleMessage(data) {
@@ -103,7 +123,7 @@ export default class Lobby extends Component {
                     <td>Total</td>
                     {scores && scores.map(s => (
                         <td key={s.uuid}>
-                            {s.rounds.length > 0 ? 
+                            {s.rounds.length > 0 ?
                                 s.rounds.map(r => r.value).reduce((a, c) => a + c) :
                                 0
                             }
@@ -130,8 +150,8 @@ export default class Lobby extends Component {
 
             function getClassName(s) {
                 const classes = [];
-                if(s.end) classes .push(locals.end);
-                if(s.doubled) classes.push(locals.doubled);
+                if (s.end) classes.push(locals.end);
+                if (s.doubled) classes.push(locals.doubled);
                 return classes.join(' ');
             }
 
@@ -153,6 +173,9 @@ export default class Lobby extends Component {
         return (
             <div className="container" >
                 <div className="row">
+                    <button className="btn red right" onClick={this.handleQuit}>QUIT</button>
+                </div>
+                <div className="row">
                     <div className="col s12">
                         <h1>{this.state.lobby.name}</h1>
                     </div>
@@ -160,26 +183,25 @@ export default class Lobby extends Component {
                     <div className="col m8 s12">
                         {this.state.lobby.creator === this.context.username &&
                             <button className="btn" onClick={this.handleStart}>starten...</button>}
-                        
+
                         {this.state.lobby &&
-                        this.state.lobby.scores && this.state.lobby.scores.length === 0
-                        &&
+                            this.state.lobby.scores && this.state.lobby.scores.length === 0
+                            &&
                             <ul>
                                 {this.state.lobby.players && this.state.lobby.players.map((u, i) => (
                                     <li key={i}>{u}</li>
                                 ))}
                             </ul>}
 
-
                         {this.state.lobby &&
-                        this.state.lobby.scores && this.state.lobby.scores.length > 0 &&
-                        <table>
-                            {renderScoreHead(this.state.lobby.scores)}
-                            <tbody>
-                                {renderScoreTotalSum(this.state.lobby.scores)}
-                                {renderScoreRounds(this.state.lobby.scores)}
-                            </tbody>
-                        </table>}
+                            this.state.lobby.scores && this.state.lobby.scores.length > 0 &&
+                            <table>
+                                {renderScoreHead(this.state.lobby.scores)}
+                                <tbody>
+                                    {renderScoreTotalSum(this.state.lobby.scores)}
+                                    {renderScoreRounds(this.state.lobby.scores)}
+                                </tbody>
+                            </table>}
                     </div>
 
                     <div className="col m4 s12">

@@ -448,13 +448,35 @@ module.exports = class Ojyks {
         const player = this.players.find(p => p.uuid === uuid);
         if (!player) return;
 
-        if(player.online === isOnline) {
+        if (player.online === isOnline) {
             console.log("Player online state is already: " + isOnline.toString());
             return;
         }
 
         player.online = isOnline;
         player.state = "ready";
+
+        if (this.currentPlayer === player.name) {
+            const card = this.drawPile.splice(0, 1)[0];
+
+            if (card && card.faceDown) {
+                this.drawPile = [card, ...this.drawPile];
+            } else {
+                card.faceDown = false;
+                this.discardPile = [card, ...this.discardPile];
+            }
+
+            this.completeTurn();
+        }
+    }
+
+    removePlayer(uuid) {
+        const player = this.players.find(p => p.uuid === uuid);
+        if (!player) return;
+
+        const pid = this.players.find(p => p.uuid === uuid);
+        if (pid > 0)
+            this.players.splice(pid, 1);
 
         if (this.currentPlayer === player.name) {
             const card = this.drawPile.splice(0, 1)[0];
