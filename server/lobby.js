@@ -131,16 +131,23 @@ function handleMessage(sender, data) {
             sendDirectResponse(sender, createResponseLobbyOverview());
             break;
         case 'lobby-leave':
+            console.log(payload)
+
             const lobbyToLeave = lobbies && lobbies.find(l => l.name === payload.lobby);
 
             const pid = lobbyToLeave.players.findIndex(p => p.uuid === payload.player.uuid);
             const removedPlayer = lobbyToLeave.players.splice(pid, 1)[0];
 
-            if (lobbyToLeave.game && !lobbyToLeave.game.state === 'init') {
+            console.log("state: ", lobbyToLeave.game.state)
+            if (lobbyToLeave.game && lobbyToLeave.game.state !== 'init') {
                 // remove player from game
                 lobbyToLeave.game.removePlayer(payload.player.uuid);
                 if (lobbyToLeave.game.state === 'active') {
-                    // Ontify players
+                    broadcastToLobby(null, lobbyToLeave.name, {
+                        type: 'response',
+                        action: 'game-state',
+                        payload: getCurrentGameState(lobbyToLeave.game)
+                    });
                 }
             }
 

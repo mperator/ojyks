@@ -39,7 +39,8 @@ module.exports = class Ojyks {
                     online: true,
                     cards: [],  // this is an list of 12 objects,
                     state: "init",
-                    scores: []
+                    scores: [],
+                    deleted: false
                 });
             }
 
@@ -419,14 +420,14 @@ module.exports = class Ojyks {
     // check if all players are ready
     // get player with highest open cards.
     findAndSetBeginningPlayer() {
-        const playerInitCount = this.players.filter(p => p.state === "init").length;
+        const playerInitCount = this.players.filter(p => p.state === "init" && p.online).length;
         if (playerInitCount > 0) return;
 
         let beginner = "";
         let beginnerSum = -99;
 
         // find player with highest score
-        for (const player of this.players) {
+        for (const player of this.players.filter(p => p.state === 'ready')) {
             const playerSum = player.cards.filter(c => !c.faceDown)
                 .map(c => c.value)
                 .reduce((a, b) => a + b);
@@ -454,7 +455,8 @@ module.exports = class Ojyks {
         }
 
         player.online = isOnline;
-        player.state = "ready";
+        if(player.online)
+            player.state = "ready";
 
         if (this.currentPlayer === player.name) {
             const card = this.drawPile.splice(0, 1)[0];
@@ -474,21 +476,14 @@ module.exports = class Ojyks {
         const player = this.players.find(p => p.uuid === uuid);
         if (!player) return;
 
-        const pid = this.players.find(p => p.uuid === uuid);
-        if (pid > 0)
-            this.players.splice(pid, 1);
+        player.deleted = true;
+        this.setPlayerNetworkState(uuid, false);
 
-        if (this.currentPlayer === player.name) {
-            const card = this.drawPile.splice(0, 1)[0];
+        console.log(player)
 
-            if (card && card.faceDown) {
-                this.drawPile = [card, ...this.drawPile];
-            } else {
-                card.faceDown = false;
-                this.discardPile = [card, ...this.discardPile];
-            }
-
-            this.completeTurn();
+        if(player.state === "init") {
+            console.log("Player was in initalization that means game was not running yet.")
+            this.findAndSetBeginningPlayer();
         }
     }
 }
