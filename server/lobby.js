@@ -131,14 +131,11 @@ function handleMessage(sender, data) {
             sendDirectResponse(sender, createResponseLobbyOverview());
             break;
         case 'lobby-leave':
-            console.log(payload)
-
             const lobbyToLeave = lobbies && lobbies.find(l => l.name === payload.lobby);
 
             const pid = lobbyToLeave.players.findIndex(p => p.uuid === payload.player.uuid);
             const removedPlayer = lobbyToLeave.players.splice(pid, 1)[0];
-
-            console.log("state: ", lobbyToLeave.game.state)
+            
             if (lobbyToLeave.game && lobbyToLeave.game.state !== 'init') {
                 // remove player from game
                 lobbyToLeave.game.removePlayer(payload.player.uuid);
@@ -158,7 +155,6 @@ function handleMessage(sender, data) {
                 payload: null
             });
 
-            console.log(removedPlayer.name, lobbyToLeave.creator);
             if(removedPlayer.name === lobbyToLeave.creator) {
                 /// change to other player in the 
                 if(lobbyToLeave.players.length > 0) {
@@ -382,7 +378,7 @@ function getCurrentGameState(game) {
     return {
         drawPile: game.drawPile,
         discardPile: game.discardPile,
-        players: game.players,
+        players: game.players.filter(p => !p.deleted),
         currentPlayer: game.currentPlayer
     }
 }

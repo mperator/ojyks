@@ -227,7 +227,6 @@ module.exports = class Ojyks {
     detectGameEnd() {
         // if all player have state end then open all cards
         // also enable score state
-        const count = this.players.length;
         const onlineCount = this.players.filter(p => p.online === true).length;
         const countEnd = this.players.filter(p => p.state === "end").length;
 
@@ -256,6 +255,7 @@ module.exports = class Ojyks {
 
         // get all player whos last score is better than challanger score
         const betterPlayers = this.players.filter(p =>
+            !p.deleted &&
             p !== this.playerInitLastRound &&
             p.scores.slice(-1)[0].value <= challengerScore.value);
 
@@ -264,13 +264,12 @@ module.exports = class Ojyks {
             challengerScore.doubled = true;
         }
 
-
         this.state = "score";
     }
 
     // returns score table 
     getScores() {
-        return this.players && this.players.map(p => ({
+        return this.players && this.players.filter(p => !p.deleted).map(p => ({
             name: p.name,
             uuid: p.uuid,
             rounds: p.scores
@@ -479,10 +478,7 @@ module.exports = class Ojyks {
         player.deleted = true;
         this.setPlayerNetworkState(uuid, false);
 
-        console.log(player)
-
         if(player.state === "init") {
-            console.log("Player was in initalization that means game was not running yet.")
             this.findAndSetBeginningPlayer();
         }
     }
