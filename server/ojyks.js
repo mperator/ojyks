@@ -144,7 +144,6 @@ module.exports = class Ojyks {
             this.drawPile = this.shuffle(pile);
         }
 
-
         const count = this.players.filter(p => p.state === "end").length;
 
         let player = this.players.find(p => p.name === this.currentPlayer);
@@ -455,7 +454,7 @@ module.exports = class Ojyks {
         }
 
         player.online = isOnline;
-        if(player.online)
+        if(player.online && player.state !== "init")
             player.state = "ready";
 
         if (this.currentPlayer === player.name) {
@@ -470,6 +469,10 @@ module.exports = class Ojyks {
 
             this.completeTurn();
         }
+
+        // check if player is last which has not ended yet
+        if(!this.players.find(p => p.state === "play"))
+            this.completeTurn();
     }
 
     removePlayer(uuid) {
