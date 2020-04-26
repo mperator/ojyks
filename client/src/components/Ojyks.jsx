@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Link } from 'react-router-dom'
 
 import Chat from './Chat';
 import CardDeck from './CardDeck';
@@ -193,6 +194,8 @@ export default class Ojyks extends Component {
                 <div className="row">
                     <div className="col s12">
                         <StateDisplay state={this.state} />
+                        {this.state.state === "score" &&
+                        <Link to={`/lobby/${this.props.match.params.name}`}>To Score Screen...</Link> }
                     </div>
                 </div>
                 <div className="row">
