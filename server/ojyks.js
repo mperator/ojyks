@@ -439,9 +439,10 @@ module.exports = class Ojyks {
 
         // select player with highest value to begin
         const player = this.players.find(p => p.name === beginner);
-        player.state = "play";
-
-        this.currentPlayer = player.name;
+        if(player) {
+            player.state = "play";
+            this.currentPlayer = player.name;
+        }
     }
 
     setPlayerNetworkState(uuid, isOnline) {
