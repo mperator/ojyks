@@ -8,6 +8,26 @@ const lobbies = [];
 // callbacks
 let sendToHandler;
 
+const AUTOTRASHTIME = 20 * 60 * 1000;
+
+setInterval(() => {
+    const remove = lobbies
+        .filter(l => {
+            return (new Date() - l.lastActivityTS) > AUTOTRASHTIME;
+        })
+        .map(l => l.name);
+
+    for(let i = 0; i < remove.length; i++) {
+        let index = lobbies.findIndex(l => l.name === remove[i]);
+        lobbies.splice(index, 1);
+
+        console.log(`Remove ${remove[i]} during inactivity.`);
+    }
+
+    // send to players in lobby that lobby was closed.
+    broadcast(null, createResponseLobbyOverview());
+}, 30*60*1000); // 20 min
+
 // methods
 function registerSendCallback(callback) {
     this.sendToHandler = callback;
@@ -36,6 +56,12 @@ function handleDisconnect(sender) {
 
 function handleMessage(sender, data) {
     const { action, payload } = data;
+
+    // Each message is addressed to one lobby
+    // if lobby exists set activity timestamp
+    // a service cleans up all lobbies that have no activity since 20 minutes
+    let lobbyForActivity = null;
+
     switch (action) {
         case 'reconnect':
             /* if the player reconnects the player should automatically navigate to the site he was on before losing 
@@ -46,6 +72,9 @@ function handleMessage(sender, data) {
                 const lobby = lobbies && lobbies.find(l => l.players.find(p => p.uuid === payload.player.uuid));
 
                 if (lobby) {
+                    lobbyForActivity = lobby;
+
+
                     // get player with uuid
                     const player = lobby.players.find(p => p.uuid === payload.player.uuid);
                     player.ws = sender;
@@ -86,8 +115,10 @@ function handleMessage(sender, data) {
         case 'lobby-create':
             // a player requests to create a new lobby.
             const lobby = lobbies && lobbies.find(l => l.name === payload.lobby);
+            lobbyForActivity = lobby;
 
             if (lobby) {
+
                 sendDirectResponse(sender, {
                     type: 'response',
                     action: 'lobby-create',
@@ -107,7 +138,9 @@ function handleMessage(sender, data) {
                     state: 'open',
                     slots: 8,
                     players: [{ name: playerName, uuid: playerUUID, ws: sender, scores: [] }],
-                    game: new Ojyks()
+                    game: new Ojyks(),
+                    lastActivityTS: new Date()
+
                 };
                 lobbies.push(newLobby);
 
@@ -132,10 +165,12 @@ function handleMessage(sender, data) {
             break;
         case 'lobby-leave':
             const lobbyToLeave = lobbies && lobbies.find(l => l.name === payload.lobby);
+            lobbyForActivity = lobbyToLeave;
+
 
             const pid = lobbyToLeave.players.findIndex(p => p.uuid === payload.player.uuid);
             const removedPlayer = lobbyToLeave.players.splice(pid, 1)[0];
-            
+
             if (lobbyToLeave.game && lobbyToLeave.game.state !== 'init') {
                 // remove player from game
                 lobbyToLeave.game.removePlayer(payload.player.uuid);
@@ -155,9 +190,9 @@ function handleMessage(sender, data) {
                 payload: null
             });
 
-            if(removedPlayer.name === lobbyToLeave.creator) {
+            if (removedPlayer.name === lobbyToLeave.creator) {
                 /// change to other player in the 
-                if(lobbyToLeave.players.length > 0) {
+                if (lobbyToLeave.players.length > 0) {
                     lobbyToLeave.creator = lobbyToLeave.players[0].name;
                 }
             }
@@ -165,7 +200,7 @@ function handleMessage(sender, data) {
             // notifiy lobby
             broadcastToLobby(null, lobbyToLeave.name, createResponseLobbyUpdate(lobbyToLeave.name));
 
-            if(lobbyToLeave.players.length === 0) {
+            if (lobbyToLeave.players.length === 0) {
                 // delete lobby
                 const lid = lobbies.findIndex(l => l.name === lobbyToLeave.name);
                 lobbies.splice(lid, 1);
@@ -177,6 +212,8 @@ function handleMessage(sender, data) {
         case 'lobby-join':
             // a player requests to join the lobby.
             const lobbyToJoin = lobbies && lobbies.find(l => l.name === payload.lobby);
+            lobbyForActivity = lobbyToJoin;
+
             if (!lobbyToJoin) {
                 sendDirectResponse(sender, {
                     type: "response",
@@ -232,11 +269,15 @@ function handleMessage(sender, data) {
             broadcast(sender, createResponseLobbyOverview());
             break;
         case 'lobby-update':
+            lobbyForActivity = lobbies && lobbies.find(l => l.name == payload.lobby);
+
             // user requests an update of a specific lobby
             sendDirectResponse(sender, createResponseLobbyUpdate(payload.lobby));
             break;
         case 'lobby-message':
             const lobbyToMessage = lobbies && lobbies.find(l => l.name === payload.lobby);
+            lobbyForActivity = lobbyToMessage;
+
             if (!lobbyToMessage) return
 
             broadcastToLobby(sender, lobbyToMessage.name, { type: 'response', action: 'lobby-message', payload: payload })
@@ -247,6 +288,8 @@ function handleMessage(sender, data) {
             // a player requests to start the game
             const lobbyToStartGame = lobbies.find(l => l.name === payload.lobby);
             lobbyToStartGame.state = 'closed'
+
+            lobbyForActivity = lobbyToStartGame;
 
             const playerNames = lobbyToStartGame.players.map(u => ({ name: u.name, uuid: u.uuid }));
             lobbyToStartGame.game.tryInit(playerNames)
@@ -262,6 +305,7 @@ function handleMessage(sender, data) {
         case 'game-state':
             // a player requests the current game state
             const lobbyGameState = lobbies.find(l => l.name === payload.lobby);
+            lobbyForActivity = lobbyGameState;
 
             // if player currently was offline and reconnect
             // set player to online 
@@ -283,6 +327,8 @@ function handleMessage(sender, data) {
         case 'game-turn': {
             // a player executes a game turn.
             const lobbyGameTurn = lobbies.find(l => l.name === payload.lobby);
+            lobbyForActivity = lobbyGameTurn;
+
             const game = lobbyGameTurn.game;
 
             if (game.state === "score") {
@@ -298,6 +344,10 @@ function handleMessage(sender, data) {
                 payload: getCurrentGameState(lobbyGameTurn.game)
             });
         }
+    }
+
+    if (lobbyForActivity) {
+        lobbyForActivity.lastActivityTS = new Date();
     }
 }
 
