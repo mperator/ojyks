@@ -40,14 +40,24 @@ export default class Ojyks extends Component {
     }
 
     handleMessage(data) {
-        const { type, action, payload} = data;
+        const { type, action, payload } = data;
         if (type !== 'response') return;
 
         switch (action) {
             case 'reconnect':
                 if (payload.lobby) {
                     if (payload.gameState === 'active') {
-                        this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.props.match.params.name } });
+                        this.context.send({
+                            type: 'request',
+                            action: 'game-state',
+                            payload: {
+                                lobby: this.props.match.params.name,
+                                player: {
+                                    name: this.context.username,
+                                    uuid: this.context.uuid
+                                }
+                            }
+                        });
                     } else {
                         this.props.history.push(`/lobby/${payload.lobby}`);
                     }
@@ -85,7 +95,17 @@ export default class Ojyks extends Component {
         this.context.registerCallback('gameMessageHandler', this.handleMessage);
 
         if (this.context.ws.readyState === this.context.ws.OPEN) {
-            this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.props.match.params.name } });
+            this.context.send({
+                type: 'request',
+                action: 'game-state',
+                payload: {
+                    lobby: this.props.match.params.name,
+                    player: {
+                        name: this.context.username,
+                        uuid: this.context.uuid
+                    }
+                }
+            });
         }
     }
 
@@ -195,7 +215,7 @@ export default class Ojyks extends Component {
                     <div className="col s12">
                         <StateDisplay state={this.state} />
                         {this.state.state === "score" &&
-                        <Link to={`/lobby/${this.props.match.params.name}`}>To Score Screen...</Link> }
+                            <Link to={`/lobby/${this.props.match.params.name}`}>To Score Screen...</Link>}
                     </div>
                 </div>
                 <div className="row">

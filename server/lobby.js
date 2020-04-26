@@ -50,16 +50,6 @@ function handleMessage(sender, data) {
                     const player = lobby.players.find(p => p.uuid === payload.player.uuid);
                     player.ws = sender;
 
-                    if (lobby.game) {
-                        lobby.game.setPlayerNetworkState(player.uuid, true);
-
-                        broadcastToLobby(null, lobby.name, {
-                            type: 'response',
-                            action: 'game-state',
-                            payload: getCurrentGameState(lobby.game)
-                        });
-                    }
-
                     // response with lobby and game state
                     const gameState = lobby.game ? lobby.game.state : 'score';
 
@@ -228,6 +218,18 @@ function handleMessage(sender, data) {
         case 'game-state':
             // a player requests the current game state
             const lobbyGameState = lobbies.find(l => l.name === payload.lobby);
+
+            // if player currently was offline and reconnect
+            // set player to online 
+            if (lobbyGameState.game) {
+                lobbyGameState.game.setPlayerNetworkState(payload.player.uuid, true);
+
+                broadcastToLobby(null, lobbyGameState.name, {
+                    type: 'response',
+                    action: 'game-state',
+                    payload: getCurrentGameState(lobbyGameState.game)
+                });
+            }
 
             sendDirectResponse(sender, {
                 type: 'response',

@@ -446,8 +446,12 @@ module.exports = class Ojyks {
 
     setPlayerNetworkState(uuid, isOnline) {
         const player = this.players.find(p => p.uuid === uuid);
-
         if (!player) return;
+
+        if(player.online === isOnline) {
+            console.log("Player online state is already: " + isOnline.toString());
+            return;
+        }
 
         player.online = isOnline;
         player.state = "ready";
