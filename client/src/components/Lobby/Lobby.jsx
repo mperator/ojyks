@@ -184,8 +184,9 @@ export default class Lobby extends Component {
                     </div>
 
                     <div className="col m8 s12">
+                        
                         {this.state.lobby.creator === this.context.username &&
-                            <button className="btn" onClick={this.handleStart}>starten...</button>}
+                            <button disabled={!(this.state.lobby.gameState === "init" || this.state.lobby.gameState=== "score")} className="btn" onClick={this.handleStart}>starten...</button>}
 
                         {this.state.lobby &&
                             this.state.lobby.scores && this.state.lobby.scores.length === 0

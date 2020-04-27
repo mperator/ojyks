@@ -414,6 +414,7 @@ function getLobbyDTO(lobbyName) {
         slots: lobby.slots,
         players: lobby.players.map(u => u.name),
         game: null,
+        gameState: lobby.game && lobby.game.state,
         scores: lobby.game && lobby.game.getScores()
     };
 }
