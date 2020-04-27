@@ -68,6 +68,9 @@ export default class Lobby extends Component {
             case 'lobby-update':
                 this.setState({ lobby: payload.lobby });
                 break;
+            case 'lobby-closed':
+                this.props.history.push(`/lobby/join`);
+                break;
 
             case 'lobby-message':
                 this.context.addMessage(payload)

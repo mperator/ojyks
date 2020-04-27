@@ -18,6 +18,15 @@ setInterval(() => {
         .map(l => l.name);
 
     for(let i = 0; i < remove.length; i++) {
+        const lobby = lobbies.find(l => l.name === remove[i]);
+        if(lobby) {
+            broadcastToLobby(null, lobby.name, {
+                type: 'response',
+                action: 'lobby-closed',
+                payload: null
+            });
+        }
+        
         let index = lobbies.findIndex(l => l.name === remove[i]);
         lobbies.splice(index, 1);
 
@@ -26,7 +35,7 @@ setInterval(() => {
 
     // send to players in lobby that lobby was closed.
     broadcast(null, createResponseLobbyOverview());
-}, 30*60*1000); // 20 min
+}, 30*60*1000); // 30 min
 
 // methods
 function registerSendCallback(callback) {

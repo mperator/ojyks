@@ -105,6 +105,11 @@ export default class Ojyks extends Component {
                 this.context.addMessage(data.payload)
                 break;
 
+            case 'lobby-closed':
+                this.props.history.push(`/lobby/join`);
+                break;
+    
+
             default:
                 return;
         }
