@@ -39,7 +39,8 @@ module.exports = class Ojyks {
                     online: true,
                     cards: [],  // this is an list of 12 objects,
                     state: "init",
-                    scores: []
+                    scores: [],
+                    deleted: false
                 });
             }
 
@@ -143,7 +144,6 @@ module.exports = class Ojyks {
             this.drawPile = this.shuffle(pile);
         }
 
-
         const count = this.players.filter(p => p.state === "end").length;
 
         let player = this.players.find(p => p.name === this.currentPlayer);
@@ -226,7 +226,6 @@ module.exports = class Ojyks {
     detectGameEnd() {
         // if all player have state end then open all cards
         // also enable score state
-        const count = this.players.length;
         const onlineCount = this.players.filter(p => p.online === true).length;
         const countEnd = this.players.filter(p => p.state === "end").length;
 
@@ -255,6 +254,7 @@ module.exports = class Ojyks {
 
         // get all player whos last score is better than challanger score
         const betterPlayers = this.players.filter(p =>
+            !p.deleted &&
             p !== this.playerInitLastRound &&
             p.scores.slice(-1)[0].value <= challengerScore.value);
 
@@ -263,13 +263,12 @@ module.exports = class Ojyks {
             challengerScore.doubled = true;
         }
 
-
         this.state = "score";
     }
 
     // returns score table 
     getScores() {
-        return this.players && this.players.map(p => ({
+        return this.players && this.players.filter(p => !p.deleted).map(p => ({
             name: p.name,
             uuid: p.uuid,
             rounds: p.scores
@@ -419,14 +418,14 @@ module.exports = class Ojyks {
     // check if all players are ready
     // get player with highest open cards.
     findAndSetBeginningPlayer() {
-        const playerInitCount = this.players.filter(p => p.state === "init").length;
+        const playerInitCount = this.players.filter(p => p.state === "init" && p.online).length;
         if (playerInitCount > 0) return;
 
         let beginner = "";
         let beginnerSum = -99;
 
         // find player with highest score
-        for (const player of this.players) {
+        for (const player of this.players.filter(p => p.state === 'ready')) {
             const playerSum = player.cards.filter(c => !c.faceDown)
                 .map(c => c.value)
                 .reduce((a, b) => a + b);
@@ -439,18 +438,24 @@ module.exports = class Ojyks {
 
         // select player with highest value to begin
         const player = this.players.find(p => p.name === beginner);
-        player.state = "play";
-
-        this.currentPlayer = player.name;
+        if(player) {
+            player.state = "play";
+            this.currentPlayer = player.name;
+        }
     }
 
     setPlayerNetworkState(uuid, isOnline) {
         const player = this.players.find(p => p.uuid === uuid);
-
         if (!player) return;
 
+        if (player.online === isOnline) {
+            console.log("Player online state is already: " + isOnline.toString());
+            return;
+        }
+
         player.online = isOnline;
-        player.state = "ready";
+        if(player.online && player.state !== "init")
+            player.state = "ready";
 
         if (this.currentPlayer === player.name) {
             const card = this.drawPile.splice(0, 1)[0];
@@ -463,6 +468,22 @@ module.exports = class Ojyks {
             }
 
             this.completeTurn();
+        }
+
+        // check if player is last which has not ended yet
+        if(!this.players.find(p => p.state === "play"))
+            this.completeTurn();
+    }
+
+    removePlayer(uuid) {
+        const player = this.players.find(p => p.uuid === uuid);
+        if (!player) return;
+
+        player.deleted = true;
+        this.setPlayerNetworkState(uuid, false);
+
+        if(player.state === "init") {
+            this.findAndSetBeginningPlayer();
         }
     }
 }
