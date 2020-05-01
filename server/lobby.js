@@ -53,7 +53,6 @@ function handleDisconnect(sender) {
 
         if (lobby.game) {
             lobby.game.setPlayerNetworkState(player.uuid, false);
-
             broadcastToLobby(null, lobby.name, {
                 type: 'response',
                 action: 'game-state',
