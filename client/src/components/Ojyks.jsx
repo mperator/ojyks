@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Link } from 'react-router-dom'
 
 import Chat from './Chat';
 import CardDeck from './CardDeck';
@@ -36,17 +37,46 @@ export default class Ojyks extends Component {
 
         this.executeTurn = this.executeTurn.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
+        this.handleQuit = this.handleQuit.bind(this);
+    }
+
+    handleQuit(e) {
+        e.preventDefault();
+
+        this.context.send({
+            type: 'request',
+            action: 'lobby-leave',
+            payload: {
+                lobby: this.props.match.params.name,
+                player: {
+                    name: this.context.username,
+                    uuid: this.context.uuid
+                }
+            }
+        });
+
+        this.props.history.push(`/login`);
     }
 
     handleMessage(data) {
-        const { type, action, payload} = data;
+        const { type, action, payload } = data;
         if (type !== 'response') return;
 
         switch (action) {
             case 'reconnect':
                 if (payload.lobby) {
                     if (payload.gameState === 'active') {
-                        this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.props.match.params.name } });
+                        this.context.send({
+                            type: 'request',
+                            action: 'game-state',
+                            payload: {
+                                lobby: this.props.match.params.name,
+                                player: {
+                                    name: this.context.username,
+                                    uuid: this.context.uuid
+                                }
+                            }
+                        });
                     } else {
                         this.props.history.push(`/lobby/${payload.lobby}`);
                     }
@@ -75,6 +105,11 @@ export default class Ojyks extends Component {
                 this.context.addMessage(data.payload)
                 break;
 
+            case 'lobby-closed':
+                this.props.history.push(`/lobby/join`);
+                break;
+    
+
             default:
                 return;
         }
@@ -84,7 +119,17 @@ export default class Ojyks extends Component {
         this.context.registerCallback('gameMessageHandler', this.handleMessage);
 
         if (this.context.ws.readyState === this.context.ws.OPEN) {
-            this.context.send({ type: 'request', action: 'game-state', payload: { lobby: this.props.match.params.name } });
+            this.context.send({
+                type: 'request',
+                action: 'game-state',
+                payload: {
+                    lobby: this.props.match.params.name,
+                    player: {
+                        name: this.context.username,
+                        uuid: this.context.uuid
+                    }
+                }
+            });
         }
     }
 
@@ -173,6 +218,9 @@ export default class Ojyks extends Component {
         return (
             <div className="container">
                 <div className="row">
+                    <button className="btn red right" onClick={this.handleQuit}>RAGE QUIT</button>
+                </div>
+                <div className="row">
                     <div className={`ol s12 ${locals.overflowContainer}`}>
                         {this.state.players && this.state.players.map((player, i) => (
                             <div key={i} className={locals.deckContainer}>
@@ -193,6 +241,8 @@ export default class Ojyks extends Component {
                 <div className="row">
                     <div className="col s12">
                         <StateDisplay state={this.state} />
+                        {this.state.state === "score" &&
+                            <Link to={`/lobby/${this.props.match.params.name}`}>To Score Screen...</Link>}
                     </div>
                 </div>
                 <div className="row">
