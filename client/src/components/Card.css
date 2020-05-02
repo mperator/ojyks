@@ -26,6 +26,11 @@
 	box-shadow: 0 0 3px #000;
 }
 
+.card-selected {
+    border-radius: 10px;
+    box-shadow: 0 0 24px blue;
+}
+
 .face {
     display: flex;
     justify-content: center;

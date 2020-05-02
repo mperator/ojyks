@@ -7,12 +7,13 @@ Card.propTypes = {
     cardIndex: PropTypes.number.isRequired,
     source: PropTypes.string.isRequired,
     handleClick: PropTypes.func,
-    small: PropTypes.bool
+    small: PropTypes.bool,
+    selected: PropTypes.bool
 };
 
-export default function Card({ card, cardIndex, source, handleClick, small }) {
+export default function Card({ card, cardIndex, source, handleClick, small, selected }) {
     return (
-        <div className={getCardClassName(card, small)} onClick={() => handleClick && handleClick({ source, cardIndex })}>
+        <div className={getCardClassName(card, small, selected)} onClick={() => handleClick && handleClick({ source, cardIndex })}>
             <div className={getBackClassName(card, small)} />
             <div className={getFrontClassName(card, small)}>
                 {!card.faceDown &&
@@ -42,10 +43,13 @@ function getBackClassName(card, small) {
     return className;
 }
 
-function getCardClassName(card, small) {
+function getCardClassName(card, small, selected) {
     let className = 'card-wrapper';
     if (!card.faceDown) {
         className += ' card-flipped';
+    }
+    if(selected) {
+        className += ' card-selected'
     }
     if (small) {
         className += ' small';
