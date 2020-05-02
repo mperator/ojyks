@@ -233,8 +233,8 @@ export default class Ojyks extends Component {
                 <div className="row">
                     <div className="col s12">
                         <div className={locals.drawDiscardContainer}>
-                            <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} />
-                            <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} />
+                            <DrawPile cards={this.state.drawPile} handleClick={this.executeTurn} state={this.state.state}/>
+                            <DiscardPile cards={this.state.discardPile} handleClick={this.executeTurn} state={this.state.state}/>
                         </div>
                     </div>
                 </div>
