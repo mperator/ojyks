@@ -24,19 +24,24 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: 12
+    
+        
+        
     - name: Install and Build
       working-directory: ./client
       run: |
         npm ci
-        npm run start
+        npm run build
+        
     - name: Publish
-      uses: SamKirkland/FTP-Deploy-Action@3.0.0
+    - uses: SamKirkland/FTP-Deploy-Action@3.0.0
       with:
         ftp-server: ${{ secrets.FTP_SERVER }}
         ftp-username: ${{ secrets.FTP_USERNAME }}
         ftp-password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./client/build
         git-ftp-args: --insecure # if your certificate is setup correctly this can be removed (see known-hosts argument)
+
       
   # Runs a single command using the runners shell
     - name: Run a one-line script
