@@ -32,7 +32,7 @@ jobs:
     - name: Publish
       uses: SamKirkland/FTP-Deploy-Action@3.0.0
       with:
-        ftp-server: ${{ secrets.FTP_SERVER }}
+        ftp-server: ${{ secrets.SFTP_SERVER }}
         ftp-username: ${{ secrets.FTP_USERNAME }}
         ftp-password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./client/build
