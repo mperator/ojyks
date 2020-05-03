@@ -36,6 +36,7 @@ jobs:
         ftp-username: ${{ secrets.FTP_USERNAME }}
         ftp-password: ${{ secrets.FTP_PASSWORD }}
         local-dir: ./client/build
+        git-ftp-args: --insecure # if your certificate is setup correctly this can be removed (see known-hosts argument)
       
   # Runs a single command using the runners shell
     - name: Run a one-line script
