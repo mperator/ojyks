@@ -28,7 +28,7 @@ jobs:
       working-directory: ./client
       run: |
         npm ci
-        npm run buils
+        npm run build
     - name: Publish
       uses: SamKirkland/FTP-Deploy-Action@3.0.0
       with:
