@@ -36,7 +36,7 @@ const PlayerBoard = ({ player, isCurrentPlayer }: { player: PlayerType, isCurren
 
 
 const GameBoard = () => {
-    const { room, players, client, gameState, currentTurn, drawnCard, drawPile, discardPile, winner, scores } = useGameStore();
+    const { room, players, gameState, currentTurn, drawnCard, drawPile, discardPile, winner, scores, revealInitialCards } = useGameStore();
     const [selectedCardIndices, setSelectedCardIndices] = useState<number[]>([]);
     const [selectedBoardCard, setSelectedBoardCard] = useState<number | null>(null);
 
@@ -45,10 +45,8 @@ const GameBoard = () => {
     const isMyTurn = currentTurn === mySessionId;
 
     const handleBoardCardClick = (index: number) => {
-        if (!isMyTurn) return;
-
-        // Initial card selection
-        if (gameState === 'waiting' && !player?.isReady) {
+        // Initial card revelation
+        if (gameState === 'starting' && player && !player.isReady) {
             if (selectedCardIndices.includes(index)) {
                 setSelectedCardIndices(selectedCardIndices.filter(i => i !== index));
             } else if (selectedCardIndices.length < 2) {
@@ -59,25 +57,28 @@ const GameBoard = () => {
 
         // Gameplay clicks
         if (isMyTurn && gameState === 'playing') {
-            // Action 1: Flip a card as the whole turn
-            if (!drawnCard) {
+             // If a drawn card is present, the main action is to decide what to do with it.
+            if (drawnCard) {
+                // Option A: Swap with a card on the board (can be flipped or unflipped)
+                // We'll select the card first, then a separate button will confirm the swap.
+                // For simplicity, let's make the click a direct swap action.
+                room?.send("swapCard", index);
+                return;
+            }
+            // If no card is drawn, the action is to flip a card.
+            else {
                 if (!player?.cards[index].isFlipped) {
                     room?.send("flipCard", index);
                 }
                 return;
             }
-
-            // Action 2: Swap drawn card with a board card
-            if (drawnCard) {
-                room?.send("swapCard", index);
-                return;
-            }
         }
     };
 
-    const handleReady = () => {
-        if (room && selectedCardIndices.length === 2) {
-            room.send("revealInitialCards", selectedCardIndices);
+    const handleRevealClick = () => {
+        if (gameState === 'starting' && selectedCardIndices.length === 2) {
+            revealInitialCards(selectedCardIndices);
+            setSelectedCardIndices([]); // Clear selection after revealing
         }
     };
 
@@ -131,12 +132,17 @@ const GameBoard = () => {
         <div className="flex-grow bg-gray-900 p-4 rounded-lg flex flex-col">
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">
-                    {isMyTurn ? "Your Turn" : `${players[currentTurn!]?.name}'s Turn`}
+                    {gameState === 'starting'
+                        ? "Reveal Phase"
+                        : isMyTurn
+                        ? "Your Turn"
+                        : `${players[currentTurn!]?.name}'s Turn`
+                    }
                 </h2>
                 <div className="flex space-x-4">
                     <div className="text-center">
                         <p>Draw Pile</p>
-                        <div onClick={handleDrawPileClick} className="w-20 h-28 bg-blue-800 rounded-lg cursor-pointer flex items-center justify-center">
+                        <div onClick={handleDrawPileClick} className={`w-20 h-28 bg-blue-800 rounded-lg flex items-center justify-center ${isMyTurn && !drawnCard ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
                            {drawPile.length}
                         </div>
                     </div>
@@ -171,16 +177,16 @@ const GameBoard = () => {
             )}
 
 
-            {gameState === 'waiting' && !player.isReady && (
+            {gameState === 'starting' && !player.isReady && (
                  <div className="mb-4 text-center p-4 bg-gray-800 rounded-lg">
-                    <p className="font-bold">Game Setup</p>
+                    <p className="font-bold">Reveal Your Cards</p>
                     <p>Select two of your cards to reveal.</p>
                     <button
-                        onClick={handleReady}
+                        onClick={handleRevealClick}
                         disabled={selectedCardIndices.length !== 2}
                         className="mt-2 px-4 py-2 bg-green-600 rounded disabled:bg-gray-500"
                     >
-                        Ready
+                        Reveal Selected Cards
                     </button>
                 </div>
             )}

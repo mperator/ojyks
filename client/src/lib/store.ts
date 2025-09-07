@@ -10,6 +10,7 @@ interface GameState {
   discardPile: Card[];
   currentTurn: string | null;
   gameState: string;
+  hostId: string | null;
   lastRoundInitiator: string | null;
   drawnCard: Card | null;
   messages: string[];
@@ -20,6 +21,9 @@ interface GameState {
   joinRoom: (roomId: string, playerName: string) => Promise<void>;
   leaveRoom: () => void;
   sendMessage: (message: string) => void;
+  setReady: (isReady: boolean) => void;
+  startGame: () => void;
+  revealInitialCards: (indices: number[]) => void;
   setRoom: (room: Room<State>) => void;
 }
 
@@ -31,12 +35,13 @@ export const useGameStore = create<GameState>((set, get) => ({
   discardPile: [],
   currentTurn: null,
   gameState: 'waiting',
+  hostId: null,
   lastRoundInitiator: null,
   drawnCard: null,
   messages: [],
   winner: null,
   scores: null,
-  connect: async (playerName) => {
+  connect: async () => {
     try {
       if (get().client) return;
       const client = new Client("ws://localhost:3001");
@@ -78,13 +83,22 @@ export const useGameStore = create<GameState>((set, get) => ({
       room.leave();
     }
     // Reset state on leave
-    set({ room: null, players: {}, messages: [], drawnCard: null, currentTurn: null, gameState: 'waiting', winner: null, scores: null });
+    set({ room: null, players: {}, messages: [], drawnCard: null, currentTurn: null, gameState: 'waiting', winner: null, scores: null, hostId: null });
   },
   sendMessage: (message) => {
     const { room } = get();
     if (room) {
       room.send("chat", message);
     }
+  },
+  setReady: (isReady: boolean) => {
+    get().room?.send("playerReady", { isReady });
+  },
+  startGame: () => {
+    get().room?.send("startGame");
+  },
+  revealInitialCards: (indices: number[]) => {
+    get().room?.send("revealInitialCards", indices);
   },
   setRoom: (room) => {
     room.onStateChange((state) => {
@@ -98,6 +112,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         discardPile: Array.from(state.discardPile),
         currentTurn: state.currentTurn,
         gameState: state.gameState,
+        hostId: state.hostId,
         lastRoundInitiator: state.lastRoundInitiator,
         drawnCard: state.drawnCard,
       });
@@ -105,6 +120,11 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     room.onMessage("chat", (message) => {
       set((state) => ({ messages: [...state.messages, message] }));
+    });
+
+    room.onMessage("gameStarting", () => {
+        console.log("Game is starting! Reveal your cards.");
+        set({ gameState: 'starting' });
     });
 
     room.onMessage("gameStart", ({ startPlayerId }) => {
@@ -126,9 +146,20 @@ export const useGameStore = create<GameState>((set, get) => ({
         set({ winner });
     });
 
+    room.onMessage("newRound", () => {
+        console.log("Starting a new round...");
+        set({ gameState: 'waiting', winner: null, scores: null, drawnCard: null, currentTurn: null });
+    });
+
+     room.onMessage("gameReset", () => {
+        console.log("Game reset to waiting lobby.");
+        set({ gameState: 'waiting', winner: null, scores: null, drawnCard: null, currentTurn: null });
+    });
+
     room.onLeave(() => {
       // State is reset in leaveRoom now
       set({ room: null });
     });
   },
 }));
+

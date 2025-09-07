@@ -37,7 +37,10 @@ export class State extends Schema {
   currentTurn: string = "";
 
   @type("string")
-  gameState: string = "waiting"; // waiting, playing, finished
+  gameState: string = "waiting"; // waiting, starting, playing, finished
+
+  @type("string")
+  hostId: string = "";
 
   @type("string")
   lastRoundInitiator: string | null = null;
@@ -53,8 +56,6 @@ export class MyRoom extends Room<State> {
   onCreate (options: any) {
     this.setState(new State());
 
-    this.resetGame();
-
     this.onMessage("chat", (client, message) => {
       const player = this.state.players.get(client.sessionId);
       if (player) {
@@ -62,9 +63,31 @@ export class MyRoom extends Room<State> {
       }
     });
 
+    this.onMessage("playerReady", (client, { isReady }: { isReady: boolean }) => {
+        const player = this.state.players.get(client.sessionId);
+        if (player && this.state.gameState === "waiting") {
+            player.isReady = isReady;
+            this.broadcast("playerReady", { playerId: client.sessionId, isReady });
+        }
+    });
+
+     this.onMessage("startGame", (client) => {
+        if (client.sessionId !== this.state.hostId || this.state.gameState !== "waiting") {
+            return; // Only host can start, and only in waiting state
+        }
+
+        const allPlayersReady = Array.from(this.state.players.values()).every(p => p.isReady);
+        if (this.state.players.size >= 2 && allPlayersReady) {
+            this.resetGame(); // Deal cards and set up piles
+            this.state.gameState = "starting";
+            this.broadcast("gameStarting");
+        }
+    });
+
     this.onMessage("revealInitialCards", (client, cardIndices: number[]) => {
         const player = this.state.players.get(client.sessionId);
-        if (this.state.gameState !== "waiting" || !player || player.isReady) return;
+        // A player can only reveal cards once during the "starting" phase
+        if (this.state.gameState !== "starting" || !player || player.cards.some(c => c.isFlipped)) return;
 
         if (player && cardIndices.length === 2) {
             cardIndices.forEach(index => {
@@ -72,8 +95,9 @@ export class MyRoom extends Room<State> {
                     player.cards[index].isFlipped = true;
                 }
             });
+            // Use isReady to track who has revealed their initial cards
             player.isReady = true;
-            this.checkAllPlayersReady();
+            this.checkAllPlayersRevealed();
         }
     });
 
@@ -154,6 +178,9 @@ export class MyRoom extends Room<State> {
   }
 
   resetGame() {
+    // Reset player ready state for the new round
+    this.state.players.forEach(p => p.isReady = false);
+
     // Initialize the deck
     const values = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2];
     const counts = [10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 20, 10, 5];
@@ -172,16 +199,9 @@ export class MyRoom extends Room<State> {
     // Shuffle the deck
     this.state.drawPile.sort(() => Math.random() - 0.5);
 
-    // Place top card on discard pile
-    const topCard = this.state.drawPile.pop();
-    if (topCard) {
-        topCard.isFlipped = true;
-        this.state.discardPile.push(topCard);
-    }
-
+    // Deal cards
     this.state.players.forEach(player => {
         player.cards.clear();
-        player.isReady = false;
         for (let i = 0; i < 12; i++) {
             const card = this.state.drawPile.pop();
             if (card) {
@@ -190,7 +210,13 @@ export class MyRoom extends Room<State> {
         }
     });
 
-    this.state.gameState = "waiting";
+    // Place top card on discard pile
+    const topCard = this.state.drawPile.pop();
+    if (topCard) {
+        topCard.isFlipped = true;
+        this.state.discardPile.push(topCard);
+    }
+
     this.state.currentTurn = "";
     this.state.lastRoundInitiator = null;
     this.state.drawnCard = null;
@@ -288,20 +314,23 @@ export class MyRoom extends Room<State> {
           // lock room?
       } else {
           // Schedule next round
-          setTimeout(() => this.resetGame(), 10000);
+          setTimeout(() => {
+            this.state.gameState = "waiting";
+            this.broadcast("newRound");
+          }, 10000);
       }
   }
 
-  checkAllPlayersReady() {
+  checkAllPlayersRevealed() {
       if (this.state.players.size < 2) return;
-      const allReady = Array.from(this.state.players.values()).every(p => p.isReady);
-      if (allReady) {
-          this.startGame();
+      const allRevealed = Array.from(this.state.players.values()).every(p => p.isReady);
+      if (allRevealed) {
+          this.determineStartPlayer();
       }
   }
 
-  startGame() {
-      if (this.state.gameState !== "waiting") return;
+  determineStartPlayer() {
+      if (this.state.gameState !== "starting") return;
 
       let maxScore = -Infinity;
       let startPlayerId = "";
@@ -331,44 +360,56 @@ export class MyRoom extends Room<State> {
 
   onJoin (client: Client, options: any) {
     console.log(client.sessionId, "joined!");
-    const player = new Player();
-    player.name = options.playerName;
 
-    // Deal 12 cards to the player
-    for (let i = 0; i < 12; i++) {
-        // Ensure draw pile has cards
-        if (this.state.drawPile.length === 0) this.resetGame();
-        const card = this.state.drawPile.pop();
-        if (card) {
-            player.cards.push(card);
-        }
+    if (this.state.players.size === 0) {
+        this.state.hostId = client.sessionId;
     }
+
+    const player = new Player();
+    player.name = options.playerName || "Player";
+    player.isReady = false;
+
     this.state.players.set(client.sessionId, player);
+    this.broadcast("playerJoined", { player, playerId: client.sessionId });
   }
 
   onLeave (client: Client, consented: boolean) {
     console.log(client.sessionId, "left!");
     const playerLeft = this.state.players.get(client.sessionId);
     if (playerLeft) {
-        // Return cards to draw pile
-        playerLeft.cards.forEach(card => {
-            if (card.value !== 999) { // Don't return empty placeholders
-                this.state.drawPile.push(card)
-            }
-        });
-        this.state.drawPile.sort(() => Math.random() - 0.5); // Re-shuffle
+        // Return cards to draw pile if game is in progress
+        if (this.state.gameState === "playing" || this.state.gameState === "starting") {
+            playerLeft.cards.forEach(card => {
+                if (card.value !== 999) { // Don't return empty placeholders
+                    this.state.drawPile.push(card)
+                }
+            });
+            this.state.drawPile.sort(() => Math.random() - 0.5); // Re-shuffle
+        }
     }
 
     this.state.players.delete(client.sessionId);
+    this.broadcast("playerLeft", { playerId: client.sessionId });
+
+    // If the host left, assign a new host
+    if (client.sessionId === this.state.hostId && this.state.players.size > 0) {
+        const newHostId = this.state.players.keys().next().value;
+        if (newHostId) {
+            this.state.hostId = newHostId;
+            this.broadcast("newHost", { hostId: newHostId });
+        }
+    }
 
     if (this.state.currentTurn === client.sessionId) {
         this.endTurn(); // Properly handle turn change
     }
 
-    if (this.state.players.size < 2 && this.state.gameState === "playing") {
+    if (this.state.players.size < 2 && (this.state.gameState === "playing" || this.state.gameState === "starting")) {
         this.state.gameState = "waiting";
         this.state.currentTurn = "";
-        // Potentially reset the whole game if it was in progress
+        // Reset player ready states
+        this.state.players.forEach(p => p.isReady = false);
+        this.broadcast("gameReset");
     }
   }
 

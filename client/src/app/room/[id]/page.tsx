@@ -5,12 +5,18 @@ import { useParams, useRouter } from "next/navigation";
 import { useGameStore } from "@/lib/store";
 import GameBoard from "./GameBoard";
 import Chat from "./Chat";
+import Lobby from "./Lobby"; // We will create this component
 
 export default function RoomPage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
-  const { joinRoom, room, leaveRoom } = useGameStore();
+  const {
+    joinRoom,
+    room,
+    leaveRoom,
+    gameState,
+  } = useGameStore();
 
   useEffect(() => {
     if (!id) {
@@ -29,8 +35,7 @@ export default function RoomPage() {
     }
 
     return () => {
-      // This cleanup function might be tricky with Next.js App Router
-      // and fast refresh. We'll manage leaving the room more explicitly.
+      // leaveRoom is handled by button click or browser close
     };
   }, [id, joinRoom, room, router]);
 
@@ -42,6 +47,26 @@ export default function RoomPage() {
   if (!room) {
     return <div>Joining room...</div>;
   }
+
+  const renderGameState = () => {
+    switch (gameState) {
+      case "waiting":
+        return <Lobby />;
+      case "starting":
+        return (
+            <div>
+                <h2 className="text-xl text-center mb-4">Game is starting!</h2>
+                <p className="text-center mb-4">Reveal two of your cards.</p>
+                <GameBoard />
+            </div>
+        );
+      case "playing":
+      case "finished":
+        return <GameBoard />;
+      default:
+        return <div>Loading...</div>;
+    }
+  };
 
   return (
     <div className="flex h-screen p-4 bg-gray-800 text-white">
@@ -55,7 +80,7 @@ export default function RoomPage() {
                 Leave Room
             </button>
         </div>
-        <GameBoard />
+        {renderGameState()}
       </div>
       <div className="w-1/4 ml-4">
         <Chat />

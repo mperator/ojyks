@@ -98,3 +98,17 @@ The project is a functional Minimum Viable Product (MVP). Players can create, jo
 # Iteration 2
 
 Du bist ein professioneller Web Spieleentwickler. Erstelle ein Kartenspiel mit den folgenden Regeln #file:Spielregeln.md . Das Kartenspiel soll über das Internet spielbar sein. Leider funktionirt das eigentliche game play noch nicht. Warte bis ich dir weitere anweisungen gebe.
+
+# Iteration 3
+
+Fehlerbehebungen
+
+
+# Iteration 4
+
+Features
+
+- Visuelles Feedback für Aktionen (z. B. Animationen).
+- Verbesserung der Anzeige für den Spielstatus und die  Spielerinformationen.
+- Hinzufügen von Spiel-Sounds.
+- Lobby
