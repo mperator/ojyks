@@ -93,3 +93,8 @@ This document outlines the features that have been implemented for the web-based
 ### Current Status
 
 The project is a functional Minimum Viable Product (MVP). Players can create, join, and chat in game rooms. The core structure for both the server and client is in place, ready for the implementation of the actual card game logic based on the provided rules.
+
+
+# Iteration 2
+
+Du bist ein professioneller Web Spieleentwickler. Erstelle ein Kartenspiel mit den folgenden Regeln #file:Spielregeln.md . Das Kartenspiel soll über das Internet spielbar sein. Leider funktionirt das eigentliche game play noch nicht. Warte bis ich dir weitere anweisungen gebe.
