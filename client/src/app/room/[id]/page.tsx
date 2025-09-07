@@ -1,79 +1,64 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Room } from "colyseus.js";
-import { client } from "@/lib/colyseus";
-import { useRouter, useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { useGameStore } from "@/lib/store";
+import GameBoard from "./GameBoard";
+import Chat from "./Chat";
 
 export default function RoomPage() {
   const params = useParams();
   const id = params.id as string;
-  const [room, setRoom] = useState<Room | null>(null);
-  const [chatMessages, setChatMessages] = useState<string[]>([]);
-  const [message, setMessage] = useState("");
   const router = useRouter();
+  const { joinRoom, room, leaveRoom } = useGameStore();
 
   useEffect(() => {
-    if (!id) return;
-    const joinRoom = async () => {
-      try {
-        const playerName = localStorage.getItem("playerName") || "Anonymous";
-        const joinedRoom = await client.joinById(id, { playerName });
-        setRoom(joinedRoom);
+    if (!id) {
+      router.push("/");
+      return;
+    }
 
-        joinedRoom.onMessage("chat", (message) => {
-          setChatMessages((prev) => [...prev, message]);
-        });
+    const playerName = localStorage.getItem("playerName");
+    if (!playerName) {
+      router.push("/");
+      return;
+    }
 
-        joinedRoom.onLeave(() => {
-          router.push("/");
-        });
-
-      } catch (e) {
-        console.error("join error", e);
-        router.push("/");
-      }
-    };
-
-    joinRoom();
+    if (!room) {
+        joinRoom(id, playerName);
+    }
 
     return () => {
-      if (room) {
-        room.leave();
-      }
+      // This cleanup function might be tricky with Next.js App Router
+      // and fast refresh. We'll manage leaving the room more explicitly.
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, router]);
+  }, [id, joinRoom, room, router]);
 
-  const sendMessage = () => {
-    if (room && message) {
-      room.send("chat", message);
-      setMessage("");
-    }
+  const handleLeave = () => {
+    leaveRoom();
+    router.push("/");
   };
 
+  if (!room) {
+    return <div>Joining room...</div>;
+  }
+
   return (
-    <div className="flex flex-col h-screen p-4">
-      <h1 className="text-2xl font-bold mb-4">Room: {id}</h1>
-      <div className="flex-grow border rounded p-4 mb-4 overflow-y-auto">
-        {chatMessages.map((msg, i) => (
-          <div key={i}>{msg}</div>
-        ))}
+    <div className="flex h-screen p-4 bg-gray-800 text-white">
+      <div className="flex-grow flex flex-col">
+        <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold">Room: {id}</h1>
+            <button
+                onClick={handleLeave}
+                className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            >
+                Leave Room
+            </button>
+        </div>
+        <GameBoard />
       </div>
-      <div className="flex">
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          className="flex-grow border rounded-l px-4 py-2 text-black"
-          onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-        />
-        <button
-          onClick={sendMessage}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-r"
-        >
-          Send
-        </button>
+      <div className="w-1/4 ml-4">
+        <Chat />
       </div>
     </div>
   );
