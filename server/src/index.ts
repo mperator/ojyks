@@ -1,18 +1,17 @@
-import { Server } from "colyseus";
-import { createServer } from "http";
-import express from "express";
-import { MyRoom } from "./rooms/MyRoom";
+/**
+ * IMPORTANT:
+ * ---------
+ * Do not manually edit this file if you'd like to host your server on Colyseus Cloud
+ *
+ * If you're self-hosting (without Colyseus Cloud), you can manually
+ * instantiate a Colyseus Server as documented here:
+ *
+ * See: https://docs.colyseus.io/server/api/#constructor-options
+ */
+import { listen } from "@colyseus/tools";
 
-const port = Number(process.env.PORT) || 3001;
+// Import Colyseus config
+import app from "./app.config";
 
-const app = express();
-app.use(express.json());
-
-const gameServer = new Server({
-  server: createServer(app),
-});
-
-gameServer.define("my_room", MyRoom);
-
-gameServer.listen(port);
-console.log(`Listening on ws://localhost:${port}`);
+// Create and listen on 2567 (or PORT environment variable.)
+listen(app, Number(process.env.PORT || 3001));
