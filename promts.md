@@ -101,7 +101,13 @@ Du bist ein professioneller Web Spieleentwickler. Erstelle ein Kartenspiel mit d
 
 # Iteration 3
 
-Fehlerbehebungen
+Du bist ein professioneller Web Spieleentwickler. Wir haben ein Kartenspiel mit den folgenden Regeln #file:Spielregeln.md erstellt. Das Kartenspiel ist über das Internet spielbar und besteht aus einem Backend mit colyseus und einem Frontend mit nextjs und typescript. Leider gibt es noch kleine Fehler die wir beheben müssen:
+
+F001: IST: Wenn ein Spieler die Seite neu lädt wird das Spiel für alle Spieler beendet und die spieler kommen in die Lobby. SOLL: Wenn ein Spieler die Seite neu lädt soll das spiel für die spieler nicht beendet werden sondern weiter spielen können. Für alle anderen spieler soll ersichtlich sein dass der spieler nicht verbunden ist. Für den spieler soll es möglich sein wieder dem spiel beizutreten und weiterzuspielen.
+
+Bearbeite die Fehler nach und nach ab. Nachdem ein Fehler behoben wurde testen wir die Umsetzung. Danach gebe ich dir den nächsten fehler den du beheben sollst.
+
+Für den server und den client wurden der befehl npm install bereits ausgeführt und alle Abhängigkeiten wurden installert.
 
 
 # Iteration 4
