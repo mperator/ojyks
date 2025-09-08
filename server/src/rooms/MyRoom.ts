@@ -133,7 +133,8 @@ export class MyRoom extends Room<State> {
         if (this.state.currentTurn !== client.sessionId || this.state.drawnCard) return;
         if (this.state.discardPile.length === 0) return;
 
-        const card = this.state.discardPile.pop();
+        // Don't pop the card, just set it as drawn. It will be removed on swap.
+        const card = this.state.discardPile[this.state.discardPile.length - 1];
         if (card) {
             this.state.drawnCard = card;
         }
@@ -146,6 +147,12 @@ export class MyRoom extends Room<State> {
 
         const oldCard = player.cards[cardIndex];
         oldCard.isFlipped = true;
+
+        // If the drawn card is from the discard pile, we need to pop it now.
+        if (this.state.discardPile.length > 0 && this.state.drawnCard.value === this.state.discardPile[this.state.discardPile.length - 1].value) {
+            this.state.discardPile.pop();
+        }
+        
         player.cards[cardIndex] = this.state.drawnCard;
         this.state.discardPile.push(oldCard);
         console.log(`Cards on discard pile: ${this.state.discardPile.length}`, this.state.discardPile.toJSON());
@@ -161,20 +168,18 @@ export class MyRoom extends Room<State> {
         this.state.discardPile.push(this.state.drawnCard);
         console.log(`Cards on discard pile: ${this.state.discardPile.length}`);
         this.state.drawnCard = null;
-        // The player must now flip a card, but we don't end the turn yet.
-        // The client will be responsible for sending a "flipCard" message next.
-        // This is a slight deviation from the rules for simplicity, we'll combine the actions.
-        // Let's adjust: the client will send which card to flip along with this message.
+
+        // The player must now flip a card. The client will set a state to enforce this
+        // and then send a "flipCard" message.
     });
 
-     this.onMessage("discardAndFlip", (client, cardIndex: number) => {
-        if (this.state.currentTurn !== client.sessionId || !this.state.drawnCard) return;
+    this.onMessage("flipCard", (client, cardIndex: number) => {
+        if (this.state.currentTurn !== client.sessionId) return;
         const player = this.state.players.get(client.sessionId);
         if (!player || !player.cards[cardIndex] || player.cards[cardIndex].isFlipped) return;
 
-        this.state.discardPile.push(this.state.drawnCard);
-        console.log(`Cards on discard pile: ${this.state.discardPile.length}`);
-        this.state.drawnCard = null;
+        // If a card is drawn, this message is not valid.
+        if (this.state.drawnCard) return;
 
         player.cards[cardIndex].isFlipped = true;
         this.checkForColumn(player);

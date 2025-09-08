@@ -24,6 +24,7 @@ interface GameState {
   setReady: (isReady: boolean) => void;
   startGame: () => void;
   revealInitialCard: (index: number) => void;
+  discardDrawnCard: () => void;
   setRoom: (room: Room<State>) => void;
 }
 
@@ -99,6 +100,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   revealInitialCard: (index: number) => {
     get().room?.send("revealInitialCard", index);
+  },
+  discardDrawnCard: () => {
+    get().room?.send("discardDrawnCard");
   },
   setRoom: (room) => {
     room.onStateChange((state) => {

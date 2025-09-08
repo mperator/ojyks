@@ -35,12 +35,19 @@ const PlayerBoard = ({ player, isCurrentPlayer }: { player: PlayerType, isCurren
 }
 
 const GameBoard = () => {
-    const { room, players, gameState, currentTurn, drawnCard, drawPile, discardPile, winner, scores, revealInitialCard } = useGameStore();
-    const [isDiscardingDrawnCard, setIsDiscardingDrawnCard] = useState<boolean>(false);
+    const { room, players, gameState, currentTurn, drawnCard, drawPile, discardPile, winner, scores, revealInitialCard, discardDrawnCard } = useGameStore();
+    const [selectedPile, setSelectedPile] = useState<'draw' | 'discard' | null>(null);
+    const [isFlippingAfterDiscard, setIsFlippingAfterDiscard] = useState<boolean>(false);
 
     const mySessionId = room?.sessionId;
     const player = mySessionId ? players[mySessionId] : null;
     const isMyTurn = currentTurn === mySessionId;
+
+    // Reset states when turn changes or card is handled
+    if ((!isMyTurn || (drawnCard === null && !isFlippingAfterDiscard)) && (selectedPile || isFlippingAfterDiscard)) {
+        setSelectedPile(null);
+        setIsFlippingAfterDiscard(false);
+    }
 
     const handleBoardCardClick = (index: number) => {
         if (gameState === 'starting' && player && !player.isReady) {
@@ -48,49 +55,47 @@ const GameBoard = () => {
             return;
         }
 
-        // Gameplay clicks
         if (isMyTurn && gameState === 'playing') {
-             // If a drawn card is present, the main action is to decide what to do with it.
-            if (drawnCard) {
-                if (isDiscardingDrawnCard) {
-                    // Action C: Discard the drawn card and flip this one
-                    if (!player?.cards[index].isFlipped) {
-                        room?.send("discardAndFlip", index);
-                        setIsDiscardingDrawnCard(false); // Reset state
-                    }
-                } else {
-                    // Action B: Swap with a card on the board
-                    room?.send("swapCard", index);
+            if (isFlippingAfterDiscard) {
+                // After deciding to discard a drawn card, the player MUST flip a card.
+                if (!player?.cards[index].isFlipped) {
+                    room?.send("flipCard", index);
+                    setIsFlippingAfterDiscard(false); // Reset state after action
                 }
-                return;
-            }
-            // If no card is drawn, the action is to flip a card.
-            else {
-                // Action A: Flip a card on the board
+            } else if (drawnCard) {
+                // If a card is drawn (from either pile), clicking the board means swapping.
+                room?.send("swapCard", index);
+                // State will be reset automatically when drawnCard becomes null
+            } else {
+                // If no card is drawn and not in flip-after-discard mode, it's a regular flip.
                 if (!player?.cards[index].isFlipped) {
                     room?.send("flipCard", index);
                 }
-                return;
             }
         }
     };
 
     const handleDrawPileClick = () => {
-        if (isMyTurn && gameState === 'playing' && !drawnCard) {
+        if (isMyTurn && gameState === 'playing' && !drawnCard && !isFlippingAfterDiscard) {
             room?.send("drawFromDrawPile");
+            setSelectedPile('draw');
         }
     }
 
     const handleDiscardPileClick = () => {
-        // Can only draw from discard if it's my turn, in 'playing' state, and I haven't drawn a card yet.
-        if (isMyTurn && gameState === 'playing' && !drawnCard) {
-            room?.send("drawFromDiscardPile");
-        }
-    }
-
-    const handleDiscardIntent = () => {
-        if (isMyTurn && drawnCard) {
-            setIsDiscardingDrawnCard(true);
+        if (isMyTurn && gameState === 'playing' && !isFlippingAfterDiscard) {
+            if (drawnCard && selectedPile === 'draw') {
+                // Player has a card from the draw pile and clicks discard.
+                discardDrawnCard();
+                setIsFlippingAfterDiscard(true);
+                setSelectedPile(null); // The card is no longer considered "selected" for swapping
+            } else if (!drawnCard) {
+                // Player is drawing from the discard pile.
+                if (discardPile.length > 0) {
+                    room?.send("drawFromDiscardPile");
+                    setSelectedPile('discard');
+                }
+            }
         }
     }
 
@@ -126,43 +131,44 @@ const GameBoard = () => {
                     {gameState === 'starting'
                         ? "Reveal Phase"
                         : isMyTurn
-                        ? isDiscardingDrawnCard ? "Select a card to flip" : "Your Turn"
-                        : `${players[currentTurn!]?.name}'s Turn`
+                            ? isFlippingAfterDiscard ? "Select a card to flip" : (drawnCard ? "Choose your action" : "Your Turn")
+                            : `${players[currentTurn!]?.name}'s Turn`
                     }
                 </h2>
                 <div className="flex space-x-4">
                     <div className="text-center">
                         <p>Draw Pile</p>
-                        <div onClick={handleDrawPileClick} className={`w-20 h-28 bg-blue-800 rounded-lg flex items-center justify-center ${isMyTurn && !drawnCard ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
+                        <div onClick={handleDrawPileClick} className={`relative w-20 h-28 bg-blue-800 rounded-lg flex items-center justify-center ${isMyTurn && !drawnCard && !isFlippingAfterDiscard ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
                            {drawPile.length}
+                           {drawnCard && selectedPile === 'draw' && (
+                                <div className="absolute -top-1 -left-1 z-10">
+                                    <Card card={drawnCard} isSelected={true} />
+                                </div>
+                           )}
                         </div>
                     </div>
                      <div className="text-center">
                         <p>Discard Pile</p>
                         {discardPile.length > 0 ?
-                            <Card card={discardPile[discardPile.length - 1]} onClick={handleDiscardPileClick} />
+                            <Card 
+                                card={discardPile[discardPile.length - 1]} 
+                                onClick={handleDiscardPileClick} 
+                                isSelected={(drawnCard != null && selectedPile === 'discard' && discardPile[discardPile.length - 1].value === drawnCard.value)}
+                            />
                             : <div className="w-20 h-28 bg-gray-700 rounded-lg"></div>
                         }
                     </div>
-                    {drawnCard && (
-                         <div className="text-center">
-                            <p>Drawn Card</p>
-                            <Card card={drawnCard} />
-                        </div>
-                    )}
                 </div>
             </div>
 
-            {drawnCard && isMyTurn && !isDiscardingDrawnCard && (
+            {isMyTurn && (drawnCard || isFlippingAfterDiscard) && (
                 <div className="bg-gray-800 p-3 rounded-lg mb-4 text-center">
-                    <p className="mb-2">You drew a {drawnCard.value}. Choose an action:</p>
-                    <p className="text-sm text-gray-400 mb-2">Click a card on your board to swap, or click the button below to discard the drawn card and flip a new one.</p>
-                     <button
-                        onClick={handleDiscardIntent}
-                        className="px-4 py-2 bg-red-600 rounded hover:bg-red-700"
-                    >
-                        Discard Drawn Card & Flip
-                    </button>
+                    {isFlippingAfterDiscard 
+                        ? <p>You discarded your card. Now you must flip one of your face-down cards.</p>
+                        : selectedPile === 'draw' 
+                            ? <p>You drew a {drawnCard!.value}. Swap it with a card on your board, or click the discard pile to discard it and flip a card.</p>
+                            : <p>You selected a {drawnCard!.value} from the discard pile. Swap it with a card on your board.</p>
+                    }
                 </div>
             )}
 
@@ -181,7 +187,7 @@ const GameBoard = () => {
                             key={index}
                             card={card}
                             onClick={() => handleBoardCardClick(index)}
-                            isSelected={false} // Selection state is now handled by isFlipped
+                            isSelected={false}
                         />
                     ))}
                 </div>
