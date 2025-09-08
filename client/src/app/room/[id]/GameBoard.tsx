@@ -34,10 +34,8 @@ const PlayerBoard = ({ player, isCurrentPlayer }: { player: PlayerType, isCurren
     )
 }
 
-
 const GameBoard = () => {
-    const { room, players, gameState, currentTurn, drawnCard, drawPile, discardPile, winner, scores, revealInitialCards } = useGameStore();
-    const [selectedCardIndices, setSelectedCardIndices] = useState<number[]>([]);
+    const { room, players, gameState, currentTurn, drawnCard, drawPile, discardPile, winner, scores, revealInitialCard } = useGameStore();
     const [isDiscardingDrawnCard, setIsDiscardingDrawnCard] = useState<boolean>(false);
 
     const mySessionId = room?.sessionId;
@@ -45,13 +43,8 @@ const GameBoard = () => {
     const isMyTurn = currentTurn === mySessionId;
 
     const handleBoardCardClick = (index: number) => {
-        // Initial card revelation
         if (gameState === 'starting' && player && !player.isReady) {
-            if (selectedCardIndices.includes(index)) {
-                setSelectedCardIndices(selectedCardIndices.filter(i => i !== index));
-            } else if (selectedCardIndices.length < 2) {
-                setSelectedCardIndices([...selectedCardIndices, index]);
-            }
+            revealInitialCard(index);
             return;
         }
 
@@ -79,13 +72,6 @@ const GameBoard = () => {
                 }
                 return;
             }
-        }
-    };
-
-    const handleRevealClick = () => {
-        if (gameState === 'starting' && selectedCardIndices.length === 2) {
-            revealInitialCards(selectedCardIndices);
-            setSelectedCardIndices([]); // Clear selection after revealing
         }
     };
 
@@ -180,18 +166,10 @@ const GameBoard = () => {
                 </div>
             )}
 
-
             {gameState === 'starting' && !player.isReady && (
                  <div className="mb-4 text-center p-4 bg-gray-800 rounded-lg">
                     <p className="font-bold">Reveal Your Cards</p>
-                    <p>Select two of your cards to reveal.</p>
-                    <button
-                        onClick={handleRevealClick}
-                        disabled={selectedCardIndices.length !== 2}
-                        className="mt-2 px-4 py-2 bg-green-600 rounded disabled:bg-gray-500"
-                    >
-                        Reveal Selected Cards
-                    </button>
+                    <p>Click on {player.cards.filter(c => c.isFlipped == true).length == 0 ? "two" : "one"} of your cards to reveal them.</p>
                 </div>
             )}
 
@@ -203,7 +181,7 @@ const GameBoard = () => {
                             key={index}
                             card={card}
                             onClick={() => handleBoardCardClick(index)}
-                            isSelected={selectedCardIndices.includes(index)}
+                            isSelected={false} // Selection state is now handled by isFlipped
                         />
                     ))}
                 </div>

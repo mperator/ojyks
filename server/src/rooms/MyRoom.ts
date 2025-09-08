@@ -84,20 +84,21 @@ export class MyRoom extends Room<State> {
         }
     });
 
-    this.onMessage("revealInitialCards", (client, cardIndices: number[]) => {
+    this.onMessage("revealInitialCard", (client, cardIndex: number) => {
         const player = this.state.players.get(client.sessionId);
-        // A player can only reveal cards once during the "starting" phase
-        if (this.state.gameState !== "starting" || !player || player.cards.some(c => c.isFlipped)) return;
+        if (this.state.gameState !== "starting" || !player) return;
 
-        if (player && cardIndices.length === 2) {
-            cardIndices.forEach(index => {
-                if (player.cards[index]) {
-                    player.cards[index].isFlipped = true;
-                }
-            });
-            // Use isReady to track who has revealed their initial cards
-            player.isReady = true;
-            this.checkAllPlayersRevealed();
+        const flippedCount = player.cards.filter(c => c.isFlipped).length;
+        if (flippedCount >= 2) return;
+
+        if (player.cards[cardIndex] && !player.cards[cardIndex].isFlipped) {
+            player.cards[cardIndex].isFlipped = true;
+
+            const newFlippedCount = player.cards.filter(c => c.isFlipped).length;
+            if (newFlippedCount === 2) {
+                player.isReady = true;
+                this.checkAllPlayersRevealed();
+            }
         }
     });
 

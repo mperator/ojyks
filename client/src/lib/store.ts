@@ -23,7 +23,7 @@ interface GameState {
   sendMessage: (message: string) => void;
   setReady: (isReady: boolean) => void;
   startGame: () => void;
-  revealInitialCards: (indices: number[]) => void;
+  revealInitialCard: (index: number) => void;
   setRoom: (room: Room<State>) => void;
 }
 
@@ -97,8 +97,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   startGame: () => {
     get().room?.send("startGame");
   },
-  revealInitialCards: (indices: number[]) => {
-    get().room?.send("revealInitialCards", indices);
+  revealInitialCard: (index: number) => {
+    get().room?.send("revealInitialCard", index);
   },
   setRoom: (room) => {
     room.onStateChange((state) => {
