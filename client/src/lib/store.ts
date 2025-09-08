@@ -145,13 +145,23 @@ export const useGameStore = create<GameState>((set, get) => ({
         set({ gameState: 'playing' });
     });
 
-    room.onMessage("gameEnd", ({ scores }) => {
-        console.log("Round ended. Scores:", scores);
-        const finalScores: Record<string, number> = {};
-        scores.forEach((player: Player, id: string) => {
-            finalScores[id] = player.score;
+    room.onMessage("roundEnd", ({ players }) => {
+        console.log("Round ended. Scores:", players);
+        set({ gameState: 'round-end' });
+    });
+
+    room.onMessage("playerReadyForNextRound", ({ playerId, isReady }) => {
+        set(state => {
+            const players = { ...state.players };
+            if (players[playerId]) {
+                players[playerId].readyForNextRound = isReady;
+            }
+            return { players };
         });
-        set({ gameState: 'finished', scores: finalScores });
+    });
+
+    room.onMessage("nextRoundCountdown", (countdown) => {
+        set({ countdown });
     });
 
      room.onMessage("gameOver", ({ winner }) => {
