@@ -27,6 +27,9 @@ export class Player extends Schema {
 
   @type("boolean")
   readyForNextRound: boolean = false;
+
+  @type("boolean")
+  connected: boolean = true;
 }
 
 export class State extends Schema {
@@ -398,48 +401,61 @@ export class MyRoom extends Room<State> {
     const player = new Player();
     player.name = options.playerName || "Player";
     player.isReady = false;
+    player.connected = true;
 
     this.state.players.set(client.sessionId, player);
     this.broadcast("playerJoined", { player, playerId: client.sessionId });
   }
 
-  onLeave (client: Client, consented: boolean) {
-    console.log(client.sessionId, "left!");
-    const playerLeft = this.state.players.get(client.sessionId);
-    if (playerLeft) {
-        // Return cards to draw pile if game is in progress
-        if (this.state.gameState === "playing" || this.state.gameState === "starting") {
-            playerLeft.cards.forEach(card => {
-                if (card.value !== 999) { // Don't return empty placeholders
-                    this.state.drawPile.push(card)
+  async onLeave (client: Client, consented: boolean) {
+    const player = this.state.players.get(client.sessionId);
+    if (player) {
+        player.connected = false;
+        console.log(client.sessionId, "disconnected.");
+    }
+
+    try {
+        if (consented) {
+            throw new Error("consented leave");
+        }
+
+        // allow disconnected client to reconnect into this room until 180 seconds
+        await this.allowReconnection(client, 180);
+
+        // client returned! let's re-activate it.
+        if (player) {
+            player.connected = true;
+            console.log(client.sessionId, "reconnected.");
+        }
+
+    } catch (e) {
+        // 20 seconds expired. let's remove the client.
+        if (player) {
+            console.log(client.sessionId, "left permanently.");
+            this.state.players.delete(client.sessionId);
+            this.broadcast("playerLeft", { playerId: client.sessionId });
+
+            // If the host left, assign a new host
+            if (client.sessionId === this.state.hostId && this.state.players.size > 0) {
+                const newHostId = this.state.players.keys().next().value;
+                if (newHostId) {
+                    this.state.hostId = newHostId;
+                    this.broadcast("newHost", { hostId: newHostId });
                 }
-            });
-            this.state.drawPile.sort(() => Math.random() - 0.5); // Re-shuffle
+            }
+
+            if (this.state.currentTurn === client.sessionId) {
+                this.endTurn(); // Properly handle turn change
+            }
+
+            if (this.state.players.size < 2 && (this.state.gameState === "playing" || this.state.gameState === "starting")) {
+                this.state.gameState = "waiting";
+                this.state.currentTurn = "";
+                // Reset player ready states
+                this.state.players.forEach(p => p.isReady = false);
+                this.broadcast("gameReset");
+            }
         }
-    }
-
-    this.state.players.delete(client.sessionId);
-    this.broadcast("playerLeft", { playerId: client.sessionId });
-
-    // If the host left, assign a new host
-    if (client.sessionId === this.state.hostId && this.state.players.size > 0) {
-        const newHostId = this.state.players.keys().next().value;
-        if (newHostId) {
-            this.state.hostId = newHostId;
-            this.broadcast("newHost", { hostId: newHostId });
-        }
-    }
-
-    if (this.state.currentTurn === client.sessionId) {
-        this.endTurn(); // Properly handle turn change
-    }
-
-    if (this.state.players.size < 2 && (this.state.gameState === "playing" || this.state.gameState === "starting")) {
-        this.state.gameState = "waiting";
-        this.state.currentTurn = "";
-        // Reset player ready states
-        this.state.players.forEach(p => p.isReady = false);
-        this.broadcast("gameReset");
     }
   }
 

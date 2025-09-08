@@ -17,15 +17,7 @@ export default function RoomPage() {
     room,
     leaveRoom,
     gameState,
-    connect,
-    client,
   } = useGameStore();
-
-  useEffect(() => {
-    if (!client) {
-      connect("player"); // player name is set on join
-    }
-  }, [client, connect]);
 
   useEffect(() => {
     if (!id) {
@@ -39,14 +31,15 @@ export default function RoomPage() {
       return;
     }
 
-    if (!room && client) {
+    const reconnectionToken = sessionStorage.getItem('reconnectionToken');
+    if (!room && reconnectionToken) {
         joinRoom(id, playerName);
     }
 
     return () => {
       // leaveRoom is handled by button click or browser close
     };
-  }, [id, joinRoom, room, router, client]);
+  }, [id, joinRoom, room, router]);
 
   const handleLeave = () => {
     leaveRoom();

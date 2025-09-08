@@ -8,14 +8,13 @@ export default function Home() {
   const [playerName, setPlayerName] = useState("");
   const [roomIdToJoin, setRoomIdToJoin] = useState("");
   const router = useRouter();
-  const { createRoom, joinRoom, connect } = useGameStore();
+  const { createRoom, joinRoom } = useGameStore();
 
   useEffect(() => {
     const savedPlayerName = localStorage.getItem("playerName");
     if (savedPlayerName) {
       setPlayerName(savedPlayerName);
     }
-    connect(playerName || "Anonymous");
   }, []);
 
   const handlePlayerNameChange = (name: string) => {

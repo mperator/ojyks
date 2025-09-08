@@ -1,9 +1,10 @@
 import { create } from 'zustand';
-import { Room, Client } from 'colyseus.js';
+import { Room } from 'colyseus.js';
 import { State, Player, Card } from '../../../server/src/rooms/MyRoom';
 
+import client from './colyseus';
+
 interface GameState {
-  client: Client | null;
   room: Room<State> | null;
   players: Record<string, Player>;
   drawPile: Card[];
@@ -18,7 +19,6 @@ interface GameState {
   scores: Record<string, number> | null;
   countdown: number | null;
   initiatorScoreDoubled: boolean;
-  connect: (playerName: string) => Promise<void>;
   createRoom: (playerName: string) => Promise<string | undefined>;
   joinRoom: (roomId: string, playerName: string) => Promise<void>;
   leaveRoom: () => void;
@@ -32,7 +32,6 @@ interface GameState {
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
-  client: null,
   room: null,
   players: {},
   drawPile: [],
@@ -47,22 +46,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   scores: null,
   countdown: null,
   initiatorScoreDoubled: false,
-  connect: async () => {
-    try {
-      if (get().client) return;
-      const client = new Client("ws://localhost:3001");
-      set({ client });
-    } catch (e) {
-      console.error("Failed to connect to server", e);
-    }
-  },
   createRoom: async (playerName) => {
-    const client = get().client;
-    if (!client) {
-        await get().connect(playerName);
-    }
     try {
-      const room = await get().client!.create<State>("my_room", { playerName });
+      const room = await client.create<State>("my_room", { playerName });
+      sessionStorage.setItem('reconnectionToken', room.reconnectionToken);
+      console.log("created room with id:", room.roomId);
       set({ room });
       get().setRoom(room);
       return room.roomId;
@@ -71,12 +59,27 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
   joinRoom: async (roomId, playerName) => {
-    const client = get().client;
-    if (!client) {
-        await get().connect(playerName);
+    // check for reconnection token
+    const reconnectionToken = sessionStorage.getItem('reconnectionToken');
+    if (reconnectionToken) {
+      try {
+        const room = await client.reconnect<State>(reconnectionToken);
+        sessionStorage.setItem('reconnectionToken', room.reconnectionToken);
+        console.log("reconnect", reconnectionToken)
+        set({ room });
+        get().setRoom(room);
+        return;
+      } catch (e) {
+        console.error(`Failed to reconnect to room ${roomId}`, e);
+         sessionStorage.removeItem('reconnectionToken');
+      }
     }
+
     try {
-      const room = await get().client!.joinById<State>(roomId, { playerName });
+      const room = await client.joinById<State>(roomId, { playerName });
+      sessionStorage.setItem('reconnectionToken', room.reconnectionToken);
+        console.log("join",reconnectionToken)
+
       set({ room });
       get().setRoom(room);
     } catch (e) {
@@ -84,12 +87,15 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
   leaveRoom: () => {
+    sessionStorage.removeItem('reconnectionToken');
+    console.log("leave");
     const { room } = get();
     if (room) {
-      room.leave();
+      room.leave(true);
+
     }
     // Reset state on leave
-    set({ room: null, players: {}, messages: [], drawnCard: null, currentTurn: null, gameState: 'waiting', winner: null, scores: null, hostId: null });
+    // set({ room: null, players: {}, messages: [], drawnCard: null, currentTurn: null, gameState: 'waiting', winner: null, scores: null, hostId: null });
   },
   sendMessage: (message) => {
     const { room } = get();
