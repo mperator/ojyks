@@ -1,9 +1,11 @@
 import React from 'react';
 import { useGameStore } from '@/lib/store';
+import { useRouter } from 'next/navigation';
 
 const RoundEndDisplay = () => {
-  const { players, setReadyForNextRound, room, countdown, winner, lastRoundInitiator, initiatorScoreDoubled } = useGameStore();
+  const { players, setReadyForNextRound, room, countdown, winner, lastRoundInitiator, initiatorScoreDoubled, leaveRoom } = useGameStore();
   const currentPlayerId = room?.sessionId;
+  const router = useRouter();
 
   const handleReadyClick = () => {
     const player = players[currentPlayerId!];
@@ -12,11 +14,42 @@ const RoundEndDisplay = () => {
     }
   };
 
+  const handleExitClick = () => {
+    router.push('/');
+    leaveRoom();
+  };
+
   if (winner) {
     return (
-      <div className="text-center">
-        <h2 className="text-3xl font-bold mb-4">Game Over!</h2>
-        <p className="text-2xl">Winner is {winner}!</p>
+      <div className="p-4 bg-gray-700 rounded-lg text-white">
+        <h2 className="text-3xl font-bold text-center mb-4">Game Over!</h2>
+        <p className="text-2xl text-center mb-4">Winner is {winner}!</p>
+        <table className="w-full text-left table-auto mb-6">
+          <thead>
+            <tr>
+              <th className="px-4 py-2">Player</th>
+              <th className="px-4 py-2">Final Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Object.values(players)
+              .sort((a, b) => b.score - a.score)
+              .map((player) => (
+              <tr key={player.name} className="border-t border-gray-600">
+                <td className="px-4 py-2">{player.name}</td>
+                <td className="px-4 py-2">{player.score}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="text-center">
+          <button
+            onClick={handleExitClick}
+            className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Exit to Lobby
+          </button>
+        </div>
       </div>
     );
   }
