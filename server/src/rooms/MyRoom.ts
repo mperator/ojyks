@@ -17,10 +17,16 @@ export class Player extends Schema {
   cards = new ArraySchema<Card>();
 
   @type("number")
-  score: number = 0;
+  score: number = 0; // Total game score
+
+  @type("number")
+  roundScore: number = 0;
 
   @type("boolean")
   isReady: boolean = false;
+
+  @type("boolean")
+  readyForNextRound: boolean = false;
 }
 
 export class State extends Schema {
@@ -37,7 +43,7 @@ export class State extends Schema {
   currentTurn: string = "";
 
   @type("string")
-  gameState: string = "waiting"; // waiting, starting, playing, finished
+  gameState: string = "waiting"; // waiting, starting, playing, round-end, game-over
 
   @type("string")
   hostId: string = "";
@@ -185,6 +191,15 @@ export class MyRoom extends Room<State> {
         this.checkForColumn(player);
         this.endTurn();
     });
+
+    this.onMessage("setReadyForNextRound", (client, { isReady }: { isReady: boolean }) => {
+        const player = this.state.players.get(client.sessionId);
+        if (player && this.state.gameState === "round-end") {
+            player.readyForNextRound = isReady;
+            this.broadcast("playerReadyForNextRound", { playerId: client.sessionId, isReady });
+            this.checkAllPlayersReadyForNextRound();
+        }
+    });
   }
 
   resetGame() {
@@ -282,56 +297,52 @@ export class MyRoom extends Room<State> {
       this.state.currentTurn = playerIds[nextPlayerIndex];
 
       if (this.state.currentTurn === this.state.lastRoundInitiator) {
-          this.endGame();
+          this.endRound();
       }
   }
 
-  endGame() {
-      this.state.gameState = "finished";
-      let initiatorScore = 0;
+  endRound() {
+      this.state.gameState = "round-end";
+      let initiatorRoundScore = 0;
       const initiator = this.state.players.get(this.state.lastRoundInitiator!);
 
+      // Flip all cards and calculate round scores
+      this.state.players.forEach((player) => {
+          player.cards.forEach(c => { if (!c.isFlipped) c.isFlipped = true; });
+          player.roundScore = player.cards.reduce((sum, card) => sum + (card.value === 999 ? 0 : card.value), 0);
+      });
+
       if (initiator) {
-          initiator.cards.forEach(c => {
-              if (!c.isFlipped) c.isFlipped = true;
-          });
-          initiatorScore = initiator.cards.reduce((sum, card) => sum + (card.value === 999 ? 0 : card.value), 0);
+          initiatorRoundScore = initiator.roundScore;
       }
 
       let someoneHasLowerScore = false;
       this.state.players.forEach((player, sessionId) => {
-          if (sessionId === this.state.lastRoundInitiator) return;
-          player.cards.forEach(c => {
-              if (!c.isFlipped) c.isFlipped = true;
-          });
-          const playerScore = player.cards.reduce((sum, card) => sum + (card.value === 999 ? 0 : card.value), 0);
-          player.score += playerScore;
-          if (playerScore <= initiatorScore) {
-              someoneHasLowerScore = true;
+          if (sessionId !== this.state.lastRoundInitiator) {
+              if (player.roundScore <= initiatorRoundScore) {
+                  someoneHasLowerScore = true;
+              }
           }
       });
 
       if (initiator) {
-          if (someoneHasLowerScore && initiatorScore > 0) {
-              initiator.score += initiatorScore * 2;
-          } else {
-              initiator.score += initiatorScore;
+          if (someoneHasLowerScore && initiatorRoundScore > 0) {
+              initiator.roundScore *= 2;
           }
       }
 
-      this.broadcast("gameEnd", { scores: this.state.players });
+      // Update total game score from round scores
+      this.state.players.forEach(player => {
+          player.score += player.roundScore;
+          player.readyForNextRound = false;
+      });
 
-      // Check for winner
+      this.broadcast("roundEnd", { players: this.state.players });
+
       const winner = Array.from(this.state.players.values()).find(p => p.score >= 100);
       if (winner) {
+          this.state.gameState = "game-over";
           this.broadcast("gameOver", { winner: winner.name });
-          // lock room?
-      } else {
-          // Schedule next round
-          setTimeout(() => {
-            this.state.gameState = "waiting";
-            this.broadcast("newRound");
-          }, 10000);
       }
   }
 
@@ -429,6 +440,38 @@ export class MyRoom extends Room<State> {
 
   onDispose() {
     console.log("room", this.roomId, "disposing...");
+  }
+
+  startNextRound() {
+    this.state.players.forEach(p => {
+        p.roundScore = 0;
+        p.readyForNextRound = false;
+    });
+
+    this.resetGame();
+    this.state.gameState = "starting";
+    this.broadcast("gameStarting");
+  }
+
+  checkAllPlayersReadyForNextRound() {
+    if (this.state.gameState !== "round-end") return;
+
+    const allReady = Array.from(this.state.players.values()).every(p => p.readyForNextRound);
+
+    if (allReady && this.state.players.size > 0) {
+        // All players are ready, start countdown
+        let countdown = 5;
+        this.broadcast("nextRoundCountdown", countdown);
+
+        const interval = this.clock.setInterval(() => {
+            countdown--;
+            this.broadcast("nextRoundCountdown", countdown);
+            if (countdown <= 0) {
+                interval.clear();
+                this.startNextRound();
+            }
+        }, 1000);
+    }
   }
 
 }

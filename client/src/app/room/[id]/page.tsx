@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useGameStore } from "@/lib/store";
 import GameBoard from "./GameBoard";
 import Chat from "./Chat";
-import Lobby from "./Lobby"; // We will create this component
+import Lobby from "./Lobby";
+import RoundEndDisplay from "./RoundEndDisplay";
 
 export default function RoomPage() {
   const params = useParams();
@@ -16,7 +17,15 @@ export default function RoomPage() {
     room,
     leaveRoom,
     gameState,
+    connect,
+    client,
   } = useGameStore();
+
+  useEffect(() => {
+    if (!client) {
+      connect("player"); // player name is set on join
+    }
+  }, [client, connect]);
 
   useEffect(() => {
     if (!id) {
@@ -30,14 +39,14 @@ export default function RoomPage() {
       return;
     }
 
-    if (!room) {
+    if (!room && client) {
         joinRoom(id, playerName);
     }
 
     return () => {
       // leaveRoom is handled by button click or browser close
     };
-  }, [id, joinRoom, room, router]);
+  }, [id, joinRoom, room, router, client]);
 
   const handleLeave = () => {
     leaveRoom();
@@ -61,8 +70,10 @@ export default function RoomPage() {
             </div>
         );
       case "playing":
-      case "finished":
         return <GameBoard />;
+      case "round-end":
+      case "game-over":
+        return <RoundEndDisplay />;
       default:
         return <div>Loading...</div>;
     }
@@ -84,7 +95,25 @@ export default function RoomPage() {
       </div>
       <div className="w-1/4 ml-4">
         <Chat />
+        <Scoreboard />
       </div>
     </div>
   );
+}
+
+const Scoreboard = () => {
+    const { players } = useGameStore();
+    return (
+        <div className="bg-gray-700 p-4 rounded-lg mt-4">
+            <h2 className="text-xl font-bold mb-2">Scoreboard</h2>
+            <ul>
+                {Object.values(players).map(p => (
+                    <li key={p.name} className="flex justify-between">
+                        <span>{p.name}</span>
+                        <span>{p.score}</span>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    )
 }

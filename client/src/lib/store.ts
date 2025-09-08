@@ -16,12 +16,14 @@ interface GameState {
   messages: string[];
   winner: string | null;
   scores: Record<string, number> | null;
+  countdown: number | null;
   connect: (playerName: string) => Promise<void>;
   createRoom: (playerName: string) => Promise<string | undefined>;
   joinRoom: (roomId: string, playerName: string) => Promise<void>;
   leaveRoom: () => void;
   sendMessage: (message: string) => void;
   setReady: (isReady: boolean) => void;
+  setReadyForNextRound: (isReady: boolean) => void;
   startGame: () => void;
   revealInitialCard: (index: number) => void;
   discardDrawnCard: () => void;
@@ -42,6 +44,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   messages: [],
   winner: null,
   scores: null,
+  countdown: null,
   connect: async () => {
     try {
       if (get().client) return;
@@ -94,6 +97,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
   setReady: (isReady: boolean) => {
     get().room?.send("playerReady", { isReady });
+  },
+  setReadyForNextRound: (isReady: boolean) => {
+    get().room?.send("setReadyForNextRound", { isReady });
   },
   startGame: () => {
     get().room?.send("startGame");
