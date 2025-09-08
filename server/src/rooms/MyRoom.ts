@@ -147,7 +147,7 @@ export class MyRoom extends Room<State> {
         oldCard.isFlipped = true;
         player.cards[cardIndex] = this.state.drawnCard;
         this.state.discardPile.push(oldCard);
-        console.log(`Cards on discard pile: ${this.state.discardPile.length}`);
+        console.log(`Cards on discard pile: ${this.state.discardPile.length}`, this.state.discardPile.toJSON());
         this.state.drawnCard = null;
 
         this.checkForColumn(player);
@@ -232,6 +232,8 @@ export class MyRoom extends Room<State> {
           const card1 = player.cards[col];
           const card2 = player.cards[col + 4];
           const card3 = player.cards[col + 8];
+
+          if(card1.value === 999 || card2.value === 999 || card3.value === 999) continue; // Skip empty placeholders    
 
           if (card1 && card2 && card3 && card1.isFlipped && card2.isFlipped && card3.isFlipped &&
               card1.value === card2.value && card2.value === card3.value)
