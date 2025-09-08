@@ -51,6 +51,9 @@ export class State extends Schema {
   @type("string")
   lastRoundInitiator: string | null = null;
 
+  @type("boolean")
+  initiatorScoreDoubled: boolean = false;
+
   @type(Card)
   drawnCard: Card | null = null;
 }
@@ -303,6 +306,7 @@ export class MyRoom extends Room<State> {
 
   endRound() {
       this.state.gameState = "round-end";
+      this.state.initiatorScoreDoubled = false;
       let initiatorRoundScore = 0;
       const initiator = this.state.players.get(this.state.lastRoundInitiator!);
 
@@ -328,6 +332,7 @@ export class MyRoom extends Room<State> {
       if (initiator) {
           if (someoneHasLowerScore && initiatorRoundScore > 0) {
               initiator.roundScore *= 2;
+              this.state.initiatorScoreDoubled = true;
           }
       }
 

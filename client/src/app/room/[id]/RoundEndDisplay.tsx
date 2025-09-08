@@ -2,7 +2,7 @@ import React from 'react';
 import { useGameStore } from '@/lib/store';
 
 const RoundEndDisplay = () => {
-  const { players, setReadyForNextRound, room, countdown, winner, lastRoundInitiator } = useGameStore();
+  const { players, setReadyForNextRound, room, countdown, winner, lastRoundInitiator, initiatorScoreDoubled } = useGameStore();
   const currentPlayerId = room?.sessionId;
 
   const handleReadyClick = () => {
@@ -34,14 +34,21 @@ const RoundEndDisplay = () => {
           </tr>
         </thead>
         <tbody>
-          {Object.entries(players).map(([sessionId, player]) => (
-            <tr key={player.name} className="border-t border-gray-600">
-              <td className="px-4 py-2">{player.name} {sessionId === lastRoundInitiator ? '👑' : ''}</td>
-              <td className="px-4 py-2">{player.roundScore}</td>
-              <td className="px-4 py-2">{player.score}</td>
-              <td className="px-4 py-2">{player.readyForNextRound ? '✅' : '❌'}</td>
-            </tr>
-          ))}
+          {Object.entries(players).map(([sessionId, player]) => {
+            const isInitiator = sessionId === lastRoundInitiator;
+            const scoreColor = isInitiator
+              ? initiatorScoreDoubled ? 'text-red-500' : 'text-green-500'
+              : '';
+
+            return (
+              <tr key={player.name} className="border-t border-gray-600">
+                <td className="px-4 py-2">{player.name} {isInitiator ? '👑' : ''}</td>
+                <td className={`px-4 py-2 ${scoreColor}`}>{player.roundScore} {isInitiator && initiatorScoreDoubled ? '(x2)' : ''}</td>
+                <td className="px-4 py-2">{player.score}</td>
+                <td className="px-4 py-2">{player.readyForNextRound ? '✅' : '❌'}</td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
       {countdown !== null && (

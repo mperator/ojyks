@@ -17,6 +17,7 @@ interface GameState {
   winner: string | null;
   scores: Record<string, number> | null;
   countdown: number | null;
+  initiatorScoreDoubled: boolean;
   connect: (playerName: string) => Promise<void>;
   createRoom: (playerName: string) => Promise<string | undefined>;
   joinRoom: (roomId: string, playerName: string) => Promise<void>;
@@ -45,6 +46,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   winner: null,
   scores: null,
   countdown: null,
+  initiatorScoreDoubled: false,
   connect: async () => {
     try {
       if (get().client) return;
@@ -125,6 +127,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         hostId: state.hostId,
         lastRoundInitiator: state.lastRoundInitiator,
         drawnCard: state.drawnCard,
+        initiatorScoreDoubled: state.initiatorScoreDoubled,
       });
     });
 
