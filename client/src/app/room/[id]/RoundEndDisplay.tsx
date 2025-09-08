@@ -2,7 +2,7 @@ import React from 'react';
 import { useGameStore } from '@/lib/store';
 
 const RoundEndDisplay = () => {
-  const { players, setReadyForNextRound, room, countdown, winner } = useGameStore();
+  const { players, setReadyForNextRound, room, countdown, winner, lastRoundInitiator } = useGameStore();
   const currentPlayerId = room?.sessionId;
 
   const handleReadyClick = () => {
@@ -34,9 +34,9 @@ const RoundEndDisplay = () => {
           </tr>
         </thead>
         <tbody>
-          {Object.values(players).map((player) => (
+          {Object.entries(players).map(([sessionId, player]) => (
             <tr key={player.name} className="border-t border-gray-600">
-              <td className="px-4 py-2">{player.name}</td>
+              <td className="px-4 py-2">{player.name} {sessionId === lastRoundInitiator ? '👑' : ''}</td>
               <td className="px-4 py-2">{player.roundScore}</td>
               <td className="px-4 py-2">{player.score}</td>
               <td className="px-4 py-2">{player.readyForNextRound ? '✅' : '❌'}</td>
