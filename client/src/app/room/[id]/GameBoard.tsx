@@ -399,7 +399,7 @@ const GameBoard = () => {
                             <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin scrollbar-thumb-gray-700/70">
                                 {Object.entries(players).map(([id, p]) => (
                                     <div key={id} className={`flex items-center justify-between text-sm rounded px-2 py-1 ${id === currentTurn ? 'bg-amber-400/15 border border-amber-300/30' : 'bg-gray-700/40'} ${id === mySessionId ? 'ring-1 ring-amber-300/30' : ''}`}>
-                                        <span className={`truncate ${id === mySessionId ? 'text-amber-200 font-medium' : 'text-gray-200'}`} title={p.name}>{id === mySessionId ? `${p.name}` : p.name}</span>
+                                        <span className={`truncate ${id === mySessionId ? 'text-amber-200 font-medium' : 'text-gray-200'}`} title={p.name}>{id === mySessionId ? `You` : p.name}</span>
                                         <span className="text-gray-300 font-mono text-xs">{p.score}</span>
                                     </div>
                                 ))}
@@ -433,7 +433,7 @@ const GameBoard = () => {
                     </div>
                     <button
                         onClick={() => { leaveRoom(); router.push('/'); }}
-                        className="mt-2 text-xs font-semibold tracking-wide uppercase bg-red-600/80 hover:bg-red-600 active:bg-red-700 text-white py-2 rounded-lg border border-red-500/60 shadow-sm transition"
+                        className="mt-2 text-xs font-semibold tracking-wide uppercase bg-red-600 px-4 py-2 rounded-full text-white shadow-lg transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
                     >
                         Rage Quit
                     </button>
