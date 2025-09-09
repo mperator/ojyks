@@ -50,13 +50,6 @@ export default function RoomPage() {
       case "waiting":
         return <Lobby />;
       case "starting":
-        return (
-            <div>
-                <h2 className="text-xl text-center mb-4">Game is starting!</h2>
-                <p className="text-center mb-4">Reveal two of your cards.</p>
-                <GameBoard />
-            </div>
-        );
       case "playing":
         return <GameBoard />;
       case "round-end":

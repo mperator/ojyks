@@ -147,7 +147,7 @@ const GameBoard = () => {
 
     // Phase & turn headline logic extracted for reuse.
     const phaseTitle = gameState === 'starting'
-        ? 'Reveal Phase'
+        ? 'Reveal two cards'
         : isMyTurn
             ? (isFlippingAfterDiscard ? 'Flip a card' : (drawnCard ? 'Choose: swap or discard' : 'Your Turn'))
             : `${players[currentTurn!]?.name}'s Turn`;
