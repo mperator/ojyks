@@ -5,28 +5,41 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Card as CardType, Player as PlayerType } from "../../../../../server/src/rooms/MyRoom";
 
+// Helper: map card value to color classes (front side)
+const getCardColorClasses = (value: number) => {
+    // Muted, less bright palette (darker variants) for better contrast with white outlined text
+    if (value === -2 || value === -1) return 'bg-blue-800';
+    if (value === 0) return 'bg-sky-600';
+    if (value >= 1 && value <= 4) return 'bg-green-700';
+    if (value >= 5 && value <= 8) return 'bg-yellow-600';
+    if (value >= 9 && value <= 12) return 'bg-red-700';
+    return 'bg-gray-600';
+};
+
 const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onClick?: () => void, isSelected?: boolean, size?: 'xs' | 'sm' | 'md' | 'lg' }) => {
     if (!card || card.value === 999) { // Render empty slot
         return <div className={`rounded-lg bg-gray-800 ${size === 'xs' ? 'w-9 h-12' : size === 'sm' ? 'w-10 h-14' : size === 'lg' ? 'w-24 h-36' : 'w-20 h-28'}`} />;
     }
     const sizeClasses = size === 'xs'
-        ? 'w-9 h-12 text-[10px]'
+        ? 'w-9 h-12 text-[14px]'
         : size === 'sm'
-            ? 'w-10 h-14 text-sm'
+            ? 'w-10 h-14 text-lg'
             : size === 'lg'
-                ? 'w-24 h-36 text-3xl'
-                : 'w-20 h-28 text-2xl';
+                ? 'w-24 h-36 text-6xl'
+                : 'w-20 h-28 text-5xl';
+    const frontClasses = `${getCardColorClasses(card.value)} text-white border-white`;
+    const backClasses = 'bg-gray-600/80 text-transparent border-gray-400/70';
     return (
         <div
             className={`${sizeClasses} border-2 rounded-xl flex items-center justify-center font-semibold tracking-wide select-none shadow-sm transition-all duration-150
-                ${onClick ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:border-amber-300' : ''}
-                ${isSelected ? 'border-amber-400 ring-2 ring-amber-300 scale-105 shadow-amber-400/30' : 'border-gray-400/70'}
-                ${card.isFlipped ? 'bg-gradient-to-br from-white to-gray-200 text-gray-900' : 'bg-gray-600/80 text-transparent'}
+                ${onClick ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg' : ''}
+                ${isSelected ? 'ring-2 ring-amber-300 scale-105 shadow-amber-400/30' : ''}
+                ${card.isFlipped ? frontClasses : backClasses}
             `}
             onClick={onClick}
             aria-label={card.isFlipped ? `Card ${card.value}` : 'Hidden card'}
         >
-            {card.isFlipped ? <span>{card.value}</span> : null}
+            {card.isFlipped ? <span className="card-value drop-shadow-md">{card.value}</span> : null}
         </div>
     );
 };
