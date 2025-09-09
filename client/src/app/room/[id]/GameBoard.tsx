@@ -9,26 +9,33 @@ import { Card as CardType, Player as PlayerType } from "../../../../../server/sr
 // Helper: map card value to color classes (front side)
 const getCardColorClasses = (value: number) => {
     // Muted, less bright palette (darker variants) for better contrast with white outlined text
-    if (value === -2 || value === -1) return 'bg-blue-800';
-    if (value === 0) return 'bg-sky-600';
-    if (value >= 1 && value <= 4) return 'bg-green-700';
-    if (value >= 5 && value <= 8) return 'bg-yellow-600';
-    if (value >= 9 && value <= 12) return 'bg-red-700';
+    if (value === -2 || value === -1) return 'bg-[#053D61]';
+    if (value === 0) return 'bg-[#429FD4]';
+    if (value >= 1 && value <= 4) return 'bg-[#02806A]';
+    if (value >= 5 && value <= 8) return 'bg-[#D99514]';
+    if (value >= 9 && value <= 12) return 'bg-[#AB2E1B]';
     return 'bg-gray-600';
 };
 
 const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onClick?: () => void, isSelected?: boolean, size?: 'xs' | 'sm' | 'md' | 'lg' }) => {
     if (!card || card.value === 999) { // Empty slot placeholder
-        return <div className={`rounded-lg bg-gray-800 ${size === 'xs' ? 'w-9 h-12' : size === 'sm' ? 'w-10 h-14' : size === 'lg' ? 'w-24 h-36' : 'w-20 h-28'}`} />;
+        return <div className={`rounded-lg bg-gray-800 ${size === 'xs' ? 'w-9 h-14' : size === 'sm' ? 'w-10 h-15' : size === 'lg' ? 'w-24 h-36' : 'w-20 h-30'}`} />;
     }
 
     const sizeClasses = size === 'xs'
-        ? 'w-9 h-12 text-[14px]'
+        ? 'w-9 h-14 text-[14px]'
         : size === 'sm'
-            ? 'w-10 h-14 text-lg'
+            ? 'w-10 h-15 text-lg'
             : size === 'lg'
                 ? 'w-24 h-36 text-6xl'
-                : 'w-20 h-28 text-5xl';
+                : 'w-20 h-30 text-5xl';
+    const roundedClasses = size === 'xs'
+        ? 'rounded-xs'
+        : size === 'sm'
+            ? 'rounded-sm'
+            : size === 'lg'
+                ? 'rounded-lg'
+                : 'rounded-lg';
 
     const frontColorClasses = `${getCardColorClasses(card.value)} text-white border-white`;
     const backColorClasses = 'bg-gray-600/80 text-transparent border-gray-400/70';
@@ -41,9 +48,9 @@ const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onCl
         >
             <div className={`flip-inner ${card.isFlipped ? 'flipped' : ''} ${isSelected ? 'ring-1 rounded-xl ring-amber-300 scale-[1.04]' : ''} ${onClick ? 'hover:-translate-y-1' : ''}`}>
                 {/* Back Face */}
-                <div className={`flip-face back border-2 rounded-xl flex items-center justify-center font-semibold tracking-wide shadow-sm ${backColorClasses}`}>
+                <div className={`flip-face back border-2 flex items-center justify-center font-semibold tracking-wide shadow-sm ${backColorClasses} ${roundedClasses}`}>
                     <Image
-                        src="/card-back.svg"
+                        src={size === "xs" || size === "sm" ? "/card_back_small.png" : "/card_back.png"}
                         alt="Card back"
                         fill
                         priority={false}
@@ -52,7 +59,7 @@ const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onCl
                     />
                 </div>
                 {/* Front Face */}
-                <div className={`flip-face front border-2 rounded-xl flex items-center justify-center font-semibold tracking-wide shadow-md ${frontColorClasses}`}>
+                <div className={`flip-face front border-2 rounded-xl flex items-center justify-center font-semibold tracking-wide shadow-md ${frontColorClasses} ${roundedClasses}`}>
                     <span className="card-value drop-shadow-md relative">{card.value}</span>
                 </div>
             </div>
@@ -222,7 +229,7 @@ const GameBoard = () => {
                                 if (count === 1 && isSelectedFromDraw) {
                                     return (
                                         <div className="relative">
-                                            <div className="w-20 h-28 rounded-xl border-2 border-dashed flex items-center justify-center text-[11px] tracking-wide uppercase text-gray-400 border-gray-700 opacity-80">Draw</div>
+                                            <div className="w-20 h-30 rounded-xl border-2 border-dashed flex items-center justify-center text-[11px] tracking-wide uppercase text-gray-400 border-gray-700 opacity-80">Draw</div>
                                             <div className="absolute -top-3 right-4 rotate-[-6deg]">
                                                 <Card card={drawnCard!} isSelected size='md' />
                                             </div>
@@ -251,7 +258,7 @@ const GameBoard = () => {
                                             isSelected={false}
                                             size='md'
                                         />
-                                        <div className="absolute -bottom-1 -right-1 w-20 h-28 rounded-xl border-2 border-gray-500 bg-gray-700/80 -z-10" />
+                                        <div className="absolute -bottom-1 -right-1 w-20 h-30 rounded-xl border-2 border-gray-500 bg-gray-700/80 -z-10" />
                                         {isSelectedFromDraw && (
                                             <div className="absolute -top-3 right-4 rotate-[-6deg]">
                                                 <Card card={drawnCard!} isSelected size='md' />
@@ -276,7 +283,7 @@ const GameBoard = () => {
                                 if (count === 1 && isSelectedFromDiscard) {
                                     return (
                                         <div className="relative">
-                                            <div className="w-20 h-28 rounded-xl border-2 border-dashed flex items-center justify-center text-[11px] tracking-wide uppercase text-gray-400 border-gray-700 opacity-80">Discard</div>
+                                            <div className="w-20 h-30 rounded-xl border-2 border-dashed flex items-center justify-center text-[11px] tracking-wide uppercase text-gray-400 border-gray-700 opacity-80">Discard</div>
                                             <div className="absolute -top-3 -right-4 rotate-[6deg]">
                                                 <Card card={drawnCard!} isSelected size='md' />
                                             </div>
@@ -305,7 +312,7 @@ const GameBoard = () => {
                                             isSelected={false}
                                             size='md'
                                         />
-                                        <div className="absolute -bottom-1 -right-1 w-20 h-28 rounded-xl border-2 border-gray-500 bg-gray-700/80 -z-10" />
+                                        <div className="absolute -bottom-1 -right-1 w-20 h-30 rounded-xl border-2 border-gray-500 bg-gray-700/80 -z-10" />
                                         <div className="absolute -top-3 -right-4 rotate-[6deg]">
                                             <Card card={discardPile[count - 1]} isSelected size='md' />
                                         </div>
