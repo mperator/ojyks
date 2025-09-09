@@ -196,7 +196,6 @@ const GameBoard = () => {
                                             : 'cursor-not-allowed '}
                                     `}
                                 >
-                                    <span className="text-sm font-bold tracking-wide">{drawPile.length}</span>
                                     {drawnCard && !drawnFromDiscard && (
                                         <div className="absolute -top-3 -left-4 rotate-[-6deg]">
                                             <Card card={drawnCard} isSelected size='md' />
