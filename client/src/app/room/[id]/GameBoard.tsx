@@ -230,7 +230,7 @@ const GameBoard = () => {
                                     return (
                                         <div className="relative">
                                             <div className="w-20 h-30 rounded-xl border-2 border-dashed flex items-center justify-center text-[11px] tracking-wide uppercase text-gray-400 border-gray-700 opacity-80">Draw</div>
-                                            <div className="absolute -top-3 right-4 rotate-[-6deg]">
+                                            <div className="absolute -top-3 -right-4 rotate-[6deg]">
                                                 <Card card={drawnCard!} isSelected size='md' />
                                             </div>
                                         </div>
@@ -243,13 +243,28 @@ const GameBoard = () => {
                                             <Card
                                                 card={drawPile[0]}
                                                 onClick={handleDrawPileClick}
-                                                isSelected={false}
+                                                isSelected={true}
                                                 size='md'
                                             />
                                         </div>
                                     );
                                 }
                                 // Multiple cards -> stacked representation
+                                if (count > 1 && isSelectedFromDraw) {
+                                    return (<div className="relative">
+                                        <Card
+                                            card={drawPile[count - 2]}
+                                            onClick={isSelectedFromDraw ? undefined : handleDrawPileClick}
+                                            isSelected={true}
+                                            size='md'
+                                        />
+                                        <div className="absolute -bottom-1 -right-1 w-20 h-30 rounded-xl border-2 border-gray-500 bg-gray-700/80 -z-10" />
+                                        <div className="absolute -top-3 -right-4 rotate-[6deg]">
+                                            <Card card={drawnCard} isSelected size='md' />
+                                        </div>
+                                    </div>)
+                                }
+                                // Not selected yet
                                 return (
                                     <div className="relative">
                                         <Card
@@ -258,22 +273,15 @@ const GameBoard = () => {
                                             isSelected={false}
                                             size='md'
                                         />
-                                        <div className="absolute -bottom-1 -right-1 w-20 h-30 rounded-xl border-2 border-gray-500 bg-gray-700/80 -z-10" />
-                                        {isSelectedFromDraw && (
-                                            <div className="absolute -top-3 right-4 rotate-[-6deg]">
-                                                <Card card={drawnCard!} isSelected size='md' />
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })()}
-                            <span className="mt-1 text-xs uppercase tracking-wide text-gray-400 flex items-center gap-1">
+                              <span className="mt-1 text-xs uppercase tracking-wide text-gray-400 flex items-center gap-1">
                                 <span>Draw</span>
                                 <span className="px-1.5 py-0.5 rounded bg-gray-700/70 text-[10px] font-medium text-gray-200">{drawPile.length}</span>
                             </span>
                         </div>
-
-
+                    
                         {/* Discard Pile */}
                         <div className="flex flex-col items-center gap-1">
                             {(() => {
