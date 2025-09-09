@@ -18,9 +18,10 @@ const getCardColorClasses = (value: number) => {
 };
 
 const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onClick?: () => void, isSelected?: boolean, size?: 'xs' | 'sm' | 'md' | 'lg' }) => {
-    if (!card || card.value === 999) { // Render empty slot
+    if (!card || card.value === 999) { // Empty slot placeholder
         return <div className={`rounded-lg bg-gray-800 ${size === 'xs' ? 'w-9 h-12' : size === 'sm' ? 'w-10 h-14' : size === 'lg' ? 'w-24 h-36' : 'w-20 h-28'}`} />;
     }
+
     const sizeClasses = size === 'xs'
         ? 'w-9 h-12 text-[14px]'
         : size === 'sm'
@@ -28,20 +29,19 @@ const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onCl
             : size === 'lg'
                 ? 'w-24 h-36 text-6xl'
                 : 'w-20 h-28 text-5xl';
-    const frontClasses = `${getCardColorClasses(card.value)} text-white border-white`;
-    const backClasses = 'bg-gray-600/80 text-transparent border-gray-400/70';
+
+    const frontColorClasses = `${getCardColorClasses(card.value)} text-white border-white`;
+    const backColorClasses = 'bg-gray-600/80 text-transparent border-gray-400/70';
+
     return (
         <div
-            className={`${sizeClasses} border-2 rounded-xl relative flex items-center justify-center font-semibold tracking-wide select-none shadow-sm transition-all duration-150
-                ${onClick ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg' : ''}
-                ${isSelected ? 'ring-1 ring-amber-300 scale-105 shadow-amber-400/30' : ''}
-                ${card.isFlipped ? frontClasses : backClasses}
-            `}
+            className={`flip-container ${sizeClasses} relative select-none ${onClick ? 'cursor-pointer' : ''}`}
             onClick={onClick}
             aria-label={card.isFlipped ? `Card ${card.value}` : 'Hidden card'}
         >
-            {!card.isFlipped && (
-                <>
+            <div className={`flip-inner ${card.isFlipped ? 'flipped' : ''} ${isSelected ? 'ring-1 rounded-xl ring-amber-300 scale-[1.04]' : ''} ${onClick ? 'hover:-translate-y-1' : ''}`}>
+                {/* Back Face */}
+                <div className={`flip-face back border-2 rounded-xl flex items-center justify-center font-semibold tracking-wide shadow-sm ${backColorClasses}`}>
                     <Image
                         src="/card-back.svg"
                         alt="Card back"
@@ -50,11 +50,12 @@ const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onCl
                         className="object-cover opacity-80 pointer-events-none select-none"
                         draggable={false}
                     />
-                </>
-            )}
-            {card.isFlipped && (
-                <span className="card-value drop-shadow-md relative">{card.value}</span>
-            )}
+                </div>
+                {/* Front Face */}
+                <div className={`flip-face front border-2 rounded-xl flex items-center justify-center font-semibold tracking-wide shadow-md ${frontColorClasses}`}>
+                    <span className="card-value drop-shadow-md relative">{card.value}</span>
+                </div>
+            </div>
         </div>
     );
 };
