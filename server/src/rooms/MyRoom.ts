@@ -84,12 +84,24 @@ export class MyRoom extends Room<State> {
     });
 
      this.onMessage("startGame", (client) => {
-        if (client.sessionId !== this.state.hostId || this.state.gameState !== "waiting") {
-            return; // Only host can start, and only in waiting state
+        // Host can start when in waiting OR after a completed game (game-over)
+        if (client.sessionId !== this.state.hostId || (this.state.gameState !== "waiting" && this.state.gameState !== "game-over")) {
+            return;
         }
 
         const allPlayersReady = Array.from(this.state.players.values()).every(p => p.isReady);
         if (this.state.players.size >= 2 && allPlayersReady) {
+            // If coming from a finished game, reset cumulative scores
+            if (this.state.gameState === "game-over") {
+                this.state.players.forEach(player => {
+                    player.score = 0;
+                    player.roundScore = 0;
+                    player.isReady = false;
+                    player.readyForNextRound = false;
+                });
+                this.state.lastRoundInitiator = null;
+                this.state.initiatorScoreDoubled = false;
+            }
             this.resetGame(); // Deal cards and set up piles
             this.state.gameState = "starting";
             this.broadcast("gameStarting");

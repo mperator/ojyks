@@ -94,8 +94,23 @@ export const useGameStore = create<GameState>((set, get) => ({
       room.leave(true);
 
     }
-    // Reset state on leave
-    // set({ room: null, players: {}, messages: [], drawnCard: null, currentTurn: null, gameState: 'waiting', winner: null, scores: null, hostId: null });
+    // Fully reset local client state
+    set({
+      room: null,
+      players: {},
+      drawPile: [],
+      discardPile: [],
+      currentTurn: null,
+      gameState: 'waiting',
+      hostId: null,
+      lastRoundInitiator: null,
+      drawnCard: null,
+      messages: [],
+      winner: null,
+      scores: null,
+      countdown: null,
+      initiatorScoreDoubled: false,
+    });
   },
   sendMessage: (message) => {
     const { room } = get();
@@ -143,7 +158,16 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     room.onMessage("gameStarting", () => {
         console.log("Game is starting! Reveal your cards.");
-        set({ gameState: 'starting' });
+        // Clear any leftover round / game-over state for a clean start
+        set({
+          gameState: 'starting',
+          winner: null,
+          scores: null,
+          countdown: null,
+          lastRoundInitiator: null,
+          drawnCard: null,
+          initiatorScoreDoubled: false,
+        });
     });
 
     room.onMessage("gameStart", ({ startPlayerId }) => {
