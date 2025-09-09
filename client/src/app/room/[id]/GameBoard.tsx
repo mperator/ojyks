@@ -50,7 +50,6 @@ const PlayerBoard = ({ player, isCurrentPlayer, compact = false }: { player: Pla
 
 const GameBoard = () => {
     const { room, players, gameState, currentTurn, drawnCard, drawPile, discardPile, winner, scores, revealInitialCard, discardDrawnCard, messages, sendMessage, leaveRoom } = useGameStore();
-    const [selectedPile, setSelectedPile] = useState<'draw' | 'discard' | null>(null);
     const [isFlippingAfterDiscard, setIsFlippingAfterDiscard] = useState<boolean>(false);
     const [sidebarTab, setSidebarTab] = useState<'scoreboard' | 'chat'>('scoreboard');
     const [chatInput, setChatInput] = useState('');
@@ -63,10 +62,16 @@ const GameBoard = () => {
     const otherPlayers = useMemo(() => Object.entries(players).filter(([id]) => id !== mySessionId).map(([id, p]) => ({ id, player: p })), [players, mySessionId]);
 
     // Reset states when turn changes or card is handled
-    if ((!isMyTurn || (drawnCard === null && !isFlippingAfterDiscard)) && (selectedPile || isFlippingAfterDiscard)) {
-        setSelectedPile(null);
+    if ((!isMyTurn || (drawnCard === null && !isFlippingAfterDiscard)) && isFlippingAfterDiscard) {
         setIsFlippingAfterDiscard(false);
     }
+
+    // Determine from which pile the currently drawn card originated so ALL players can see it.
+    const drawnFromDiscard = useMemo(() => {
+        if (!drawnCard) return false;
+        if (discardPile.length === 0) return false;
+        return discardPile[discardPile.length - 1] === drawnCard; // reference equality (server keeps card reference on discard)
+    }, [drawnCard, discardPile]);
 
     const handleBoardCardClick = (index: number) => {
         if (gameState === 'starting' && player && !player.isReady) {
@@ -97,22 +102,20 @@ const GameBoard = () => {
     const handleDrawPileClick = () => {
         if (isMyTurn && gameState === 'playing' && !drawnCard && !isFlippingAfterDiscard) {
             room?.send("drawFromDrawPile");
-            setSelectedPile('draw');
+            // No local state needed; overlay will be derived from presence of drawnCard not on discard pile
         }
     }
 
     const handleDiscardPileClick = () => {
         if (isMyTurn && gameState === 'playing' && !isFlippingAfterDiscard) {
-            if (drawnCard && selectedPile === 'draw') {
-                // Player has a card from the draw pile and clicks discard.
+            if (drawnCard && !drawnFromDiscard) {
+                // Player has a card from the draw pile and chooses to discard it -> must flip a card.
                 discardDrawnCard();
                 setIsFlippingAfterDiscard(true);
-                setSelectedPile(null); // The card is no longer considered "selected" for swapping
             } else if (!drawnCard) {
                 // Player is drawing from the discard pile.
                 if (discardPile.length > 0) {
                     room?.send("drawFromDiscardPile");
-                    setSelectedPile('discard');
                 }
             }
         }
@@ -194,7 +197,7 @@ const GameBoard = () => {
                                     `}
                                 >
                                     <span className="text-sm font-bold tracking-wide">{drawPile.length}</span>
-                                    {drawnCard && selectedPile === 'draw' && (
+                                    {drawnCard && !drawnFromDiscard && (
                                         <div className="absolute -top-3 -left-4 rotate-[-6deg]">
                                             <Card card={drawnCard} isSelected size='md' />
                                         </div>
@@ -203,7 +206,7 @@ const GameBoard = () => {
                             ) : (
                                 <div className="relative w-20 h-28 rounded-xl border-2 border-dashed border-gray-600 flex items-center justify-center text-[11px] font-medium tracking-wide text-gray-500 select-none">
                                     Draw
-                                    {drawnCard && selectedPile === 'draw' && (
+                                    {drawnCard && !drawnFromDiscard && (
                                         <div className="absolute -top-3 -left-4 rotate-[-6deg]">
                                             <Card card={drawnCard} isSelected size='md' />
                                         </div>
@@ -219,7 +222,7 @@ const GameBoard = () => {
                         <div className="flex flex-col items-center gap-1">
                             {(() => {
                                 const count = discardPile.length;
-                                const isSelectedFromDiscard = drawnCard && selectedPile === 'discard';
+                                const isSelectedFromDiscard = drawnCard && drawnFromDiscard;
                                 // Single card & selected -> show placeholder instead of base card
                                 if (count === 1 && isSelectedFromDiscard) {
                                     return (
@@ -279,11 +282,11 @@ const GameBoard = () => {
                                 </div>
                             ) : isFlippingAfterDiscard ? (
                                 <p className="text-center">You discarded. Now flip one of your face-down cards.</p>
-                            ) : selectedPile === 'draw' ? (
+                            ) : drawnCard && !drawnFromDiscard ? (
                                 <p className="text-center">You drew <span className="text-amber-300 font-medium">{drawnCard!.value}</span>. Swap with a board card or discard it to flip instead.</p>
-                            ) : (
+                            ) : drawnCard && drawnFromDiscard ? (
                                 <p className="text-center">You selected <span className="text-amber-300 font-medium">{drawnCard!.value}</span> from discard. Swap it with a card on your board.</p>
-                            )}
+                            ) : null}
                         </div>
                     ) : null}
 
