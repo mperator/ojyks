@@ -2,6 +2,7 @@
 
 import { useGameStore } from "@/lib/store";
 import { useState, useMemo } from "react";
+import Image from 'next/image';
 import { useRouter } from "next/navigation";
 import { Card as CardType, Player as PlayerType } from "../../../../../server/src/rooms/MyRoom";
 
@@ -31,15 +32,29 @@ const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onCl
     const backClasses = 'bg-gray-600/80 text-transparent border-gray-400/70';
     return (
         <div
-            className={`${sizeClasses} border-2 rounded-xl flex items-center justify-center font-semibold tracking-wide select-none shadow-sm transition-all duration-150
+            className={`${sizeClasses} border-2 rounded-xl relative flex items-center justify-center font-semibold tracking-wide select-none shadow-sm transition-all duration-150
                 ${onClick ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg' : ''}
-                ${isSelected ? 'ring-2 ring-amber-300 scale-105 shadow-amber-400/30' : ''}
+                ${isSelected ? 'ring-1 ring-amber-300 scale-105 shadow-amber-400/30' : ''}
                 ${card.isFlipped ? frontClasses : backClasses}
             `}
             onClick={onClick}
             aria-label={card.isFlipped ? `Card ${card.value}` : 'Hidden card'}
         >
-            {card.isFlipped ? <span className="card-value drop-shadow-md">{card.value}</span> : null}
+            {!card.isFlipped && (
+                <>
+                    <Image
+                        src="/card-back.svg"
+                        alt="Card back"
+                        fill
+                        priority={false}
+                        className="object-cover opacity-80 pointer-events-none select-none"
+                        draggable={false}
+                    />
+                </>
+            )}
+            {card.isFlipped && (
+                <span className="card-value drop-shadow-md relative">{card.value}</span>
+            )}
         </div>
     );
 };
@@ -199,37 +214,58 @@ const GameBoard = () => {
                     <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-10 py-2">
                         {/* Draw Pile */}
                         <div className="flex flex-col items-center gap-1">
-                            {drawPile.length > 0 ? (
-                                <div
-                                    onClick={handleDrawPileClick}
-                                    className={`relative w-20 h-28 border-2 rounded-xl flex items-center justify-center font-semibold select-none transition-all duration-150
-                                        bg-gray-600/80 text-gray-200 border-gray-400/70 shadow-sm
-                                        ${isMyTurn && !drawnCard && !isFlippingAfterDiscard
-                                            ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:border-amber-300 hover:ring-1 hover:ring-amber-300/60'
-                                            : 'cursor-not-allowed '}
-                                    `}
-                                >
-                                    {drawnCard && !drawnFromDiscard && (
-                                        <div className="absolute -top-3 -left-4 rotate-[-6deg]">
-                                            <Card card={drawnCard} isSelected size='md' />
+                            {(() => {
+                                const count = drawPile.length;
+                                const isSelectedFromDraw = drawnCard && !drawnFromDiscard;
+                                // Single card & selected -> show placeholder instead of base card
+                                if (count === 1 && isSelectedFromDraw) {
+                                    return (
+                                        <div className="relative">
+                                            <div className="w-20 h-28 rounded-xl border-2 border-dashed flex items-center justify-center text-[11px] tracking-wide uppercase text-gray-400 border-gray-700 opacity-80">Draw</div>
+                                            <div className="absolute -top-3 right-4 rotate-[-6deg]">
+                                                <Card card={drawnCard!} isSelected size='md' />
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="relative w-20 h-28 rounded-xl border-2 border-dashed border-gray-600 flex items-center justify-center text-[11px] font-medium tracking-wide text-gray-500 select-none">
-                                    Draw
-                                    {drawnCard && !drawnFromDiscard && (
-                                        <div className="absolute -top-3 -left-4 rotate-[-6deg]">
-                                            <Card card={drawnCard} isSelected size='md' />
+                                    );
+                                }
+                                // Single card & not selected -> show the actual card
+                                if (count === 1) {
+                                    return (
+                                        <div className="relative">
+                                            <Card
+                                                card={drawPile[0]}
+                                                onClick={handleDrawPileClick}
+                                                isSelected={false}
+                                                size='md'
+                                            />
                                         </div>
-                                    )}
-                                </div>
-                            )}
+                                    );
+                                }
+                                // Multiple cards -> stacked representation
+                                return (
+                                    <div className="relative">
+                                        <Card
+                                            card={drawPile[count - 1]}
+                                            onClick={isSelectedFromDraw ? undefined : handleDrawPileClick}
+                                            isSelected={false}
+                                            size='md'
+                                        />
+                                        <div className="absolute -bottom-1 -right-1 w-20 h-28 rounded-xl border-2 border-gray-500 bg-gray-700/80 -z-10" />
+                                        {isSelectedFromDraw && (
+                                            <div className="absolute -top-3 right-4 rotate-[-6deg]">
+                                                <Card card={drawnCard!} isSelected size='md' />
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })()}
                             <span className="mt-1 text-xs uppercase tracking-wide text-gray-400 flex items-center gap-1">
                                 <span>Draw</span>
                                 <span className="px-1.5 py-0.5 rounded bg-gray-700/70 text-[10px] font-medium text-gray-200">{drawPile.length}</span>
                             </span>
                         </div>
+
+
                         {/* Discard Pile */}
                         <div className="flex flex-col items-center gap-1">
                             {(() => {
@@ -260,6 +296,21 @@ const GameBoard = () => {
                                     );
                                 }
                                 // Multiple cards -> stacked representation
+                                if (count > 1 && isSelectedFromDiscard) {
+                                    return (<div className="relative">
+                                        <Card
+                                            card={discardPile[count - 2]}
+                                            onClick={isSelectedFromDiscard ? undefined : handleDiscardPileClick}
+                                            isSelected={false}
+                                            size='md'
+                                        />
+                                        <div className="absolute -bottom-1 -right-1 w-20 h-28 rounded-xl border-2 border-gray-500 bg-gray-700/80 -z-10" />
+                                        <div className="absolute -top-3 -right-4 rotate-[6deg]">
+                                            <Card card={discardPile[count - 1]} isSelected size='md' />
+                                        </div>
+                                    </div>)
+                                }
+                                // Not selected yet
                                 return (
                                     <div className="relative">
                                         <Card
@@ -268,12 +319,6 @@ const GameBoard = () => {
                                             isSelected={false}
                                             size='md'
                                         />
-                                        <div className="absolute -bottom-1 -right-1 w-20 h-28 rounded-xl border-2 border-gray-500 bg-gray-700/80 -z-10" />
-                                        {isSelectedFromDiscard && (
-                                            <div className="absolute -top-3 -right-4 rotate-[6deg]">
-                                                <Card card={drawnCard!} isSelected size='md' />
-                                            </div>
-                                        )}
                                     </div>
                                 );
                             })()}
