@@ -1,4 +1,4 @@
-import { Room, Client } from "colyseus";
+import { Room, Client, updateLobby } from "colyseus";
 import { Schema, MapSchema, ArraySchema, type } from "@colyseus/schema";
 
 export class Card extends Schema {
@@ -68,6 +68,14 @@ export class MyRoom extends Room<State> {
   onCreate (options: any) {
     this.setState(new State());
 
+        // Initial metadata used by LobbyRoom listings
+            this.setMetadata({
+                status: 'waiting',
+                players: 0,
+                maxClients: this.maxClients,
+                name: 'my_room'
+            }).then(() => updateLobby(this));
+
     this.onMessage("chat", (client, message) => {
       const player = this.state.players.get(client.sessionId);
       if (player) {
@@ -103,7 +111,9 @@ export class MyRoom extends Room<State> {
                 this.state.initiatorScoreDoubled = false;
             }
             this.resetGame(); // Deal cards and set up piles
-            this.state.gameState = "starting";
+                        this.state.gameState = "starting";
+                        this.setMetadata({ status: 'starting', players: this.state.players.size, maxClients: this.maxClients, name: 'my_room' })
+                            .then(() => updateLobby(this));
             this.broadcast("gameStarting");
         }
     });
@@ -324,7 +334,9 @@ export class MyRoom extends Room<State> {
   }
 
   endRound() {
-      this.state.gameState = "round-end";
+            this.state.gameState = "round-end";
+            this.setMetadata({ status: 'round-end', players: this.state.players.size, maxClients: this.maxClients, name: 'my_room' })
+                .then(() => updateLobby(this));
       this.state.initiatorScoreDoubled = false;
       let initiatorRoundScore = 0;
       const initiator = this.state.players.get(this.state.lastRoundInitiator!);
@@ -365,7 +377,9 @@ export class MyRoom extends Room<State> {
 
       const winner = Array.from(this.state.players.values()).find(p => p.score >= 100);
       if (winner) {
-          this.state.gameState = "game-over";
+                    this.state.gameState = "game-over";
+                    this.setMetadata({ status: 'game-over', players: this.state.players.size, maxClients: this.maxClients, name: 'my_room' })
+                        .then(() => updateLobby(this));
           this.broadcast("gameOver", { winner: winner.name });
       }
   }
@@ -403,6 +417,8 @@ export class MyRoom extends Room<State> {
 
       this.state.currentTurn = startPlayerId;
       this.state.gameState = "playing";
+            this.setMetadata({ status: 'playing', players: this.state.players.size, maxClients: this.maxClients, name: 'my_room' })
+                .then(() => updateLobby(this));
       this.broadcast("gameStart", { startPlayerId });
   }
 
@@ -419,8 +435,10 @@ export class MyRoom extends Room<State> {
     player.isReady = false;
     player.connected = true;
 
-    this.state.players.set(client.sessionId, player);
-    this.broadcast("playerJoined", { player, playerId: client.sessionId });
+        this.state.players.set(client.sessionId, player);
+        this.broadcast("playerJoined", { player, playerId: client.sessionId });
+        this.setMetadata({ status: this.state.gameState, players: this.state.players.size, maxClients: this.maxClients, name: 'my_room' })
+            .then(() => updateLobby(this));
   }
 
   async onLeave (client: Client, consented: boolean) {
@@ -448,8 +466,10 @@ export class MyRoom extends Room<State> {
         // 20 seconds expired. let's remove the client.
         if (player) {
             console.log(client.sessionId, "left permanently.");
-            this.state.players.delete(client.sessionId);
-            this.broadcast("playerLeft", { playerId: client.sessionId });
+                        this.state.players.delete(client.sessionId);
+                        this.broadcast("playerLeft", { playerId: client.sessionId });
+                        this.setMetadata({ status: this.state.gameState, players: this.state.players.size, maxClients: this.maxClients, name: 'my_room' })
+                            .then(() => updateLobby(this));
 
             // If the host left, assign a new host
             if (client.sessionId === this.state.hostId && this.state.players.size > 0) {
@@ -469,7 +489,9 @@ export class MyRoom extends Room<State> {
                 this.state.currentTurn = "";
                 // Reset player ready states
                 this.state.players.forEach(p => p.isReady = false);
-                this.broadcast("gameReset");
+                                this.broadcast("gameReset");
+                                this.setMetadata({ status: 'waiting', players: this.state.players.size, maxClients: this.maxClients, name: 'my_room' })
+                                    .then(() => updateLobby(this));
             }
         }
     }
@@ -485,8 +507,10 @@ export class MyRoom extends Room<State> {
         p.readyForNextRound = false;
     });
 
-    this.resetGame();
-    this.state.gameState = "starting";
+        this.resetGame();
+        this.state.gameState = "starting";
+        this.setMetadata({ status: 'starting', players: this.state.players.size, maxClients: this.maxClients, name: 'my_room' })
+            .then(() => updateLobby(this));
     this.broadcast("gameStarting");
   }
 

@@ -1,11 +1,14 @@
 import { create } from 'zustand';
 import { Room } from 'colyseus.js';
+import type { RoomAvailable } from 'colyseus.js'; // room listing entries from LobbyRoom
 import { State, Player, Card } from '../../../server/src/rooms/MyRoom';
 
 import client from './colyseus';
 
 interface GameState {
   room: Room<State> | null;
+  lobby: Room | null;
+  availableRooms: RoomAvailable[];
   players: Record<string, Player>;
   drawPile: Card[];
   discardPile: Card[];
@@ -21,6 +24,8 @@ interface GameState {
   initiatorScoreDoubled: boolean;
   createRoom: (playerName: string) => Promise<string | undefined>;
   joinRoom: (roomId: string, playerName: string) => Promise<void>;
+  joinLobby: () => Promise<void>;
+  createOrJoinFromLobby: (playerName: string, roomId?: string) => Promise<void>;
   leaveRoom: () => void;
   sendMessage: (message: string) => void;
   setReady: (isReady: boolean) => void;
@@ -33,6 +38,8 @@ interface GameState {
 
 export const useGameStore = create<GameState>((set, get) => ({
   room: null,
+  lobby: null,
+  availableRooms: [],
   players: {},
   drawPile: [],
   discardPile: [],
@@ -97,6 +104,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     // Fully reset local client state
     set({
       room: null,
+  lobby: null,
+  availableRooms: [],
       players: {},
       drawPile: [],
       discardPile: [],
@@ -214,5 +223,36 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ room: null });
     });
   },
+  joinLobby: async () => {
+    try {
+      const lobby = await client.joinOrCreate("lobby");
+      // initial full rooms list
+      lobby.onMessage("rooms", (rooms: RoomAvailable[]) => {
+        set({ availableRooms: rooms });
+      });
+      lobby.onMessage("+", ([roomId, room]: [string, RoomAvailable]) => {
+        set(state => {
+          const list = [...state.availableRooms];
+            const idx = list.findIndex(r => r.roomId === roomId);
+            if (idx !== -1) list[idx] = room; else list.push(room);
+            return { availableRooms: list };
+        });
+      });
+      lobby.onMessage("-", (roomId: string) => {
+        set(state => ({ availableRooms: state.availableRooms.filter(r => r.roomId !== roomId) }));
+      });
+      set({ lobby });
+    } catch (e) {
+      console.error("failed to join lobby", e);
+    }
+  },
+  createOrJoinFromLobby: async (playerName, roomId) => {
+    if (!playerName) return;
+    if (roomId) {
+      await get().joinRoom(roomId, playerName);
+    } else {
+      await get().createRoom(playerName);
+    }
+  }
 }));
 

@@ -6,6 +6,7 @@ import { playground } from "@colyseus/playground";
  * Import your Room files
  */
 import { MyRoom } from "./rooms/MyRoom";
+import { LobbyRoom } from "colyseus";
 
 export default config({
 
@@ -13,7 +14,11 @@ export default config({
         /**
          * Define your room handlers:
          */
-        gameServer.define('my_room', MyRoom);
+    // Expose the built-in lobby room
+    gameServer.define("lobby", LobbyRoom);
+
+    // Define main game room with realtime listing enabled so it shows up in lobby
+    gameServer.define('my_room', MyRoom).enableRealtimeListing();
     },
 
     initializeExpress: (app) => {
