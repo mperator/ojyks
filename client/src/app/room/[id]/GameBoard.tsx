@@ -20,7 +20,7 @@ const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onCl
         <div
             className={`${sizeClasses} border-2 rounded-xl flex items-center justify-center font-semibold tracking-wide select-none shadow-sm transition-all duration-150
                 ${onClick ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:border-amber-300' : ''}
-                ${isSelected ? 'border-amber-400 ring-2 ring-amber-300 scale-105 shadow-amber-400/30' : (card.value < 0 ? 'border-red-500' : 'border-gray-400/70')}
+                ${isSelected ? 'border-amber-400 ring-2 ring-amber-300 scale-105 shadow-amber-400/30' : 'border-gray-400/70'}
                 ${card.isFlipped ? 'bg-gradient-to-br from-white to-gray-200 text-gray-900' : 'bg-gray-600/80 text-transparent'}
             `}
             onClick={onClick}
