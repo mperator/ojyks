@@ -127,12 +127,10 @@ export class MyRoom extends Room<State> {
 
     this.onMessage("drawFromDrawPile", (client) => {
         if (this.state.currentTurn !== client.sessionId || this.state.drawnCard) return;
-        if (this.state.drawPile.length === 0) {
-            // Reshuffle discard pile into draw pile
-            const discard = this.state.discardPile.splice(0, this.state.discardPile.length -1);
-            discard.forEach(c => c.isFlipped = false);
-            this.state.drawPile.push(...discard);
-            this.state.drawPile.sort(() => Math.random() - 0.5);
+        // Draw pile should never be empty here because we reshuffle at endTurn.
+        // (Safety) If it's empty and we can reshuffle, do it now.
+        if (this.state.drawPile.length === 0 && this.state.discardPile.length > 1) {
+            this.reshuffleDiscardIntoDraw();
         }
         const card = this.state.drawPile.pop();
         if (card) {
@@ -160,8 +158,9 @@ export class MyRoom extends Room<State> {
         const oldCard = player.cards[cardIndex];
         oldCard.isFlipped = true;
 
-        // If the drawn card is from the discard pile, we need to pop it now.
-        if (this.state.discardPile.length > 0 && this.state.drawnCard.value === this.state.discardPile[this.state.discardPile.length - 1].value) {
+        // If the drawn card originated from the discard pile we still have its reference there.
+        // Use reference equality (not value) to avoid wrong removals when values match.
+        if (this.state.discardPile.length > 0 && this.state.discardPile[this.state.discardPile.length - 1] === this.state.drawnCard) {
             this.state.discardPile.pop();
         }
         
@@ -301,6 +300,11 @@ export class MyRoom extends Room<State> {
       const currentPlayerIndex = playerIds.indexOf(this.state.currentTurn);
       const nextPlayerIndex = (currentPlayerIndex + 1) % playerIds.length;
       this.state.currentTurn = playerIds[nextPlayerIndex];
+
+      // After a player's move ends, if the draw pile is empty, reshuffle discard (except top card).
+      if (this.state.drawPile.length === 0 && this.state.discardPile.length > 1) {
+          this.reshuffleDiscardIntoDraw();
+      }
 
       if (this.state.currentTurn === this.state.lastRoundInitiator) {
           this.endRound();
@@ -493,6 +497,21 @@ export class MyRoom extends Room<State> {
             }
         }, 1000);
     }
+  }
+
+  // Take all but the last card from discard pile, turn them face-down, shuffle and restock draw pile.
+  private reshuffleDiscardIntoDraw() {
+      const numberToTake = this.state.discardPile.length - 1;
+      if (numberToTake <= 0) return;
+      const toReshuffle = this.state.discardPile.splice(0, numberToTake);
+      toReshuffle.forEach(c => c.isFlipped = false);
+      // Simple shuffle
+      for (let i = toReshuffle.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [toReshuffle[i], toReshuffle[j]] = [toReshuffle[j], toReshuffle[i]];
+      }
+      this.state.drawPile.push(...toReshuffle);
+      this.broadcast("chat", "(System) The discard pile has been reshuffled into the draw pile.");
   }
 
 }

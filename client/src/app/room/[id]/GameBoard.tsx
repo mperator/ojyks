@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card as CardType, Player as PlayerType } from "../../../../../server/src/rooms/MyRoom";
 
 const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onClick?: () => void, isSelected?: boolean, size?: 'xs' | 'sm' | 'md' | 'lg' }) => {
-    if (card.value === 999) { // Render empty slot
+    if (!card || card.value === 999) { // Render empty slot
         return <div className={`rounded-lg bg-gray-800 ${size === 'xs' ? 'w-9 h-12' : size === 'sm' ? 'w-10 h-14' : size === 'lg' ? 'w-24 h-36' : 'w-20 h-28'}`} />;
     }
     const sizeClasses = size === 'xs'
@@ -183,53 +183,37 @@ const GameBoard = () => {
                     <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-10 py-2">
                         {/* Draw Pile */}
                         <div className="flex flex-col items-center gap-1">
-                            {(() => {
-                                const dCount = drawPile.length;
-                                const isSelectedFromDraw = Boolean(drawnCard && selectedPile === 'draw');
-                                const canDraw = isMyTurn && !drawnCard && !isFlippingAfterDiscard;
-                                // Single card & selected -> placeholder (pile effectively consumed visually) + overlay
-                                if (dCount === 1 && isSelectedFromDraw) {
-                                    return (
-                                        <div className="relative">
-                                            <div className="w-20 h-28 rounded-xl border-2 border-dashed flex items-center justify-center text-[11px] tracking-wide uppercase text-gray-400 border-gray-700 opacity-80 select-none">Draw</div>
-                                            <div className="absolute -top-3 -left-4 rotate-[-6deg]">
-                                                <Card card={drawnCard!} isSelected size='md' />
-                                            </div>
+                            {drawPile.length > 0 ? (
+                                <div
+                                    onClick={handleDrawPileClick}
+                                    className={`relative w-20 h-28 border-2 rounded-xl flex items-center justify-center font-semibold select-none transition-all duration-150
+                                        bg-gray-600/80 text-gray-200 border-gray-400/70 shadow-sm
+                                        ${isMyTurn && !drawnCard && !isFlippingAfterDiscard
+                                            ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:border-amber-300 hover:ring-1 hover:ring-amber-300/60'
+                                            : 'cursor-not-allowed '}
+                                    `}
+                                >
+                                    <span className="text-sm font-bold tracking-wide">{drawPile.length}</span>
+                                    {drawnCard && selectedPile === 'draw' && (
+                                        <div className="absolute -top-3 -left-4 rotate-[-6deg]">
+                                            <Card card={drawnCard} isSelected size='md' />
                                         </div>
-                                    );
-                                }
-                                // Single card & not selected -> show face-down card with count
-                                if (dCount === 1) {
-                                    return (
-                                        <div
-                                            onClick={canDraw ? handleDrawPileClick : undefined}
-                                            className={`relative w-20 h-28 border-2 rounded-xl flex items-center justify-center font-semibold select-none transition-all duration-150 bg-gray-600/80 text-gray-200 border-gray-400/70 shadow-sm
-                                                ${canDraw ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:border-amber-300 hover:ring-1 hover:ring-amber-300/60' : 'cursor-not-allowed opacity-70'}`}
-                                        >
-                                            <span className="text-sm font-bold tracking-wide">1</span>
+                                    )}
+                                </div>
+                            ) : (
+                                <div className="relative w-20 h-28 rounded-xl border-2 border-dashed border-gray-600 flex items-center justify-center text-[11px] font-medium tracking-wide text-gray-500 select-none">
+                                    Draw
+                                    {drawnCard && selectedPile === 'draw' && (
+                                        <div className="absolute -top-3 -left-4 rotate-[-6deg]">
+                                            <Card card={drawnCard} isSelected size='md' />
                                         </div>
-                                    );
-                                }
-                                // Multiple cards -> stacked representation (show top card & a shadow card behind)
-                                return (
-                                    <div className="relative">
-                                        <div
-                                            onClick={isSelectedFromDraw ? undefined : (canDraw ? handleDrawPileClick : undefined)}
-                                            className={`relative w-20 h-28 border-2 rounded-xl flex items-center justify-center font-semibold select-none transition-all duration-150 bg-gray-600/80 text-gray-200 border-gray-400/70 shadow-sm
-                                                ${!isSelectedFromDraw && canDraw ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:border-amber-300 hover:ring-1 hover:ring-amber-300/60' : (!canDraw ? 'cursor-not-allowed opacity-70' : '')}`}
-                                        >
-                                            <span className="text-sm font-bold tracking-wide">{dCount}</span>
-                                        </div>
-                                        <div className="absolute -bottom-1 -left-1 w-20 h-28 rounded-xl border-2 border-gray-500 bg-gray-700/80 -z-10" />
-                                        {isSelectedFromDraw && (
-                                            <div className="absolute -top-3 -left-4 rotate-[-6deg]">
-                                                <Card card={drawnCard!} isSelected size='md' />
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })()}
-                            <span className="mt-1 text-xs uppercase tracking-wide text-gray-400">Draw</span>
+                                    )}
+                                </div>
+                            )}
+                            <span className="mt-1 text-xs uppercase tracking-wide text-gray-400 flex items-center gap-1">
+                                <span>Draw</span>
+                                <span className="px-1.5 py-0.5 rounded bg-gray-700/70 text-[10px] font-medium text-gray-200">{drawPile.length}</span>
+                            </span>
                         </div>
                         {/* Discard Pile */}
                         <div className="flex flex-col items-center gap-1">
@@ -278,7 +262,10 @@ const GameBoard = () => {
                                     </div>
                                 );
                             })()}
-                            <span className="mt-1 text-xs uppercase tracking-wide text-gray-400">Discard</span>
+                            <span className="mt-1 text-xs uppercase tracking-wide text-gray-400 flex items-center gap-1">
+                                <span>Discard</span>
+                                <span className="px-1.5 py-0.5 rounded bg-gray-700/70 text-[10px] font-medium text-gray-200">{discardPile.length}</span>
+                            </span>
                         </div>
                     </div>
 
