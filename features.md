@@ -1,5 +1,9 @@
 # Featurelist
 
+## Bugs
+- Der draw pile hat manchmal eine aufgedeckte Karte
+- Karten werden beim initialen nutzen nicht geladen.
+
 ## Refactor
 Rename and reafactor code to be more consistent and easier to understand, create components where necessary.
 - Lobby: show all open game rooms.
