@@ -1,7 +1,4 @@
 import { Client } from "colyseus.js";
 
-const host = typeof window !== "undefined" ? window.location.hostname : "localhost";
-const port = 3001;
-
-const client = new Client(`ws://${host}:${port}`);
+const client = new Client(process.env.NEXT_PUBLIC_GAMESERVER);
 export default client;
