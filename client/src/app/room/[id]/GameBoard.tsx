@@ -50,7 +50,7 @@ const Card = ({ card, onClick, isSelected, size = 'md' }: { card: CardType, onCl
                 {/* Back Face */}
                 <div className={`flip-face back border-2 flex items-center justify-center font-semibold tracking-wide shadow-sm ${backColorClasses} ${roundedClasses}`}>
                     <Image
-                        src={size === "xs" || size === "sm" ? "/card_back_small.png" : "/card_back.png"}
+                        src={size === "xs" || size === "sm" ? "/card_back_small.jpg" : "/card_back.jpg"}
                         alt="Card back"
                         fill
                         priority={false}
