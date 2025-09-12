@@ -2,7 +2,7 @@ import type { RoomAvailable } from "colyseus.js"; // room listing entries from L
 import { Room } from "colyseus.js";
 import { create } from "zustand";
 // Use local mirrored types to avoid bundling server schema / decorators into the client build
-import { Card, Player, State } from "@/types/server-types";
+import { Card, Player, ROOM_NAME, State } from "@/types/server-types";
 
 import client from "./colyseus";
 
@@ -56,7 +56,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   initiatorScoreDoubled: false,
   createRoom: async (playerName) => {
     try {
-      const room = await client.create<State>("my_room", { playerName });
+      const room = await client.create<State>(ROOM_NAME, { playerName });
       sessionStorage.setItem("reconnectionToken", room.reconnectionToken);
       console.log("created room with id:", room.roomId);
       set({ room });

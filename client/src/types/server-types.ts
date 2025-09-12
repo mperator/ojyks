@@ -1,6 +1,8 @@
 // Local mirrored types of server-side schema for client-only type safety.
 // This avoids importing server code (decorators, Schema classes) into the Next.js bundle.
 
+export const ROOM_NAME = "ojyks_room";
+
 export interface Card {
   value: number; // normal values (-2 .. 12) or 999 for removed placeholders
   isFlipped: boolean;

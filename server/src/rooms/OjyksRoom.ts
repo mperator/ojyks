@@ -1,6 +1,8 @@
 import { ArraySchema, MapSchema, Schema, type } from "@colyseus/schema";
 import { Client, Room, updateLobby } from "colyseus";
 
+export const ROOM_NAME = "ojyks_room";
+
 export class Card extends Schema {
   @type("number")
   value: number = 0;
@@ -66,7 +68,7 @@ interface JoinOptions {
   playerName?: string;
 }
 
-export class MyRoom extends Room<State> {
+export class OjyksRoom extends Room<State> {
   maxClients = 8;
 
   // 'options' not used currently – keep signature (renamed) to satisfy base class without triggering no-unused-vars
@@ -79,7 +81,7 @@ export class MyRoom extends Room<State> {
       status: "waiting",
       players: 0,
       maxClients: this.maxClients,
-      name: "my_room",
+      name: ROOM_NAME,
     }).then(() => updateLobby(this));
 
     this.onMessage("chat", (client, message) => {
@@ -125,7 +127,7 @@ export class MyRoom extends Room<State> {
           status: "starting",
           players: this.state.players.size,
           maxClients: this.maxClients,
-          name: "my_room",
+          name: ROOM_NAME,
         }).then(() => updateLobby(this));
         this.broadcast("gameStarting");
       }
@@ -370,7 +372,7 @@ export class MyRoom extends Room<State> {
       status: "round-end",
       players: this.state.players.size,
       maxClients: this.maxClients,
-      name: "my_room",
+      name: ROOM_NAME,
     }).then(() => updateLobby(this));
     this.state.initiatorScoreDoubled = false;
     let initiatorRoundScore = 0;
@@ -424,7 +426,7 @@ export class MyRoom extends Room<State> {
         status: "game-over",
         players: this.state.players.size,
         maxClients: this.maxClients,
-        name: "my_room",
+        name: ROOM_NAME,
       }).then(() => updateLobby(this));
       this.broadcast("gameOver", { winner: winner.name });
     }
@@ -467,7 +469,7 @@ export class MyRoom extends Room<State> {
       status: "playing",
       players: this.state.players.size,
       maxClients: this.maxClients,
-      name: "my_room",
+      name: ROOM_NAME,
     }).then(() => updateLobby(this));
     this.broadcast("gameStart", { startPlayerId });
   }
@@ -497,7 +499,7 @@ export class MyRoom extends Room<State> {
       status: this.state.gameState,
       players: this.state.players.size,
       maxClients: this.maxClients,
-      name: "my_room",
+      name: ROOM_NAME,
     }).then(() => updateLobby(this));
   }
 
@@ -533,7 +535,7 @@ export class MyRoom extends Room<State> {
           status: this.state.gameState,
           players: this.state.players.size,
           maxClients: this.maxClients,
-          name: "my_room",
+          name: ROOM_NAME,
         }).then(() => updateLobby(this));
 
         // If the host left, assign a new host
@@ -562,7 +564,7 @@ export class MyRoom extends Room<State> {
             status: "waiting",
             players: this.state.players.size,
             maxClients: this.maxClients,
-            name: "my_room",
+            name: ROOM_NAME,
           }).then(() => updateLobby(this));
         } else if (this.state.players.size === 0) {
           this.state.gameState = "waiting";
@@ -570,7 +572,7 @@ export class MyRoom extends Room<State> {
             status: "waiting",
             players: this.state.players.size,
             maxClients: this.maxClients,
-            name: "my_room",
+            name: ROOM_NAME,
           }).then(() => updateLobby(this));
         }
       }
@@ -593,7 +595,7 @@ export class MyRoom extends Room<State> {
       status: "starting",
       players: this.state.players.size,
       maxClients: this.maxClients,
-      name: "my_room",
+      name: ROOM_NAME,
     }).then(() => updateLobby(this));
     this.broadcast("gameStarting");
   }

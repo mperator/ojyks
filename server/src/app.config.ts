@@ -6,7 +6,7 @@ import config from "@colyseus/tools";
  * Import your Room files
  */
 import { LobbyRoom } from "colyseus";
-import { MyRoom } from "./rooms/MyRoom";
+import { OjyksRoom, ROOM_NAME } from "./rooms/OjyksRoom";
 
 export default config({
   initializeGameServer: (gameServer) => {
@@ -17,7 +17,7 @@ export default config({
     gameServer.define("lobby", LobbyRoom);
 
     // Define main game room with realtime listing enabled so it shows up in lobby
-    gameServer.define("my_room", MyRoom).enableRealtimeListing();
+    gameServer.define(ROOM_NAME, OjyksRoom).enableRealtimeListing();
   },
 
   initializeExpress: (app) => {
