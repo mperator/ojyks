@@ -1,12 +1,12 @@
-import config from "@colyseus/tools";
 import { monitor } from "@colyseus/monitor";
 import { playground } from "@colyseus/playground";
+import config from "@colyseus/tools";
 
 /**
  * Import your Room files
  */
-import { MyRoom } from "./rooms/MyRoom";
 import { LobbyRoom } from "colyseus";
+import { MyRoom } from "./rooms/MyRoom";
 
 export default config({
   initializeGameServer: (gameServer) => {
