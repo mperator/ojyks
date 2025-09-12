@@ -183,7 +183,7 @@ export default function Home() {
                               </button>
                             ) : (
                               <button
-                                disabled={full || !playerName || isJoiningOrCreating}
+                                disabled={full || !playerName || isJoiningOrCreating || r.metadata?.status !== 'waiting'}
                                 onClick={async () => {
                                   if (isJoiningOrCreating) return;
                                   setIsJoiningOrCreating(true);

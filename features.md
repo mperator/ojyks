@@ -25,5 +25,3 @@ Extend the chat for the game room and the lobby.
 ## Mobile Optimization
 Make the app responsive and usable on mobile devices.
 
-## Network optimization
-Optimize protocoll to reduce false behavior when joining and leaving rooms.

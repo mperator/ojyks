@@ -426,6 +426,13 @@ export class MyRoom extends Room<State> {
   onJoin (client: Client, options: any) {
     console.log(client.sessionId, "joined!");
 
+    // Disallow joining if the game is in progress
+    if (this.state.gameState !== "waiting") {
+        // This is a new player trying to join a game in progress, reject them.
+        // Reconnections are handled by `allowReconnection` and don't trigger `onJoin` for the same session.
+        throw new Error("Game has already started.");
+    }
+
     if (this.state.players.size === 0) {
         this.state.hostId = client.sessionId;
     }
@@ -488,10 +495,14 @@ export class MyRoom extends Room<State> {
                 this.state.gameState = "waiting";
                 this.state.currentTurn = "";
                 // Reset player ready states
-                this.state.players.forEach(p => p.isReady = false);
+                this.state.players.forEach((p: Player) => p.isReady = false);
                                 this.broadcast("gameReset");
                                 this.setMetadata({ status: 'waiting', players: this.state.players.size, maxClients: this.maxClients, name: 'my_room' })
                                     .then(() => updateLobby(this));
+            } else if (this.state.players.size === 0) {
+                this.state.gameState = "waiting";
+                this.setMetadata({ status: 'waiting', players: this.state.players.size, maxClients: this.maxClients, name: 'my_room' })
+                    .then(() => updateLobby(this));
             }
         }
     }
