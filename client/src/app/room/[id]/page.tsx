@@ -72,15 +72,17 @@ export default function RoomPage() {
   return (
     <div className="flex h-screen bg-gray-800 p-4 text-white">
       <div className="flex flex-grow flex-col">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="truncate pr-4 font-mono text-xs text-slate-300 sm:text-sm">Room: {room?.roomId}</div>
-          <button
-            onClick={handleLeave}
-            className="inline-flex items-center rounded-full bg-red-600 px-4 py-1.5 text-xs font-semibold shadow transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
-          >
-            Leave Room
-          </button>
-        </div>
+        {gameState === "waiting" && (
+          <div className="mb-4 flex items-center justify-between">
+            <div className="truncate pr-4 font-mono text-xs text-slate-300 sm:text-sm">Room: {room?.roomId}</div>
+            <button
+              onClick={handleLeave}
+              className="inline-flex items-center rounded-full bg-red-600 px-4 py-1.5 text-xs font-semibold shadow transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+            >
+              Leave Room
+            </button>
+          </div>
+        )}
         {renderGameState()}
       </div>
     </div>
