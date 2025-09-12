@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
 import { useGameStore } from "@/lib/store";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 import GameBoard from "./GameBoard";
 import Lobby from "./Lobby";
 import RoundEndDisplay from "./RoundEndDisplay";
@@ -33,7 +33,7 @@ export default function RoomPage() {
 
     if (!room) {
       joinRoom(id, playerName).catch((e) => {
-         router.push("/");
+        router.push("/");
         return;
       });
     }
@@ -70,13 +70,13 @@ export default function RoomPage() {
   };
 
   return (
-    <div className="flex h-screen p-4 bg-gray-800 text-white">
-      <div className="flex-grow flex flex-col">
-        <div className="flex items-center justify-between mb-4">
-          <div className="text-xs sm:text-sm text-slate-300 font-mono truncate pr-4">Room: {room?.roomId}</div>
+    <div className="flex h-screen bg-gray-800 p-4 text-white">
+      <div className="flex flex-grow flex-col">
+        <div className="mb-4 flex items-center justify-between">
+          <div className="truncate pr-4 font-mono text-xs text-slate-300 sm:text-sm">Room: {room?.roomId}</div>
           <button
             onClick={handleLeave}
-            className="inline-flex items-center rounded-full bg-red-600 hover:bg-red-500 px-4 py-1.5 text-xs font-semibold shadow transition focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+            className="inline-flex items-center rounded-full bg-red-600 px-4 py-1.5 text-xs font-semibold shadow transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
           >
             Leave Room
           </button>
