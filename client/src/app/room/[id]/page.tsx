@@ -11,11 +11,7 @@ export default function RoomPage() {
   const params = useParams();
   const id = params.id as string;
   const router = useRouter();
-  const {
-  joinRoom,
-  room,
-  gameState,
-  } = useGameStore();
+  const { joinRoom, room, gameState } = useGameStore();
 
   useEffect(() => {
     if (!id) {
@@ -29,9 +25,17 @@ export default function RoomPage() {
       return;
     }
 
-    const reconnectionToken = sessionStorage.getItem('reconnectionToken');
-    if (!room && reconnectionToken) {
-        joinRoom(id, playerName);
+    const reconnectionToken = sessionStorage.getItem("reconnectionToken");
+    if (!reconnectionToken) {
+      router.push("/");
+      return;
+    }
+
+    if (!room) {
+      joinRoom(id, playerName).catch((e) => {
+         router.push("/");
+        return;
+      });
     }
 
     return () => {

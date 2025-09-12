@@ -1,9 +1,9 @@
-import { create } from 'zustand';
-import { Room } from 'colyseus.js';
-import type { RoomAvailable } from 'colyseus.js'; // room listing entries from LobbyRoom
-import { State, Player, Card } from '../../../server/src/rooms/MyRoom';
+import { create } from "zustand";
+import { Room } from "colyseus.js";
+import type { RoomAvailable } from "colyseus.js"; // room listing entries from LobbyRoom
+import { State, Player, Card } from "../../../server/src/rooms/MyRoom";
 
-import client from './colyseus';
+import client from "./colyseus";
 
 interface GameState {
   room: Room<State> | null;
@@ -44,7 +44,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   drawPile: [],
   discardPile: [],
   currentTurn: null,
-  gameState: 'waiting',
+  gameState: "waiting",
   hostId: null,
   lastRoundInitiator: null,
   drawnCard: null,
@@ -56,7 +56,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   createRoom: async (playerName) => {
     try {
       const room = await client.create<State>("my_room", { playerName });
-      sessionStorage.setItem('reconnectionToken', room.reconnectionToken);
+      sessionStorage.setItem("reconnectionToken", room.reconnectionToken);
       console.log("created room with id:", room.roomId);
       set({ room });
       get().setRoom(room);
@@ -66,52 +66,75 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
   joinRoom: async (roomId, playerName) => {
-    // check for reconnection token
-    const reconnectionToken = sessionStorage.getItem('reconnectionToken');
-    // check if reconnectionToken starts with the same roomId if so rejoin otherwise join a new room
-    if (reconnectionToken && reconnectionToken.startsWith(roomId)) {
+    const { leaveRoom, room: currentr } = get();
+
+    if(currentr) {
+      if(currentr.roomId === roomId) {
+        console.log("Already in the room", roomId);
+        return;
+      } else {
+        leaveRoom();
+      }
+    }
+
+    const reconnectionToken = sessionStorage.getItem("reconnectionToken");
+    const reconnectionRoomId = reconnectionToken?.split(":")[0];
+    // reconnect to the room with the reconnection token
+    // what happens if an error happens?
+
+    if (reconnectionToken) {
       try {
+        console.log("CurrentR", currentr, currentr?.reconnectionToken);
+        
         const room = await client.reconnect<State>(reconnectionToken);
-        sessionStorage.setItem('reconnectionToken', room.reconnectionToken);
-        console.log("reconnect", reconnectionToken)
+        sessionStorage.setItem("reconnectionToken", room.reconnectionToken);
+        console.log("reconnected to room:", room.roomId);
+
         set({ room });
         get().setRoom(room);
-        return;
+
+        // Reconnect to the same room
+        if (reconnectionRoomId === roomId) {
+          return;
+        } else {
+          // When reconnecting to a different room, leave this room and join the new one
+          leaveRoom();
+        }
       } catch (e) {
-        console.error(`Failed to reconnect to room ${roomId}`, e);
-         sessionStorage.removeItem('reconnectionToken');
+        console.error(`Failed to reconnect to room ${roomId}, will try to join as new.`, e);
+        sessionStorage.removeItem("reconnectionToken");
       }
     }
 
     try {
       const room = await client.joinById<State>(roomId, { playerName });
-      sessionStorage.setItem('reconnectionToken', room.reconnectionToken);
-        console.log("join",reconnectionToken)
-
+      sessionStorage.setItem("reconnectionToken", room.reconnectionToken);
+      console.log("joined new room:", room.roomId);
       set({ room });
       get().setRoom(room);
     } catch (e) {
       console.error(`Failed to join room ${roomId}`, e);
+      // Re-throw the error to be handled by the UI
+      throw e;
     }
   },
   leaveRoom: () => {
-    sessionStorage.removeItem('reconnectionToken');
+    sessionStorage.removeItem("reconnectionToken");
     console.log("leave");
     const { room } = get();
     if (room) {
       room.leave(true);
-
     }
     // Fully reset local client state
     set({
       room: null,
-  lobby: null,
-  availableRooms: [],
+      lobby: null,
+      availableRooms: [],
       players: {},
       drawPile: [],
       discardPile: [],
       currentTurn: null,
-      gameState: 'waiting',
+      gameState: "waiting",
       hostId: null,
       lastRoundInitiator: null,
       drawnCard: null,
@@ -167,56 +190,68 @@ export const useGameStore = create<GameState>((set, get) => ({
     });
 
     room.onMessage("gameStarting", () => {
-        console.log("Game is starting! Reveal your cards.");
-        // Clear any leftover round / game-over state for a clean start
-        set({
-          gameState: 'starting',
-          winner: null,
-          scores: null,
-          countdown: null,
-          lastRoundInitiator: null,
-          drawnCard: null,
-          initiatorScoreDoubled: false,
-        });
+      console.log("Game is starting! Reveal your cards.");
+      // Clear any leftover round / game-over state for a clean start
+      set({
+        gameState: "starting",
+        winner: null,
+        scores: null,
+        countdown: null,
+        lastRoundInitiator: null,
+        drawnCard: null,
+        initiatorScoreDoubled: false,
+      });
     });
 
     room.onMessage("gameStart", ({ startPlayerId }) => {
-        console.log("Game is starting! First turn:", startPlayerId);
-        set({ gameState: 'playing' });
+      console.log("Game is starting! First turn:", startPlayerId);
+      set({ gameState: "playing" });
     });
 
     room.onMessage("roundEnd", ({ players }) => {
-        console.log("Round ended. Scores:", players);
-        set({ gameState: 'round-end' });
+      console.log("Round ended. Scores:", players);
+      set({ gameState: "round-end" });
     });
 
     room.onMessage("playerReadyForNextRound", ({ playerId, isReady }) => {
-        set(state => {
-            const players = { ...state.players };
-            if (players[playerId]) {
-                players[playerId].readyForNextRound = isReady;
-            }
-            return { players };
-        });
+      set((state) => {
+        const players = { ...state.players };
+        if (players[playerId]) {
+          players[playerId].readyForNextRound = isReady;
+        }
+        return { players };
+      });
     });
 
     room.onMessage("nextRoundCountdown", (countdown) => {
-        set({ countdown });
+      set({ countdown });
     });
 
-     room.onMessage("gameOver", ({ winner }) => {
-        console.log("Game Over! Winner:", winner);
-        set({ winner });
+    room.onMessage("gameOver", ({ winner }) => {
+      console.log("Game Over! Winner:", winner);
+      set({ winner });
     });
 
     room.onMessage("newRound", () => {
-        console.log("Starting a new round...");
-        set({ gameState: 'waiting', winner: null, scores: null, drawnCard: null, currentTurn: null });
+      console.log("Starting a new round...");
+      set({
+        gameState: "waiting",
+        winner: null,
+        scores: null,
+        drawnCard: null,
+        currentTurn: null,
+      });
     });
 
-     room.onMessage("gameReset", () => {
-        console.log("Game reset to waiting lobby.");
-        set({ gameState: 'waiting', winner: null, scores: null, drawnCard: null, currentTurn: null });
+    room.onMessage("gameReset", () => {
+      console.log("Game reset to waiting lobby.");
+      set({
+        gameState: "waiting",
+        winner: null,
+        scores: null,
+        drawnCard: null,
+        currentTurn: null,
+      });
     });
 
     room.onLeave(() => {
@@ -232,15 +267,20 @@ export const useGameStore = create<GameState>((set, get) => ({
         set({ availableRooms: rooms });
       });
       lobby.onMessage("+", ([roomId, room]: [string, RoomAvailable]) => {
-        set(state => {
+        set((state) => {
           const list = [...state.availableRooms];
-            const idx = list.findIndex(r => r.roomId === roomId);
-            if (idx !== -1) list[idx] = room; else list.push(room);
-            return { availableRooms: list };
+          const idx = list.findIndex((r) => r.roomId === roomId);
+          if (idx !== -1) list[idx] = room;
+          else list.push(room);
+          return { availableRooms: list };
         });
       });
       lobby.onMessage("-", (roomId: string) => {
-        set(state => ({ availableRooms: state.availableRooms.filter(r => r.roomId !== roomId) }));
+        set((state) => ({
+          availableRooms: state.availableRooms.filter(
+            (r) => r.roomId !== roomId
+          ),
+        }));
       });
       set({ lobby });
     } catch (e) {
@@ -254,6 +294,5 @@ export const useGameStore = create<GameState>((set, get) => ({
     } else {
       await get().createRoom(playerName);
     }
-  }
+  },
 }));
-
