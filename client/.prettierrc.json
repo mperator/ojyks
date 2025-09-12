@@ -1,0 +1,13 @@
+{
+  "endOfLine": "auto",
+  "plugins": [
+    "prettier-plugin-organize-imports",
+    "prettier-plugin-tailwindcss"
+  ],
+  "printWidth": 120,
+  "semi": true,
+  "singleQuote": false,
+  "singleAttributePerLine": false,
+  "tabWidth": 2,
+  "trailingComma": "es5"
+}

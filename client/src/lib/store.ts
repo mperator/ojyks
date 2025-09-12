@@ -1,7 +1,8 @@
-import { create } from "zustand";
-import { Room } from "colyseus.js";
 import type { RoomAvailable } from "colyseus.js"; // room listing entries from LobbyRoom
-import { State, Player, Card } from "../../../server/src/rooms/MyRoom";
+import { Room } from "colyseus.js";
+import { create } from "zustand";
+// Use local mirrored types to avoid bundling server schema / decorators into the client build
+import { Card, Player, State } from "@/types/server-types";
 
 import client from "./colyseus";
 
@@ -68,8 +69,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   joinRoom: async (roomId, playerName) => {
     const { leaveRoom, room: currentr } = get();
 
-    if(currentr) {
-      if(currentr.roomId === roomId) {
+    if (currentr) {
+      if (currentr.roomId === roomId) {
         console.log("Already in the room", roomId);
         return;
       } else {
@@ -85,7 +86,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (reconnectionToken) {
       try {
         console.log("CurrentR", currentr, currentr?.reconnectionToken);
-        
+
         const room = await client.reconnect<State>(reconnectionToken);
         sessionStorage.setItem("reconnectionToken", room.reconnectionToken);
         console.log("reconnected to room:", room.roomId);
@@ -169,7 +170,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   setRoom: (room) => {
     room.onStateChange((state) => {
       const players: Record<string, Player> = {};
-      state.players.forEach((player, sessionId) => {
+      state.players.forEach((player: Player, sessionId: string) => {
         players[sessionId] = player;
       });
       set({
@@ -277,9 +278,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       });
       lobby.onMessage("-", (roomId: string) => {
         set((state) => ({
-          availableRooms: state.availableRooms.filter(
-            (r) => r.roomId !== roomId
-          ),
+          availableRooms: state.availableRooms.filter((r) => r.roomId !== roomId),
         }));
       });
       set({ lobby });
