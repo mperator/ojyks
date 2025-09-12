@@ -309,12 +309,7 @@ const GameBoard = () => {
                 if (count > 1 && isSelectedFromDraw) {
                   return (
                     <div className="relative">
-                      <Card
-                        card={drawPile[count - 2]}
-                        onClick={isSelectedFromDraw ? undefined : handleDrawPileClick}
-                        isSelected={true}
-                        size="md"
-                      />
+                      <Card card={drawPile[count - 1]} onClick={undefined} isSelected={false} size="md" />
                       <div className="absolute -right-1 -bottom-1 -z-10 h-30 w-20 rounded-xl border-2 border-gray-500 bg-gray-700/80" />
                       <div className="absolute -top-3 right-4 -rotate-[6deg]">
                         <Card card={drawnCard} isSelected size="md" />

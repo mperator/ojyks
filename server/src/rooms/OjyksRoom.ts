@@ -206,7 +206,6 @@ export class OjyksRoom extends Room<State> {
 
       player.cards[cardIndex] = this.state.drawnCard;
       this.state.discardPile.push(oldCard);
-      console.log(`Cards on discard pile: ${this.state.discardPile.length}`, this.state.discardPile.toJSON());
       this.state.drawnCard = null;
 
       this.checkForColumn(player);
@@ -217,7 +216,6 @@ export class OjyksRoom extends Room<State> {
       if (this.state.currentTurn !== client.sessionId || !this.state.drawnCard) return;
 
       this.state.discardPile.push(this.state.drawnCard);
-      console.log(`Cards on discard pile: ${this.state.discardPile.length}`);
       this.state.drawnCard = null;
 
       // The player must now flip a card. The client will set a state to enforce this
@@ -269,7 +267,7 @@ export class OjyksRoom extends Room<State> {
     }
 
     // Shuffle the deck
-    this.state.drawPile.sort(() => Math.random() - 0.5);
+    this.state.drawPile.shuffle();
 
     // Deal cards
     this.state.players.forEach((player: Player) => {
@@ -287,7 +285,6 @@ export class OjyksRoom extends Room<State> {
     if (topCard) {
       topCard.isFlipped = true;
       this.state.discardPile.push(topCard);
-      console.log(`Cards on discard pile: ${this.state.discardPile.length}`);
     }
 
     this.state.currentTurn = "";
@@ -321,7 +318,6 @@ export class OjyksRoom extends Room<State> {
         // A better approach for a real game would be to handle this more gracefully on the client.
         // For MVP, we'll just discard them. The client will need to handle the visual shift.
         this.state.discardPile.push(card1, card2, card3);
-        console.log(`Cards on discard pile: ${this.state.discardPile.length}`);
         // This will break indices. Let's rethink.
         // We can't remove items from ArraySchema directly without causing shifts.
         // Let's create new cards and replace them.
