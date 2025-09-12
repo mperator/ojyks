@@ -1,0 +1,6 @@
+/node_modules
+.prettierrc.json
+pnpm-lock.yaml
+
+# ignore shadcn ui generated components
+/src/components/ui/*
