@@ -316,7 +316,7 @@ const GameBoard = () => {
                         size="md"
                       />
                       <div className="absolute -right-1 -bottom-1 -z-10 h-30 w-20 rounded-xl border-2 border-gray-500 bg-gray-700/80" />
-                      <div className="absolute -top-3 -right-4 rotate-[6deg]">
+                      <div className="absolute -top-3 right-4 -rotate-[6deg]">
                         <Card card={drawnCard} isSelected size="md" />
                       </div>
                     </div>
