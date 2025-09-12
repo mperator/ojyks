@@ -8,6 +8,8 @@ import React from "react";
 export default function Home() {
   const [playerName, setPlayerName] = useState("");
   const [roomIdToJoin, setRoomIdToJoin] = useState("");
+  const [isJoiningOrCreating, setIsJoiningOrCreating] = useState(false);
+  const [reconnectRoomId, setReconnectRoomId] = useState<string | null>(null);
   const router = useRouter();
   const { createRoom, joinRoom, joinLobby, availableRooms, createOrJoinFromLobby } = useGameStore();
 
@@ -17,31 +19,81 @@ export default function Home() {
     joinLobby();
   }, [joinLobby]);
 
+  useEffect(() => {
+    const reconnectionToken = sessionStorage.getItem("reconnectionToken");
+    if (reconnectionToken) {
+      const [roomId] = reconnectionToken.split(":");
+      if (roomId && availableRooms.some(room => room.roomId === roomId)) {
+        setReconnectRoomId(roomId);
+      } else {
+        setReconnectRoomId(null);
+      }
+    }
+  }, [availableRooms]);
+
   const handlePlayerNameChange = (name: string) => {
     setPlayerName(name);
     localStorage.setItem("playerName", name);
   };
 
   const handleCreateRoom = async () => {
+    if (isJoiningOrCreating) return;
     if (!playerName) return alert("Please enter a player name.");
+    setIsJoiningOrCreating(true);
     try {
       const newRoomId = await createRoom(playerName);
       if (newRoomId) router.push(`/room/${newRoomId}`);
-    } catch (e) { console.error("create room error", e); }
+    } catch (e) {
+      console.error("create room error", e);
+      setIsJoiningOrCreating(false);
+    }
   };
 
   const handleJoinRoom = async () => {
+    if (isJoiningOrCreating) return;
     if (!playerName) return alert("Please enter a player name.");
     if (!roomIdToJoin) return alert("Please enter a room ID.");
+    setIsJoiningOrCreating(true);
     try {
       await joinRoom(roomIdToJoin, playerName);
       router.push(`/room/${roomIdToJoin}`);
-    } catch (e) { console.error("join error", e); }
+    } catch (e) {
+      console.error("join error", e);
+      setIsJoiningOrCreating(false);
+    }
+  };
+
+  const handleReconnect = async () => {
+    if (reconnectRoomId && playerName) {
+      if (isJoiningOrCreating) return;
+      setIsJoiningOrCreating(true);
+      try {
+        await joinRoom(reconnectRoomId, playerName);
+        router.push(`/room/${reconnectRoomId}`);
+      } catch (e) {
+        console.error("reconnect error", e);
+        setIsJoiningOrCreating(false);
+      }
+    }
   };
 
   return (
     <main className="min-h-screen bg-slate-900 px-6 py-10 text-slate-100">
-      <div className="mx-auto flex max-w-6xl flex-col gap-10">
+      {reconnectRoomId && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-emerald-500 to-teal-500 p-3 text-center text-sm font-semibold text-white shadow-lg">
+          <span>
+            You have an active game! Click here to jump back in.
+          </span>
+          <button
+            onClick={handleReconnect}
+            disabled={isJoiningOrCreating}
+            className="ml-4 inline-flex items-center justify-center rounded-full bg-white/20 px-4 py-1.5 text-xs font-bold text-white transition hover:bg-white/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isJoiningOrCreating ? "Reconnecting..." : "Reconnect"}
+          </button>
+        </div>
+      )}
+      <div className="mx-auto flex max-w-6xl flex-col gap-10 pt-12">
         <header className="flex flex-col items-center gap-2 text-center">
           <h1 className="bg-gradient-to-r from-indigo-300 via-emerald-300 to-amber-300 bg-clip-text text-4xl font-extrabold tracking-tight text-transparent drop-shadow-sm">
             Ojyks
@@ -63,10 +115,10 @@ export default function Home() {
               />
               <button
                 onClick={handleCreateRoom}
-                disabled={!playerName}
+                disabled={!playerName || isJoiningOrCreating}
                 className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-400"
               >
-                Create New Room
+                {isJoiningOrCreating ? "Creating..." : "Create New Room"}
               </button>
               <div className="flex items-center gap-2">
                 <input
@@ -78,10 +130,10 @@ export default function Home() {
                 />
                 <button
                   onClick={handleJoinRoom}
-                  disabled={!playerName || !roomIdToJoin}
+                  disabled={!playerName || !roomIdToJoin || isJoiningOrCreating}
                   className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-400"
                 >
-                  Join
+                  {isJoiningOrCreating ? "Joining..." : "Join"}
                 </button>
               </div>
             </div>
@@ -114,22 +166,40 @@ export default function Home() {
                     {availableRooms.map((r, idx) => {
                       const full = r.clients >= (r.metadata?.maxClients ?? r.maxClients ?? 8);
                       const rowBg = idx % 2 === 0 ? "bg-slate-800/30" : "bg-slate-800/10";
+                      const isReconnectable = r.roomId === reconnectRoomId;
                       return (
                         <tr key={r.roomId} className={`${rowBg} transition-colors hover:bg-slate-700/40`}>
                           <td className="px-4 py-3 font-mono text-xs md:text-sm">{r.roomId}</td>
                           <td className="px-4 py-3 text-xs md:text-sm">{r.clients} / {r.metadata?.maxClients ?? r.maxClients ?? 8}</td>
                           <td className="px-4 py-3 text-xs md:text-sm capitalize">{r.metadata?.status || 'unknown'}</td>
                           <td className="px-4 py-3">
-                            <button
-                              disabled={full || !playerName}
-                              onClick={async () => {
-                                await createOrJoinFromLobby(playerName, r.roomId);
-                                router.push(`/room/${r.roomId}`);
-                              }}
-                              className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-md transition hover:bg-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-400"
-                            >
-                              {full ? 'Full' : 'Join'}
-                            </button>
+                            {isReconnectable ? (
+                              <button
+                                disabled={!playerName || isJoiningOrCreating}
+                                onClick={handleReconnect}
+                                className="inline-flex items-center justify-center rounded-full bg-teal-500 px-3 py-1.5 text-xs font-semibold text-white shadow-md transition hover:bg-teal-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-300 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-400"
+                              >
+                                {isJoiningOrCreating ? "Reconnecting..." : "Reconnect"}
+                              </button>
+                            ) : (
+                              <button
+                                disabled={full || !playerName || isJoiningOrCreating}
+                                onClick={async () => {
+                                  if (isJoiningOrCreating) return;
+                                  setIsJoiningOrCreating(true);
+                                  try {
+                                    await createOrJoinFromLobby(playerName, r.roomId);
+                                    router.push(`/room/${r.roomId}`);
+                                  } catch (error) {
+                                    console.error("Failed to join from lobby", error);
+                                    setIsJoiningOrCreating(false);
+                                  }
+                                }}
+                                className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-md transition hover:bg-emerald-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-400"
+                              >
+                                {isJoiningOrCreating ? "Joining..." : (full ? 'Full' : 'Join')}
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );

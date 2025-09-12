@@ -68,7 +68,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   joinRoom: async (roomId, playerName) => {
     // check for reconnection token
     const reconnectionToken = sessionStorage.getItem('reconnectionToken');
-    if (reconnectionToken) {
+    // check if reconnectionToken starts with the same roomId if so rejoin otherwise join a new room
+    if (reconnectionToken && reconnectionToken.startsWith(roomId)) {
       try {
         const room = await client.reconnect<State>(reconnectionToken);
         sessionStorage.setItem('reconnectionToken', room.reconnectionToken);
