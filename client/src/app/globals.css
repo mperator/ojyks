@@ -40,6 +40,20 @@ body {
   letter-spacing: 0.5px;
 }
 
+.card-value-xxs {
+  color: #fff;
+  -webkit-text-stroke: 1px #000; /* Chrome / Safari */
+  paint-order: stroke fill;
+  text-shadow:
+    0 0 1px #000,
+    0 1px 1px #000,
+    1px 0 1px #000,
+    -1px 0 1px #000,
+    0 -1px 1px #000; /* Fallback outline via shadows */
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
 /* Flip animation */
 .flip-container {
   perspective: 900px;

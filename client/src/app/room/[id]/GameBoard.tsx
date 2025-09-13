@@ -26,27 +26,47 @@ const Card = ({
   card: CardType;
   onClick?: () => void;
   isSelected?: boolean;
-  size?: "xs" | "sm" | "md" | "lg";
+  size?: "xxs" | "xs" | "sm" | "md" | "lg";
 }) => {
   if (!card || card.value === 999) {
     // Empty slot placeholder
     return (
       <div
-        className={`rounded-lg bg-gray-800 ${size === "xs" ? "h-14 w-9" : size === "sm" ? "h-15 w-10" : size === "lg" ? "h-36 w-24" : "h-30 w-20"}`}
+        className={`rounded-lg bg-gray-800 ${
+          size === "xxs"
+            ? "h-4 w-2.5"
+            : size === "xs"
+              ? "h-14 w-9"
+              : size === "sm"
+                ? "h-15 w-10"
+                : size === "lg"
+                  ? "h-36 w-24"
+                  : "h-30 w-20"
+        }`}
       />
     );
   }
 
   const sizeClasses =
-    size === "xs"
-      ? "w-9 h-14 text-[14px]"
-      : size === "sm"
-        ? "w-10 h-15 text-lg"
-        : size === "lg"
-          ? "w-24 h-36 text-6xl"
-          : "w-20 h-30 text-5xl";
+    size === "xxs"
+      ? "w-2.5 h-4 text-[10px]"
+      : size === "xs"
+        ? "w-9 h-14 text-[14px]"
+        : size === "sm"
+          ? "w-10 h-15 text-lg"
+          : size === "lg"
+            ? "w-24 h-36 text-6xl"
+            : "w-20 h-30 text-5xl";
   const roundedClasses =
-    size === "xs" ? "rounded-xs" : size === "sm" ? "rounded-sm" : size === "lg" ? "rounded-lg" : "rounded-lg";
+    size === "xxs"
+      ? ""
+      : size === "xs"
+        ? "rounded-xs"
+        : size === "sm"
+          ? "rounded-sm"
+          : size === "lg"
+            ? "rounded-lg"
+            : "rounded-lg";
 
   const frontColorClasses = `${getCardColorClasses(card.value)} text-white border-white`;
   const backColorClasses = "bg-gray-600/80 text-transparent border-gray-400/70";
@@ -62,7 +82,7 @@ const Card = ({
       >
         {/* Back Face */}
         <div
-          className={`flip-face back flex items-center justify-center border-2 font-semibold tracking-wide shadow-sm ${backColorClasses} ${roundedClasses}`}
+          className={`flip-face back flex items-center justify-center tracking-wide shadow-sm ${backColorClasses} ${roundedClasses}`}
         >
           <Image
             src={size === "xs" || size === "sm" ? "/card_back_small.jpg" : "/card_back.jpg"}
@@ -75,9 +95,11 @@ const Card = ({
         </div>
         {/* Front Face */}
         <div
-          className={`flip-face front flex items-center justify-center rounded-xl border-2 font-semibold tracking-wide shadow-md ${frontColorClasses} ${roundedClasses}`}
+          className={`flip-face front flex items-center justify-center tracking-wide shadow-md ${frontColorClasses} ${roundedClasses} ${size === "xxs" ? "" : "border-2"}`}
         >
-          <span className="card-value relative drop-shadow-md">{card.value}</span>
+          <span className={`${size === "xxs" ? "card-value-xxs" : "card-value"} relative drop-shadow-md`}>
+            {card.value}
+          </span>
         </div>
       </div>
     </div>
@@ -94,20 +116,48 @@ const PlayerBoard = ({
   compact?: boolean;
 }) => {
   return (
-    <div className={`flex flex-col items-center ${compact ? "min-w-[120px]" : ""}`}>
-      <div className={`flex items-center justify-center gap-2 ${compact ? "mb-1" : "mb-2"}`}>
-        <span className={`text-sm font-medium ${isCurrentPlayer ? "text-amber-300" : "text-gray-300"}`}>
-          {player.name}
-        </span>
-        <span className="rounded bg-gray-700/70 px-1.5 py-0.5 text-xs text-gray-200">{player.score}</span>
-        {isCurrentPlayer && <span className="animate-pulse text-[10px] text-amber-300">●</span>}
+    <>
+      <div className={`flex-col items-center sm:flex lg:hidden`}>
+        {/* Score on top */}
+        <div className="order-1 flex items-center justify-center">
+          <span className="rounded bg-gray-700/80 px-1 py-[1px] text-[9px] font-medium text-amber-200 shadow-sm sm:text-[10px] md:text-xs">
+            {player.score}
+          </span>
+        </div>
+        {/* Card grid */}
+        <div className={`order-2 mt-1 grid grid-cols-4 justify-items-center`}>
+          {player.cards.map((card: CardType, index: number) => (
+            <Card key={index} card={card} size={compact ? "xxs" : "md"} />
+          ))}
+        </div>
+        {/* Name & indicator bottom */}
+        <div className={`order-3 flex items-center justify-center gap-1 sm:gap-1.5 ${compact ? "mt-1" : "mt-2"}`}>
+          <span
+            className={`font-medium ${isCurrentPlayer ? "text-amber-300" : "text-gray-300"} sm:text-[11px]md:text-xs text-[9px]`}
+          >
+            {player.name}
+          </span>
+          {isCurrentPlayer && (
+            <span className="animate-pulse text-[7px] text-amber-300 sm:text-[8px] md:text-[9px]">●</span>
+          )}
+        </div>
       </div>
-      <div className={`grid justify-items-center ${compact ? "grid-cols-4 gap-[2px]" : "grid-cols-4 gap-2"}`}>
-        {player.cards.map((card: CardType, index: number) => (
-          <Card key={index} card={card} size={compact ? "xs" : "md"} />
-        ))}
+
+      <div className={`hidden flex-col items-center lg:flex`}>
+        <div className={`flex items-center justify-center gap-2 ${compact ? "mb-1" : "mb-2"}`}>
+          <span className={`text-sm font-medium ${isCurrentPlayer ? "text-amber-300" : "text-gray-300"}`}>
+            {player.name}
+          </span>
+          <span className="rounded bg-gray-700/70 px-1.5 py-0.5 text-xs text-gray-200">{player.score}</span>
+          {isCurrentPlayer && <span className="animate-pulse text-[10px] text-amber-300">●</span>}
+        </div>
+        <div className={`grid justify-items-center ${compact ? "grid-cols-4 gap-[2px]" : "grid-cols-4 gap-2"}`}>
+          {player.cards.map((card: CardType, index: number) => (
+            <Card key={index} card={card} size={compact ? "xs" : "md"} />
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -250,11 +300,10 @@ const GameBoard = () => {
             ? "Choose: swap or discard"
             : "Your Turn"
         : `${players[currentTurn!]?.name}'s Turn`;
-
   return (
     <div className="flex flex-grow flex-col overflow-hidden rounded-xl bg-gradient-to-br from-gray-900 via-gray-900 to-gray-800 p-3 md:p-5">
-      {/* Top bar: other players (centered, wrapping) */}
-      <div className="mb-3 flex flex-wrap items-start justify-center gap-4 border-b border-gray-700/60 pb-2">
+      {/* Top bar: other players */}
+      <div className="mb-3 flex w-full flex-wrap justify-center gap-2 border-b border-gray-700/60 pb-2 lg:gap-8">
         {otherPlayers.map(({ id, player: p }) => (
           <PlayerBoard key={id} player={p} isCurrentPlayer={currentTurn === id} compact />
         ))}
@@ -264,11 +313,10 @@ const GameBoard = () => {
       <div className="flex min-h-0 flex-1 gap-4">
         {/* Center play zone */}
         <div className="flex flex-1 flex-col">
-          {/* Status / instructions (mobile inline) */}
+          {/* Status / instructions */}
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
             <h2 className="text-lg font-semibold text-gray-100 md:text-xl">{phaseTitle}</h2>
             <div className="flex gap-3">
-              {/* Turn indicator badge */}
               <div
                 className={`rounded-full px-2 py-1 text-xs ${isMyTurn ? "border border-amber-400/40 bg-amber-400/20 text-amber-300" : "bg-gray-700/60 text-gray-300"}`}
               >
@@ -278,13 +326,12 @@ const GameBoard = () => {
           </div>
 
           {/* Central piles area */}
-          <div className="flex flex-1 flex-col items-center justify-center gap-10 py-2 md:flex-row">
+          <div className="flex flex-1 flex-row items-center justify-center gap-6 py-2 md:gap-10">
             {/* Draw Pile */}
             <div className="flex flex-col items-center gap-1">
               {(() => {
                 const count = drawPile.length;
                 const isSelectedFromDraw = drawnCard && !drawnFromDiscard;
-                // Single card & selected -> show placeholder instead of base card
                 if (count === 1 && isSelectedFromDraw) {
                   return (
                     <div className="relative">
@@ -297,19 +344,17 @@ const GameBoard = () => {
                     </div>
                   );
                 }
-                // Single card & not selected -> show the actual card
                 if (count === 1) {
                   return (
                     <div className="relative">
-                      <Card card={drawPile[0]} onClick={handleDrawPileClick} isSelected={true} size="md" />
+                      <Card card={drawPile[0]} onClick={handleDrawPileClick} isSelected size="md" />
                     </div>
                   );
                 }
-                // Multiple cards -> stacked representation
                 if (count > 1 && isSelectedFromDraw) {
                   return (
                     <div className="relative">
-                      <Card card={drawPile[count - 1]} onClick={undefined} isSelected={false} size="md" />
+                      <Card card={drawPile[count - 1]} isSelected={false} size="md" />
                       <div className="absolute -right-1 -bottom-1 -z-10 h-30 w-20 rounded-xl border-2 border-gray-500 bg-gray-700/80" />
                       <div className="absolute -top-3 right-4 -rotate-[6deg]">
                         <Card card={drawnCard} isSelected size="md" />
@@ -317,7 +362,6 @@ const GameBoard = () => {
                     </div>
                   );
                 }
-                // Not selected yet
                 return (
                   <div className="relative">
                     <Card
@@ -336,13 +380,11 @@ const GameBoard = () => {
                 </span>
               </span>
             </div>
-
             {/* Discard Pile */}
             <div className="flex flex-col items-center gap-1">
               {(() => {
                 const count = discardPile.length;
                 const isSelectedFromDiscard = drawnCard && drawnFromDiscard;
-                // Single card & selected -> show placeholder instead of base card
                 if (count === 1 && isSelectedFromDiscard) {
                   return (
                     <div className="relative">
@@ -355,7 +397,6 @@ const GameBoard = () => {
                     </div>
                   );
                 }
-                // Single card & not selected -> show the actual card
                 if (count === 1) {
                   return (
                     <div className="relative">
@@ -363,7 +404,6 @@ const GameBoard = () => {
                     </div>
                   );
                 }
-                // Multiple cards -> stacked representation
                 if (count > 1 && isSelectedFromDiscard) {
                   return (
                     <div className="relative">
@@ -380,7 +420,6 @@ const GameBoard = () => {
                     </div>
                   );
                 }
-                // Not selected yet
                 return (
                   <div className="relative">
                     <Card
@@ -401,7 +440,6 @@ const GameBoard = () => {
             </div>
           </div>
 
-          {/* Instruction banner (moved below piles, above player board) */}
           {(isMyTurn && (drawnCard || isFlippingAfterDiscard)) || (gameState === "starting" && !player.isReady) ? (
             <div className="mx-auto mt-2 mb-3 w-full max-w-md px-4 py-3 text-sm text-gray-200">
               {gameState === "starting" && !player.isReady ? (
@@ -428,7 +466,6 @@ const GameBoard = () => {
             </div>
           ) : null}
 
-          {/* Player Board at bottom (heading removed, score moved to sidebar) */}
           <div className="mt-auto flex flex-col items-center pt-3">
             <div className="inline-grid grid-cols-4 place-items-center gap-2 sm:gap-3">
               {player.cards.map((card: CardType, index: number) => (
@@ -438,16 +475,12 @@ const GameBoard = () => {
           </div>
         </div>
 
-        {/* Unified Sidebar with Tabs (phase card removed) */}
         <aside className="hidden w-64 flex-col gap-4 border-l border-gray-700/60 pl-4 lg:flex">
-          {/* Your info panel */}
           <div className="rounded-lg border border-gray-700/70 bg-gray-800/70 p-3 shadow-sm">
             <p className="text-xs text-gray-300">
               Your Score: <span className="font-medium text-amber-300">{player.score}</span>
             </p>
           </div>
-
-          {/* Tabs */}
           <div className="flex overflow-hidden rounded-lg border border-gray-700/70 bg-gray-800/70">
             <button
               onClick={() => setSidebarTab("scoreboard")}
@@ -462,8 +495,6 @@ const GameBoard = () => {
               Chat
             </button>
           </div>
-
-          {/* Tab Content */}
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-gray-700/70 bg-gray-800/60">
             {sidebarTab === "scoreboard" ? (
               <div className="scrollbar-thin scrollbar-thumb-gray-700/70 flex-1 space-y-1 overflow-y-auto p-3">
