@@ -181,6 +181,7 @@ const GameBoard = () => {
   const [isFlippingAfterDiscard, setIsFlippingAfterDiscard] = useState<boolean>(false);
   const [sidebarTab, setSidebarTab] = useState<"scoreboard" | "chat">("scoreboard");
   const [chatInput, setChatInput] = useState("");
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false); // mobile fly-in
   const router = useRouter();
 
   const mySessionId = room?.sessionId;
@@ -474,7 +475,7 @@ const GameBoard = () => {
             </div>
           </div>
         </div>
-
+        {/* Desktop Sidebar */}
         <aside className="hidden w-64 flex-col gap-4 border-l border-gray-700/60 pl-4 lg:flex">
           <div className="rounded-lg border border-gray-700/70 bg-gray-800/70 p-3 shadow-sm">
             <p className="text-xs text-gray-300">
@@ -560,6 +561,124 @@ const GameBoard = () => {
             Rage Quit
           </button>
         </aside>
+      </div>
+
+      {/* Mobile floating button */}
+      <button
+        onClick={() => setIsMobileSidebarOpen(true)}
+        className="fixed right-4 bottom-4 z-30 rounded-full bg-amber-500 px-4 py-2 text-xs font-semibold text-gray-900 shadow-md ring-1 shadow-amber-500/30 ring-amber-300/50 transition hover:bg-amber-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 lg:hidden"
+        aria-label="Open sidebar"
+      >
+        Menu
+      </button>
+
+      {/* Mobile fly-in sidebar */}
+      <div
+        className={`fixed inset-0 z-40 lg:hidden ${isMobileSidebarOpen ? "pointer-events-auto" : "pointer-events-none"}`}
+      >
+        {/* Backdrop */}
+        <div
+          onClick={() => setIsMobileSidebarOpen(false)}
+          className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity ${isMobileSidebarOpen ? "opacity-100" : "opacity-0"}`}
+          aria-hidden={!isMobileSidebarOpen}
+        />
+        <div
+          className={`absolute top-0 right-0 flex h-full w-72 max-w-[80%] flex-col gap-4 border-l border-gray-700/70 bg-gray-900/95 p-4 shadow-xl transition-transform duration-300 ${isMobileSidebarOpen ? "translate-x-0" : "translate-x-full"}`}
+          role="dialog"
+          aria-label="Sidebar"
+          aria-modal="true"
+        >
+          <div className="mb-1 flex items-center justify-between">
+            <p className="text-xs text-gray-300">
+              Score: <span className="font-medium text-amber-300">{player.score}</span>
+            </p>
+            <button
+              onClick={() => setIsMobileSidebarOpen(false)}
+              className="rounded px-2 py-1 text-[11px] font-medium text-gray-300 hover:bg-gray-700/60"
+              aria-label="Close sidebar"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex overflow-hidden rounded-lg border border-gray-700/70 bg-gray-800/70">
+            <button
+              onClick={() => setSidebarTab("scoreboard")}
+              className={`flex-1 py-2 text-xs font-medium transition ${sidebarTab === "scoreboard" ? "bg-gray-700 text-amber-300" : "text-gray-300 hover:text-gray-100"}`}
+            >
+              Scoreboard
+            </button>
+            <button
+              onClick={() => setSidebarTab("chat")}
+              className={`flex-1 py-2 text-xs font-medium transition ${sidebarTab === "chat" ? "bg-gray-700 text-amber-300" : "text-gray-300 hover:text-gray-100"}`}
+            >
+              Chat
+            </button>
+          </div>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-lg border border-gray-700/70 bg-gray-800/60">
+            {sidebarTab === "scoreboard" ? (
+              <div className="scrollbar-thin scrollbar-thumb-gray-700/70 flex-1 space-y-1 overflow-y-auto p-3">
+                {Object.entries(players).map(([id, p]) => (
+                  <div
+                    key={id}
+                    className={`flex items-center justify-between rounded px-2 py-1 text-sm ${id === currentTurn ? "border border-amber-300/30 bg-amber-400/15" : "bg-gray-700/40"} ${id === mySessionId ? "ring-1 ring-amber-300/30" : ""}`}
+                  >
+                    <span
+                      className={`truncate ${id === mySessionId ? "font-medium text-amber-200" : "text-gray-200"}`}
+                      title={p.name}
+                    >
+                      {id === mySessionId ? `You` : p.name}
+                    </span>
+                    <span className="font-mono text-xs text-gray-300">{p.score}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex h-full flex-col">
+                <div className="scrollbar-thin scrollbar-thumb-gray-700/70 flex-1 space-y-1 overflow-y-auto p-3">
+                  {messages.length === 0 && <div className="text-[11px] text-gray-400">No messages yet.</div>}
+                  {messages.map((m, i) => (
+                    <div key={i} className="rounded bg-gray-700/60 px-2 py-1 text-xs break-words text-gray-200">
+                      {m}
+                    </div>
+                  ))}
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (chatInput.trim()) {
+                      sendMessage(chatInput);
+                      setChatInput("");
+                    }
+                  }}
+                  className="flex gap-2 border-t border-gray-700 p-2"
+                >
+                  <input
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Type..."
+                    className="flex-1 rounded bg-gray-900/60 px-2 py-1 text-xs text-gray-100 outline-none focus:ring-1 focus:ring-amber-400"
+                  />
+                  <button
+                    type="submit"
+                    className="rounded bg-amber-500 px-3 py-1 text-xs font-semibold text-gray-900 transition hover:bg-amber-600 disabled:opacity-40"
+                    disabled={!chatInput.trim()}
+                  >
+                    Send
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              leaveRoom();
+              router.push("/");
+            }}
+            className="rounded-full bg-red-600 px-4 py-2 text-xs font-semibold tracking-wide text-white uppercase shadow-lg transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+          >
+            Rage Quit
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -35,18 +35,21 @@ const RoundEndDisplay = () => {
     const winnerName = winningPlayer?.name;
 
     return (
-      <div className="animate-fade-in mx-auto w-full max-w-3xl rounded-2xl border border-slate-600/60 bg-slate-800 p-6 text-slate-100 shadow-2xl">
-        <div className="mb-6 text-center">
-          <h2 className="mb-2 text-4xl font-extrabold tracking-tight text-amber-300 drop-shadow-sm">Game Over</h2>
-          <p className="text-lg font-medium text-slate-300">Final Results</p>
+      <div className="animate-fade-in mx-auto w-full max-w-3xl rounded-2xl border border-slate-600/60 bg-slate-800 p-4 text-slate-100 shadow-2xl sm:p-6">
+        <div className="mb-5 text-center">
+          <h2 className="mb-1 text-3xl font-extrabold tracking-tight text-amber-300 drop-shadow-sm sm:text-4xl">
+            Game Over
+          </h2>
+          <p className="text-sm font-medium text-slate-300 sm:text-lg">Final Results</p>
         </div>
-        <div className="mb-6 rounded-xl border border-slate-600/50 bg-slate-900/40 p-4 shadow-inner">
-          <p className="text-center text-2xl font-semibold text-amber-300">
+        <div className="mb-5 rounded-xl border border-slate-600/50 bg-slate-900/40 p-3 shadow-inner sm:p-4">
+          <p className="text-center text-xl font-semibold text-amber-300 sm:text-2xl">
             👑 Winner:{" "}
             <span className="font-bold text-white">{winningSessionId === currentPlayerId ? "You" : winnerName}</span>
           </p>
         </div>
-        <div className="overflow-hidden rounded-xl border border-slate-600/50 shadow">
+        {/* Desktop / md+ table */}
+        <div className="hidden overflow-hidden rounded-xl border border-slate-600/50 shadow md:block">
           <table className="w-full border-collapse text-left">
             <thead className="bg-slate-700/60 text-xs tracking-wider text-slate-300 uppercase">
               <tr>
@@ -79,10 +82,32 @@ const RoundEndDisplay = () => {
             </tbody>
           </table>
         </div>
-        <div className="mt-8 flex justify-center">
+        {/* Mobile list */}
+        <div className="space-y-2 md:hidden">
+          {sortedEntries.map(([sessionId, player]) => {
+            const isWinner = sessionId === winningSessionId;
+            return (
+              <div
+                key={sessionId}
+                className={`flex items-center justify-between rounded-xl border border-slate-600/50 bg-slate-900/50 p-3 shadow-sm ${isWinner ? "ring-1 ring-amber-400/40" : ""}`}
+              >
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{sessionId === currentPlayerId ? "You" : player.name}</span>
+                  {isWinner && (
+                    <span className="mt-0.5 inline-flex w-fit items-center rounded-full bg-amber-400/15 px-2 py-[2px] text-[10px] font-semibold text-amber-300 ring-1 ring-amber-300/30">
+                      Champion
+                    </span>
+                  )}
+                </div>
+                <span className="font-mono text-base text-slate-100">{player.score}</span>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-6 flex justify-center sm:mt-8">
           <button
             onClick={handleExitClick}
-            className="inline-flex items-center gap-2 rounded-full bg-red-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+            className="inline-flex items-center gap-2 rounded-full bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-red-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-300 sm:px-6 sm:py-3"
           >
             Exit to Lobby
           </button>
@@ -92,12 +117,17 @@ const RoundEndDisplay = () => {
   }
 
   return (
-    <div className="animate-fade-in mx-auto w-full max-w-4xl rounded-2xl border border-slate-600/60 bg-slate-800 p-6 text-slate-100 shadow-xl">
-      <div className="mb-6 flex flex-col items-center gap-2 text-center">
-        <h2 className="text-3xl font-extrabold tracking-tight text-indigo-300 drop-shadow-sm">Round Complete</h2>
-        <p className="text-sm text-slate-300">Review scores while players ready up for the next round.</p>
+    <div className="animate-fade-in mx-auto w-full max-w-4xl rounded-2xl border border-slate-600/60 bg-slate-800 p-4 text-slate-100 shadow-xl sm:p-6">
+      <div className="mb-5 flex flex-col items-center gap-1.5 text-center">
+        <h2 className="text-2xl font-extrabold tracking-tight text-indigo-300 drop-shadow-sm sm:text-3xl">
+          Round Complete
+        </h2>
+        <p className="text-[12px] text-slate-300 sm:text-sm">
+          Review scores while players ready up for the next round.
+        </p>
       </div>
-      <div className="overflow-hidden rounded-xl border border-slate-600/50 shadow ring-1 ring-white/5">
+      {/* Desktop table */}
+      <div className="hidden overflow-hidden rounded-xl border border-slate-600/50 shadow ring-1 ring-white/5 md:block">
         <table className="w-full border-collapse text-left">
           <thead className="bg-slate-700/60 text-xs tracking-wider text-slate-300 uppercase">
             <tr>
@@ -147,6 +177,49 @@ const RoundEndDisplay = () => {
           </tbody>
         </table>
       </div>
+      {/* Mobile stacked list */}
+      <div className="space-y-2 md:hidden">
+        {Object.entries(players).map(([sessionId, player]) => {
+          const isInitiator = sessionId === lastRoundInitiator;
+          const doubled = isInitiator && initiatorScoreDoubled;
+          const scoreColor = isInitiator ? (doubled ? "text-rose-300" : "text-emerald-300") : "text-slate-100";
+          return (
+            <div
+              key={sessionId}
+              className="flex flex-col gap-2 rounded-xl border border-slate-600/50 bg-slate-900/50 p-3 shadow-sm"
+            >
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-2 text-sm font-medium">
+                  {sessionId === currentPlayerId ? "You" : player.name}
+                  {isInitiator && (
+                    <span className="inline-flex items-center rounded-full bg-amber-400/15 px-2 py-[2px] text-[9px] font-semibold tracking-wide text-amber-300 uppercase ring-1 ring-amber-300/30 ring-inset">
+                      Initiator
+                    </span>
+                  )}
+                </span>
+                <span className={`font-mono text-xs ${scoreColor}`}>
+                  {player.roundScore}
+                  {doubled && <span className="ml-1 text-[9px] font-bold text-rose-300">×2</span>}
+                </span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-mono text-slate-300">
+                  Total: <span className="font-semibold text-slate-100">{player.score}</span>
+                </span>
+                {player.readyForNextRound ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-[2px] text-[10px] font-medium text-emerald-300 ring-1 ring-emerald-400/30 ring-inset">
+                    ✅ Ready
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-500/15 px-2 py-[2px] text-[10px] font-medium text-slate-300 ring-1 ring-slate-400/20 ring-inset">
+                    ⏳ Waiting
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
       {countdown !== null && (
         <div className="mt-6 flex flex-col items-center gap-3">
           <div className="relative h-2 w-full overflow-hidden rounded-full bg-slate-700">
@@ -161,10 +234,10 @@ const RoundEndDisplay = () => {
         players[currentPlayerId] &&
         !players[currentPlayerId].readyForNextRound &&
         countdown === null && (
-          <div className="mt-8 flex justify-center">
+          <div className="mt-6 flex justify-center sm:mt-8">
             <button
               onClick={handleReadyClick}
-              className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-7 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"
+              className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:bg-indigo-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 sm:px-7 sm:py-3"
             >
               Ready for Next Round
             </button>
