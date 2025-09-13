@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Ojyks Card Game",
     start_url: "/",
     display: "standalone",
-    background_color: "#ffffff",
+    background_color: "#0f172b",
     theme_color: "#000000",
     icons: [
       {
