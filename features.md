@@ -1,9 +1,6 @@
-# Featurelist
+## Features
 
-## Bugs
-
-- Der draw pile hat manchmal eine aufgedeckte Karte
-- Karten werden beim initialen nutzen nicht geladen.
+- After a round ends overlay the game board with the scoreboard and transparent backfround.
 
 ## Refactor
 
@@ -27,7 +24,3 @@ Extend the chat for the game room and the lobby.
 - Show timestamps for messages.
 - Show who is typing.
 - Show how send the message
-
-## Mobile Optimization
-
-Make the app responsive and usable on mobile devices.
