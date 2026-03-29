@@ -54,6 +54,18 @@ export const useGameStore = create<GameState>((set, get) => ({
   countdown: null,
   initiatorScoreDoubled: false,
   createRoom: async (playerName) => {
+    // Leave any previous room before creating a new one
+    const existingToken = localStorage.getItem("reconnectionToken");
+    if (existingToken) {
+      try {
+        const oldRoom = await client.reconnect<State>(existingToken);
+        oldRoom.leave(true);
+      } catch {
+        // Token expired or invalid — nothing to leave
+      }
+      localStorage.removeItem("reconnectionToken");
+    }
+
     try {
       const room = await client.create<State>(ROOM_NAME, { playerName });
       localStorage.setItem("reconnectionToken", room.reconnectionToken);
@@ -79,31 +91,29 @@ export const useGameStore = create<GameState>((set, get) => ({
 
     const reconnectionToken = localStorage.getItem("reconnectionToken");
     const reconnectionRoomId = reconnectionToken?.split(":")[0];
-    // reconnect to the room with the reconnection token
-    // what happens if an error happens?
 
-    if (reconnectionToken) {
+    if (reconnectionToken && reconnectionRoomId === roomId) {
+      // Same room — attempt to reconnect
       try {
-        console.log("CurrentR", currentr, currentr?.reconnectionToken);
-
         const room = await client.reconnect<State>(reconnectionToken);
         localStorage.setItem("reconnectionToken", room.reconnectionToken);
         console.log("reconnected to room:", room.roomId);
-
         set({ room });
         get().setRoom(room);
-
-        // Reconnect to the same room
-        if (reconnectionRoomId === roomId) {
-          return;
-        } else {
-          // When reconnecting to a different room, leave this room and join the new one
-          leaveRoom();
-        }
+        return;
       } catch (e) {
         console.error(`Failed to reconnect to room ${roomId}, will try to join as new.`, e);
         localStorage.removeItem("reconnectionToken");
       }
+    } else if (reconnectionToken && reconnectionRoomId !== roomId) {
+      // Different room — leave it before joining the new one
+      try {
+        const oldRoom = await client.reconnect<State>(reconnectionToken);
+        oldRoom.leave(true);
+      } catch {
+        // Token expired or invalid — nothing to leave
+      }
+      localStorage.removeItem("reconnectionToken");
     }
 
     try {
