@@ -25,14 +25,14 @@ export default function RoomPage() {
       return;
     }
 
-    const reconnectionToken = sessionStorage.getItem("reconnectionToken");
+    const reconnectionToken = localStorage.getItem("reconnectionToken");
     if (!reconnectionToken) {
       router.push("/");
       return;
     }
 
     if (!room) {
-      joinRoom(id, playerName).catch((e) => {
+      joinRoom(id, playerName).catch(() => {
         router.push("/");
         return;
       });

@@ -68,13 +68,21 @@ interface JoinOptions {
   playerName?: string;
 }
 
-export class OjyksRoom extends Room<State> {
-  maxClients = 8;
+interface RoomMetadata {
+  status: string;
+  players: number;
+  maxClients: number;
+  name: string;
+}
 
-  // 'options' not used currently – keep signature (renamed) to satisfy base class without triggering no-unused-vars
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  onCreate(_options: unknown) {
-    this.setState(new State());
+export class OjyksRoom extends Room<{ state: State; metadata: RoomMetadata }> {
+  maxClients = 8;
+  state = new State();
+
+  onCreate(options: RoomMetadata) {
+    this.state = new State();
+
+    console.log("Room created with options:", options);
 
     // Initial metadata used by LobbyRoom listings
     this.setMetadata({
@@ -499,80 +507,75 @@ export class OjyksRoom extends Room<State> {
     }).then(() => updateLobby(this));
   }
 
-  async onLeave(client: Client, consented: boolean) {
+  onDrop(client: Client, code: number) {
+    console.log(`Client ${client.sessionId} dropped (code: ${code})`);
+
+    // Allow disconnected client to reconnect for up to 60 seconds.
+    this.allowReconnection(client, 60);
+
     const player = this.state.players.get(client.sessionId);
     if (player) {
       player.connected = false;
-      console.log(client.sessionId, "disconnected.");
+    }
+  }
+
+  onReconnect(client: Client) {
+    console.log(`Client ${client.sessionId} reconnected!`);
+
+    // Restore the player's connected status
+    const player = this.state.players.get(client.sessionId);
+    if (player) {
+      player.connected = true;
+    }
+  }
+
+  onLeave(client: Client, code: number) {
+    console.log(`Client ${client.sessionId} left with code ${code}`);
+
+    this.broadcast("playerLeft", { playerId: client.sessionId });
+    this.setMetadata({
+      status: this.state.gameState,
+      players: this.state.players.size,
+      maxClients: this.maxClients,
+      name: ROOM_NAME,
+    }).then(() => updateLobby(this));
+
+    // If the host left, assign a new host.
+    if (client.sessionId === this.state.hostId && this.state.players.size > 0) {
+      const newHostId = this.state.players.keys().next().value;
+      if (newHostId) {
+        this.state.hostId = newHostId;
+        this.broadcast("newHost", { hostId: newHostId });
+      }
     }
 
-    try {
-      if (consented) {
-        throw new Error("consented leave");
-      }
-
-      // allow disconnected client to reconnect into this room until 180 seconds
-      await this.allowReconnection(client, 180);
-
-      // client returned! let's re-activate it.
-      if (player) {
-        player.connected = true;
-        console.log(client.sessionId, "reconnected.");
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (_err) {
-      // 20 seconds expired. let's remove the client.
-      if (player) {
-        console.log(client.sessionId, "left permanently.");
-        this.state.players.delete(client.sessionId);
-        this.broadcast("playerLeft", { playerId: client.sessionId });
-        this.setMetadata({
-          status: this.state.gameState,
-          players: this.state.players.size,
-          maxClients: this.maxClients,
-          name: ROOM_NAME,
-        }).then(() => updateLobby(this));
-
-        // If the host left, assign a new host
-        if (client.sessionId === this.state.hostId && this.state.players.size > 0) {
-          const newHostId = this.state.players.keys().next().value;
-          if (newHostId) {
-            this.state.hostId = newHostId;
-            this.broadcast("newHost", { hostId: newHostId });
-          }
-        }
-
-        if (this.state.currentTurn === client.sessionId) {
-          this.endTurn(); // Properly handle turn change
-        }
-
-        if (
-          this.state.players.size < 2 &&
-          (this.state.gameState === "playing" || this.state.gameState === "starting")
-        ) {
-          this.state.gameState = "waiting";
-          this.state.currentTurn = "";
-          // Reset player ready states
-          this.state.players.forEach((p: Player) => (p.isReady = false));
-          this.broadcast("gameReset");
-          this.setMetadata({
-            status: "waiting",
-            players: this.state.players.size,
-            maxClients: this.maxClients,
-            name: ROOM_NAME,
-          }).then(() => updateLobby(this));
-        } else if (this.state.players.size === 0) {
-          this.state.gameState = "waiting";
-          this.setMetadata({
-            status: "waiting",
-            players: this.state.players.size,
-            maxClients: this.maxClients,
-            name: ROOM_NAME,
-          }).then(() => updateLobby(this));
-        }
-      }
+    if (this.state.currentTurn === client.sessionId) {
+      this.endTurn();
     }
+
+    if (this.state.players.size < 2 && (this.state.gameState === "playing" || this.state.gameState === "starting")) {
+      this.state.gameState = "waiting";
+      this.state.currentTurn = "";
+      this.state.players.forEach((p: Player) => (p.isReady = false));
+      this.broadcast("gameReset");
+      this.setMetadata({
+        status: "waiting",
+        players: this.state.players.size,
+        maxClients: this.maxClients,
+        name: ROOM_NAME,
+      }).then(() => updateLobby(this));
+    } else if (this.state.players.size === 0) {
+      this.state.gameState = "waiting";
+      this.setMetadata({
+        status: "waiting",
+        players: this.state.players.size,
+        maxClients: this.maxClients,
+        name: ROOM_NAME,
+      }).then(() => updateLobby(this));
+    }
+
+    // Clean up player data
+    this.state.players.delete(client.sessionId);
   }
 
   onDispose() {

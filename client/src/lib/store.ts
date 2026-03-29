@@ -1,5 +1,4 @@
-import type { RoomAvailable } from "colyseus.js"; // room listing entries from LobbyRoom
-import { Room } from "colyseus.js";
+import { Room, RoomAvailable } from "@colyseus/sdk";
 import { create } from "zustand";
 // Use local mirrored types to avoid bundling server schema / decorators into the client build
 import { Card, Player, ROOM_NAME, State } from "@/types/server-types";
@@ -57,7 +56,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   createRoom: async (playerName) => {
     try {
       const room = await client.create<State>(ROOM_NAME, { playerName });
-      sessionStorage.setItem("reconnectionToken", room.reconnectionToken);
+      localStorage.setItem("reconnectionToken", room.reconnectionToken);
       console.log("created room with id:", room.roomId);
       set({ room });
       get().setRoom(room);
@@ -78,7 +77,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
     }
 
-    const reconnectionToken = sessionStorage.getItem("reconnectionToken");
+    const reconnectionToken = localStorage.getItem("reconnectionToken");
     const reconnectionRoomId = reconnectionToken?.split(":")[0];
     // reconnect to the room with the reconnection token
     // what happens if an error happens?
@@ -88,7 +87,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         console.log("CurrentR", currentr, currentr?.reconnectionToken);
 
         const room = await client.reconnect<State>(reconnectionToken);
-        sessionStorage.setItem("reconnectionToken", room.reconnectionToken);
+        localStorage.setItem("reconnectionToken", room.reconnectionToken);
         console.log("reconnected to room:", room.roomId);
 
         set({ room });
@@ -103,13 +102,13 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
       } catch (e) {
         console.error(`Failed to reconnect to room ${roomId}, will try to join as new.`, e);
-        sessionStorage.removeItem("reconnectionToken");
+        localStorage.removeItem("reconnectionToken");
       }
     }
 
     try {
       const room = await client.joinById<State>(roomId, { playerName });
-      sessionStorage.setItem("reconnectionToken", room.reconnectionToken);
+      localStorage.setItem("reconnectionToken", room.reconnectionToken);
       console.log("joined new room:", room.roomId);
       set({ room });
       get().setRoom(room);
@@ -120,7 +119,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
   leaveRoom: () => {
-    sessionStorage.removeItem("reconnectionToken");
+    localStorage.removeItem("reconnectionToken");
     console.log("leave");
     const { room } = get();
     if (room) {

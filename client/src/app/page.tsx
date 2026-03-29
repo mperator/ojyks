@@ -2,32 +2,31 @@
 
 import { useGameStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { startTransition, useEffect, useMemo, useState } from "react";
 
 export default function Home() {
   const [playerName, setPlayerName] = useState("");
   const [roomIdToJoin, setRoomIdToJoin] = useState("");
   const [isJoiningOrCreating, setIsJoiningOrCreating] = useState(false);
-  const [reconnectRoomId, setReconnectRoomId] = useState<string | null>(null);
   const router = useRouter();
   const { createRoom, joinRoom, joinLobby, availableRooms, createOrJoinFromLobby } = useGameStore();
 
   useEffect(() => {
-    const savedPlayerName = localStorage.getItem("playerName");
-    if (savedPlayerName) setPlayerName(savedPlayerName);
     joinLobby();
   }, [joinLobby]);
 
   useEffect(() => {
-    const reconnectionToken = sessionStorage.getItem("reconnectionToken");
-    if (reconnectionToken) {
-      const [roomId] = reconnectionToken.split(":");
-      if (roomId && availableRooms.some((room) => room.roomId === roomId)) {
-        setReconnectRoomId(roomId);
-      } else {
-        setReconnectRoomId(null);
-      }
-    }
+    const saved = localStorage.getItem("playerName");
+    if (saved) startTransition(() => setPlayerName(saved));
+  }, []);
+
+  // useMemo recomputes it synchronously whenever availableRooms changes with no extra render cycle.
+  const reconnectRoomId = useMemo(() => {
+    if (typeof window === "undefined") return null;
+    const token = localStorage.getItem("reconnectionToken");
+    if (!token) return null;
+    const [roomId] = token.split(":");
+    return roomId && availableRooms.some((r) => r.roomId === roomId) ? roomId : null;
   }, [availableRooms]);
 
   const handlePlayerNameChange = (name: string) => {
