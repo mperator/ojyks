@@ -27,7 +27,24 @@ export default function RootLayout({
       <head>
         <meta name="theme-color" content="#0f172b" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        {process.env.NEXT_PUBLIC_VERSION && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: "0.5rem",
+              right: "0.5rem",
+              fontSize: "0.625rem",
+              opacity: 0.4,
+              pointerEvents: "none",
+              fontFamily: "monospace",
+            }}
+          >
+            v{process.env.NEXT_PUBLIC_VERSION}
+          </div>
+        )}
+      </body>
     </html>
   );
 }
