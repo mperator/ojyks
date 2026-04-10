@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@colyseus/sdk": "^0.17.35",
-    "next": "16.2.1",
+    "next": "16.2.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zustand": "^5.0.12"
